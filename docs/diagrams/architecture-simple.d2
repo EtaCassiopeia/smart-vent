@@ -1,8 +1,8 @@
 direction: right
 
 hub: RPi 4B (Hub) {
-  style.fill: "#e3f2fd"
-  style.stroke: "#1565c0"
+  style.fill: "#16213e"
+  style.stroke: "#3a7bd5"
 
   ha: Home Assistant {
     vc: Vent Control
@@ -18,8 +18,8 @@ hub: RPi 4B (Hub) {
 }
 
 mesh: Thread Mesh (802.15.4) {
-  style.fill: "#f3e5f5"
-  style.stroke: "#7b1fa2"
+  style.fill: "#1a0a2e"
+  style.stroke: "#9b59b6"
 
   v1: "[Vent 1] -- Servo"
   v2: "[Vent 2] -- Servo"
@@ -34,5 +34,5 @@ hub.service.coap -> mesh: "CoAP (IPv6)" {
   style.stroke-dash: 3
 }
 hub.otbr.nrf -> mesh: 802.15.4 {
-  style.stroke: "#c62828"
+  style.stroke: "#e74c3c"
 }

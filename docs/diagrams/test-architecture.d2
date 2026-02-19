@@ -2,22 +2,22 @@ direction: down
 
 integration: Integration Tests {
   label: "Integration Tests\nHub CLI -> CoAP -> Simulator\n(tests/integration/)"
-  style.fill: "#fff3e0"
-  style.stroke: "#f57c00"
+  style.fill: "#2d1b00"
+  style.stroke: "#e68a00"
   style.font-size: 14
 }
 
 hub_tests: Hub Unit Tests {
   label: "Hub Unit Tests\n34 tests with mocked CoAP\n(hub/tests/)"
-  style.fill: "#e3f2fd"
-  style.stroke: "#1565c0"
+  style.fill: "#16213e"
+  style.stroke: "#3a7bd5"
   style.font-size: 14
 }
 
 firmware_tests: Firmware Unit Tests {
   label: "Firmware Unit Tests\n5 host-side tests (cargo test)\nState machine + CBOR roundtrip"
-  style.fill: "#e8f5e9"
-  style.stroke: "#388e3c"
+  style.fill: "#0d2818"
+  style.stroke: "#2ecc71"
   style.font-size: 14
 }
 
@@ -25,8 +25,8 @@ integration -> hub_tests: depends on
 hub_tests -> firmware_tests: depends on
 
 simulator: Device Simulator {
-  style.fill: "#f3e5f5"
-  style.stroke: "#7b1fa2"
+  style.fill: "#1a0a2e"
+  style.stroke: "#9b59b6"
 
   cmd: "vent-sim start --count 5"
   detail: "5 virtual vents on ports 5683-5687\nFull CoAP resource tree, in-memory state\nHub and HA cannot tell them from real devices"

@@ -1,31 +1,31 @@
 direction: right
 
 home_network: HOME NETWORK {
-  style.fill: "#f8f9fa"
-  style.stroke: "#dee2e6"
+  style.fill: "#1a1a2e"
+  style.stroke: "#4a4a6a"
 
   rpi: Raspberry Pi 4B {
-    style.fill: "#e3f2fd"
-    style.stroke: "#1976d2"
+    style.fill: "#16213e"
+    style.stroke: "#3a7bd5"
 
     ha: Home Assistant {
-      style.fill: "#fff3e0"
-      style.stroke: "#f57c00"
+      style.fill: "#2d1b00"
+      style.stroke: "#e68a00"
 
       vc: Vent Control Component
     }
 
     hub: Hub Service {
-      style.fill: "#e8f5e9"
-      style.stroke: "#388e3c"
+      style.fill: "#0d2818"
+      style.stroke: "#2ecc71"
 
       db: SQLite DB
       coap: CoAP Client
     }
 
     otbr: OTBR (Docker) {
-      style.fill: "#fce4ec"
-      style.stroke: "#c62828"
+      style.fill: "#2d0a0a"
+      style.stroke: "#e74c3c"
 
       dongle: nRF52840 Dongle\n(RCP firmware)
     }
@@ -34,8 +34,8 @@ home_network: HOME NETWORK {
   }
 
   mesh: Thread Mesh Network {
-    style.fill: "#f3e5f5"
-    style.stroke: "#7b1fa2"
+    style.fill: "#1a0a2e"
+    style.stroke: "#9b59b6"
 
     v1: Vent 1 {
       mcu1: ESP32-C6
@@ -59,7 +59,7 @@ home_network: HOME NETWORK {
     style.font-size: 14
   }
   rpi.otbr.dongle -> mesh: 802.15.4 radio {
-    style.stroke: "#c62828"
+    style.stroke: "#e74c3c"
     style.font-size: 14
   }
 }
@@ -67,6 +67,6 @@ home_network: HOME NETWORK {
 note: |md
   **No cloud services.** All communication stays on local network.
 | {
-  style.fill: "#fffde7"
-  style.stroke: "#f9a825"
+  style.fill: "#2d2d00"
+  style.stroke: "#f1c40f"
 }
