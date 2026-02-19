@@ -1,31 +1,21 @@
 direction: down
 
-integration: Integration Tests {
-  label: "Integration Tests\nHub CLI -> CoAP -> Simulator\n(tests/integration/)"
-  style.fill: "#2d1b00"
+integration: "Integration Tests\nHub CLI -> CoAP -> Simulator\n(tests/integration/)" {
   style.stroke: "#e68a00"
-  style.font-size: 14
 }
 
-hub_tests: Hub Unit Tests {
-  label: "Hub Unit Tests\n34 tests with mocked CoAP\n(hub/tests/)"
-  style.fill: "#16213e"
+hub_tests: "Hub Unit Tests\n34 tests with mocked CoAP\n(hub/tests/)" {
   style.stroke: "#3a7bd5"
-  style.font-size: 14
 }
 
-firmware_tests: Firmware Unit Tests {
-  label: "Firmware Unit Tests\n5 host-side tests (cargo test)\nState machine + CBOR roundtrip"
-  style.fill: "#0d2818"
+firmware_tests: "Firmware Unit Tests\n5 host-side tests (cargo test)\nState machine + CBOR roundtrip" {
   style.stroke: "#2ecc71"
-  style.font-size: 14
 }
 
 integration -> hub_tests: depends on
 hub_tests -> firmware_tests: depends on
 
 simulator: Device Simulator {
-  style.fill: "#1a0a2e"
   style.stroke: "#9b59b6"
 
   cmd: "vent-sim start --count 5"

@@ -1,38 +1,24 @@
 trust: TRUST BOUNDARY {
-  style.fill: "#2d0a0a"
   style.stroke: "#e74c3c"
   style.stroke-width: 3
 
   thread: Thread Network {
-    style.fill: "#0d2818"
     style.stroke: "#2ecc71"
 
-    encryption: AES-128 encrypted\nat MAC layer {
-      style.fill: "#143d24"
-    }
-    membership: Network membership\n= authorization {
-      style.fill: "#143d24"
-    }
-    joining: Joining requires\nnetwork key {
-      style.fill: "#143d24"
-    }
+    encryption: AES-128 encrypted\nat MAC layer
+    membership: Network membership\n= authorization
+    joining: Joining requires\nnetwork key
   }
 
-  coap: CoAP {
-    label: "CoAP: No additional auth\nOn the Thread network = trusted\nThe network key IS the credential"
-    style.fill: "#2d1b00"
+  coap: "CoAP: No additional auth\nOn the Thread network = trusted\nThe network key IS the credential" {
     style.stroke: "#e68a00"
   }
 
-  otbr_api: OTBR REST API {
-    label: "OTBR REST API\nLocalhost only (127.0.0.1:8081)"
-    style.fill: "#16213e"
+  otbr_api: "OTBR REST API\nLocalhost only (127.0.0.1:8081)" {
     style.stroke: "#3a7bd5"
   }
 
-  ha: Home Assistant {
-    label: "Home Assistant\nLocal network, has its own auth"
-    style.fill: "#16213e"
+  ha: "Home Assistant\nLocal network, has its own auth" {
     style.stroke: "#3a7bd5"
   }
 }
