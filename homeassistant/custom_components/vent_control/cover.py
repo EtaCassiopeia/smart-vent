@@ -83,11 +83,21 @@ class VentCoverEntity(CoordinatorEntity[VentCoordinator], CoverEntity):
 
     @property
     def is_opening(self) -> bool:
-        return self._device_data.get("state") == "moving"
+        data = self._device_data
+        if data.get("state") != "moving":
+            return False
+        target = data.get("target_angle")
+        angle = data.get("angle", ANGLE_CLOSED)
+        return target is not None and target > angle
 
     @property
     def is_closing(self) -> bool:
-        return self._device_data.get("state") == "moving"
+        data = self._device_data
+        if data.get("state") != "moving":
+            return False
+        target = data.get("target_angle")
+        angle = data.get("angle", ANGLE_CLOSED)
+        return target is not None and target < angle
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the vent fully."""
