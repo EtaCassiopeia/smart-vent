@@ -437,41 +437,55 @@ When entering deep sleep, the ESP32-C6's main RAM is powered off. Critical state
 | EUI-64 | eFuse (not NVS) | Everything (permanent) |
 | Power mode config | NVS flash | Reboot + deep sleep |
 
-### 8.4 Write-Ahead Log (WAL) Recovery
+### 8.4 Write-Ahead Checkpoint Recovery
 
-The servo takes time to physically move (1 degree per 15ms, so a full 90-degree sweep takes ~1.35 seconds). If power is lost mid-move, the device must recover to a consistent state on reboot. A write-ahead log pattern ensures no command is silently lost.
+The servo takes time to physically move (1 degree per 15ms, so a full 90-degree sweep takes ~1.35 seconds). If power is lost mid-move, the device must recover to a consistent state on reboot. A write-ahead checkpoint pattern ensures no command is silently lost.
 
-**The problem without WAL:** The device saves the vent angle to NVS only after a move completes. If power dies mid-move, the saved angle is stale (the position before the move started). On reboot the servo snaps back to that stale position and the in-flight command is lost — the hub thinks the vent moved, but it didn't.
+> **Naming note:** This mechanism is inspired by write-ahead logging (WAL), but it is **not** an append-only log. A traditional WAL appends every operation to a growing log file, which requires periodic truncation or compaction to avoid unbounded storage growth. Our implementation instead **overwrites three fixed NVS keys** on every command cycle. Total storage is constant at 3 bytes regardless of how many commands the device processes over its lifetime.
 
-**WAL protocol:**
+**The problem without recovery:** The device saves the vent angle to NVS only after a move completes. If power dies mid-move, the saved angle is stale (the position before the move started). On reboot the servo snaps back to that stale position and the in-flight command is lost — the hub thinks the vent moved, but it didn't.
+
+**NVS keys (constant storage, overwritten in place):**
+
+| Key | Size | Role |
+|-----|------|------|
+| `angle` | 1 byte | **Checkpoint** — last committed (known-good) angle |
+| `target` | 1 byte | **Intent** — target recorded before the move starts |
+| `wal` | 1 byte | **Commit flag** — 1 = committed, 0 = pending |
+
+**Protocol (4 NVS writes per command cycle):**
 
 ```
-1. WRITE-AHEAD    Command received → persist target + clear commit flag
-                  NVS: target=150, wal=0
+1. WRITE-AHEAD    Command received:
+                    write NVS "target" = 150    (1 write)
+                    write NVS "wal"    = 0      (1 write)
 
 2. EXECUTE        Servo steps toward target (1 deg/15ms)
-                  RAM only — NVS not touched during movement
+                  RAM only — no NVS writes during movement
 
-3. COMMIT         Servo reaches target → persist final angle + set commit flag
-                  NVS: angle=150, wal=1
+3. COMMIT         Servo reaches target:
+                    write NVS "angle"  = 150    (1 write)
+                    write NVS "wal"    = 1      (1 write)
 ```
+
+The 10,000th command overwrites the same 3 bytes as the 1st. No log to truncate, no compaction needed.
 
 **Recovery on boot:**
 
 ```
 Read NVS "wal" flag
-  │
-  ├── wal=1 (committed)
-  │   Normal boot. Restore "angle" as checkpoint.
-  │   Servo drives to checkpoint position.
-  │
-  └── wal=0 (uncommitted)
+  |
+  |-- wal=1 (committed)
+  |   Normal boot. Restore "angle" as checkpoint.
+  |   Servo drives to checkpoint position.
+  |
+  +-- wal=0 (uncommitted)
       Previous move was interrupted.
       1. Restore "angle" (last checkpoint — known-good position)
       2. Read "target" (the write-ahead intent)
       3. Drive servo to checkpoint first
       4. Replay: set_target(pending) to complete the interrupted move
-      5. When move completes → commit as usual
+      5. When move completes -> commit as usual
 ```
 
 **Scenarios:**
@@ -485,6 +499,8 @@ Read NVS "wal" flag
 **Why restore-then-replay instead of jumping straight to the target?** The SG90 servo is absolute-position — it moves to whatever angle the PWM signal commands, regardless of where the shaft physically is. After a power loss the shaft could be anywhere between checkpoint and target. Driving to the checkpoint first establishes a known starting point, then replaying the move produces the same gradual 1-degree steps the original command intended. This avoids a sudden full-speed snap that could stress the damper linkage.
 
 **NVS write ordering matters.** In `write_ahead()`, the target is written before the commit flag is cleared. If power dies between the two writes, the worst case is `wal=1` with a stale target — which is treated as "committed" and the stale target is harmlessly ignored. The reverse order would risk `wal=0` with no valid target, which would be harder to recover from.
+
+**Flash wear.** Although our logical storage is 3 bytes, ESP-IDF's NVS is internally log-structured on flash — each `set_raw()` appends a new entry to the flash page and old entries are garbage-collected when pages fill up. This is handled automatically by ESP-IDF. With 4 NVS writes per command, a 24KB NVS partition (6 pages, wear-leveled), and ~100,000 erase cycles per flash sector, the effective lifetime is ~600,000 commands. At 100 commands per day that is over 16 years — well beyond the expected device lifetime.
 
 ---
 
@@ -599,5 +615,5 @@ Read NVS "wal" flag
 | **SQLite** | — | A lightweight file-based SQL database. The hub stores its device registry in a SQLite file (`devices.db`). No separate database server needed. |
 | **REST API** | Representational State Transfer Application Programming Interface | An HTTP-based interface for querying/modifying resources. The OTBR exposes a REST API at `http://localhost:8081` for Thread network management. |
 | **RSSI** | Received Signal Strength Indicator | A measurement of radio signal strength, in dBm. Higher (less negative) = stronger signal. -50 dBm is strong, -90 dBm is weak. Reported in device health for diagnostics. |
-| **WAL** | Write-Ahead Log | A crash-recovery pattern where intent is persisted to durable storage before an operation begins, and a commit flag is set after completion. On recovery, uncommitted entries are replayed. Used in the firmware to survive power loss during servo moves (see section 8.4). |
-| **Checkpoint** | — | In WAL terminology, the last committed (known-good) state. For the vent firmware, this is the last angle that was successfully reached and committed to NVS. |
+| **Write-Ahead Checkpoint** | — | A crash-recovery pattern inspired by write-ahead logging (WAL). Intent is persisted to durable storage before an operation begins, and a commit flag is set after completion. On recovery, uncommitted entries are replayed. Unlike a traditional append-only WAL, this implementation overwrites fixed keys — storage is constant, not growing (see section 8.4). |
+| **Checkpoint** | — | The last committed (known-good) state. For the vent firmware, this is the last angle that was successfully reached and written to NVS. On recovery, the servo restores to this position before replaying any pending command. |

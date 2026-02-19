@@ -106,20 +106,29 @@ impl DeviceIdentity {
         Ok(())
     }
 
-    // -- Write-Ahead Log (WAL) for servo position recovery --
+    // -- Write-Ahead Checkpoint for servo position recovery --
     //
-    // NVS keys:
+    // Inspired by write-ahead logging (WAL), but NOT an append-only log.
+    // Three fixed NVS keys are overwritten in place — total storage is
+    // constant at 3 bytes regardless of how many commands are processed.
+    //
+    // NVS keys (each 1 byte, overwritten on every cycle):
     //   "angle"  — checkpoint: last committed (known-good) angle
-    //   "target" — write-ahead: intent recorded before the move starts
+    //   "target" — intent: target recorded before the move starts
     //   "wal"    — commit flag: 1 = committed, 0 = pending
     //
     // Protocol:
-    //   1. write_ahead(target)  — persist intent + clear commit flag
-    //   2. servo moves
-    //   3. commit(angle)        — persist final angle + set commit flag
+    //   1. write_ahead(target)  — persist intent + clear commit flag  (2 NVS writes)
+    //   2. servo moves          — RAM only, no NVS writes
+    //   3. commit(angle)        — persist final angle + set flag      (2 NVS writes)
     //
     // Recovery (boot with wal=0):
     //   restore checkpoint, replay pending target
+    //
+    // Flash wear: 4 NVS writes per command cycle. ESP-IDF NVS is
+    // internally log-structured and wear-leveled across pages.
+    // With a 24KB NVS partition (~600K effective writes) and 100
+    // commands/day, flash wear is not a concern for ~16 years.
 
     /// Get the last committed (checkpoint) vent angle from NVS.
     pub fn checkpoint_angle(&self) -> Result<Option<u8>, EspError> {
