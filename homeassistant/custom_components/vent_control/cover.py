@@ -109,13 +109,19 @@ class VentCoverEntity(CoordinatorEntity[VentCoordinator], CoverEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         data = self._device_data
-        return {
+        attrs = {
             "eui64": self._eui64,
             "angle": data.get("angle"),
             "room": data.get("room", ""),
             "floor": data.get("floor", ""),
             "firmware_version": data.get("firmware_version", ""),
+            "rssi": data.get("rssi"),
+            "power_source": data.get("power_source", ""),
+            "free_heap": data.get("free_heap"),
         }
+        if data.get("battery_mv") is not None:
+            attrs["battery_mv"] = data["battery_mv"]
+        return attrs
 
     @callback
     def _handle_coordinator_update(self) -> None:
