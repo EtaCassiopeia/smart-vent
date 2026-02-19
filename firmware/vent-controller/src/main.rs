@@ -124,6 +124,7 @@ fn main() {
     let mut app_state = AppState {
         vent: vent_state,
         identity: device_id,
+        thread: thread_mgr,
         start_time: Instant::now(),
         power_source: match power_mode {
             PowerMode::AlwaysOn => PowerSource::Usb,

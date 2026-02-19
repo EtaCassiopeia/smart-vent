@@ -1,5 +1,6 @@
 use crate::identity::DeviceIdentity;
 use crate::state::VentStateMachine;
+use crate::thread::ThreadManager;
 use log::{info, warn};
 use minicbor::{to_vec, Decoder};
 use vent_protocol::*;
@@ -11,6 +12,7 @@ const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub struct AppState {
     pub vent: VentStateMachine,
     pub identity: DeviceIdentity,
+    pub thread: ThreadManager,
     pub start_time: Instant,
     pub power_source: PowerSource,
     pub poll_period_ms: u32,
@@ -133,7 +135,7 @@ pub fn handle_put_config(state: &mut AppState, payload: &[u8]) -> CoapResponse {
 /// Handle GET /device/health
 pub fn handle_get_health(state: &AppState) -> CoapResponse {
     let health = DeviceHealth {
-        rssi: -50, // TODO: read from Thread stack
+        rssi: state.thread.get_rssi(),
         poll_period_ms: state.poll_period_ms,
         power_source: state.power_source,
         free_heap: unsafe { esp_idf_sys::esp_get_free_heap_size() },
