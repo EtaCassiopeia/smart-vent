@@ -107,7 +107,18 @@ fn main() {
     }
 
     // Determine power mode from NVS (default: always-on)
-    let power_mode = PowerMode::AlwaysOn; // TODO: read from NVS config
+    let power_mode = match device_id.get_power_mode() {
+        Ok(Some(mode_str)) => {
+            let poll_ms = device_id.get_poll_period().ok().flatten().unwrap_or(5000);
+            let mode = PowerMode::from_nvs_str(&mode_str, poll_ms);
+            info!("Power mode from NVS: {}", mode.as_str());
+            mode
+        }
+        _ => {
+            info!("Power mode: always_on (default)");
+            PowerMode::AlwaysOn
+        }
+    };
     let power_mgr = PowerManager::new(power_mode);
 
     // Initialize Thread networking
