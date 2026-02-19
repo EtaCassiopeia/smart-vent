@@ -15,6 +15,8 @@ RPi 4B (Hub)                           Thread Mesh (802.15.4)
 +---------------------------+
 ```
 
+See [docs/architecture.md](docs/architecture.md) for the full architecture reference, including data flow diagrams, device lifecycle, power management, security model, and a glossary of all technologies used.
+
 ## Quick Start
 
 ### Development (no hardware)
