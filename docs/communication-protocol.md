@@ -115,7 +115,7 @@ Returns device health telemetry.
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `rssi` | i8 | Thread RSSI in dBm |
+| `rssi` | i8 | Average RSSI of parent link in dBm (via otThreadGetParentAverageRssi). -128 if unavailable |
 | `poll_period_ms` | u32 | SED poll period (0 if always-on) |
 | `power_source` | str | `"usb"` or `"battery"` |
 | `free_heap` | u32 | Free heap in bytes |

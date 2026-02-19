@@ -195,12 +195,15 @@ firmware/vent-controller/src/
 ├── identity.rs     Device identity via eFuse + NVS
 │                   Reads permanent EUI-64 from eFuse
 │                   Stores room/floor/name/angle in NVS
+│                   Stores power mode (pwr_mode) and poll period (poll_ms) in NVS
 │
 ├── thread.rs       OpenThread network stack
 │                   Inits 802.15.4 radio, joins as MTD
 │                   Manages IPv6 addressing
+│                   get_rssi() reads live parent RSSI via otThreadGetParentAverageRssi()
 │
 ├── coap.rs         CoAP server and resource handlers
+│                   Defines AppState (owns VentStateMachine, DeviceIdentity, ThreadManager)
 │                   5 endpoints (position, target, identity, config, health)
 │                   CBOR encode/decode via minicbor
 │
@@ -271,13 +274,15 @@ homeassistant/custom_components/vent_control/
 │                   User enters hub host/port/poll interval
 │
 ├── coordinator.py  DataUpdateCoordinator subclass
-│                   Polls all devices via CoAP on interval
+│                   Polls all devices via CoAP on interval (position, identity, config, health)
+│                   Tracks target_angle per device for direction detection
 │                   Caches state for entity consumption
 │
 ├── cover.py        Cover entity implementation
 │                   Maps vent angle (90-180°) to position (0-100%)
 │                   Supports open, close, set_position
-│                   Shows room/floor/firmware in extra attributes
+│                   is_opening/is_closing reflect movement direction via target_angle
+│                   Shows room/floor/firmware/rssi/power_source/free_heap in extra attributes
 │
 └── strings.json    UI text for config flow
 ```
@@ -433,9 +438,10 @@ When entering deep sleep, the ESP32-C6's main RAM is powered off. Critical state
 | Pending target (write-ahead) | `target` | Reboot + deep sleep |
 | WAL commit flag | `wal` | Reboot + deep sleep |
 | Room/floor/name | `room`, `floor`, `name` | Reboot + deep sleep |
+| Power mode ("always_on" or "sed") | `pwr_mode` | Reboot + deep sleep |
+| SED poll period (u32, little-endian) | `poll_ms` | Reboot + deep sleep |
 | Thread credentials | (managed by OpenThread) | Reboot + deep sleep |
 | EUI-64 | eFuse (not NVS) | Everything (permanent) |
-| Power mode config | NVS flash | Reboot + deep sleep |
 
 ### 8.4 Write-Ahead Checkpoint Recovery
 
