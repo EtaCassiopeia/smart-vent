@@ -1,0 +1,28 @@
+direction: right
+
+closed: Closed {
+  style.fill: "#ffcdd2"
+  style.stroke: "#c62828"
+}
+open: Open {
+  style.fill: "#c8e6c9"
+  style.stroke: "#2e7d32"
+}
+partial: Partial {
+  style.fill: "#fff9c4"
+  style.stroke: "#f9a825"
+}
+moving: Moving {
+  style.fill: "#bbdefb"
+  style.stroke: "#1565c0"
+}
+
+closed -> moving: "set_target(180)"
+moving -> open: reached target
+open -> moving: "set_target(90)"
+moving -> closed: reached target
+open -> moving: "set_target(N)"
+moving -> partial: reached target
+closed -> moving: "set_target(N)" {
+  style.stroke-dash: 3
+}

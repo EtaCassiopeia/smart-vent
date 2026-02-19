@@ -31,21 +31,7 @@ The system provides per-vent, per-room, and per-floor control of vent positions 
 
 ## 4. Architecture
 
-```
-RPi 4B (Hub)                           Thread Mesh (802.15.4)
-+---------------------------+          +---------------------+
-| Home Assistant            |          |                     |
-|   +-- Vent Control        |   CoAP   | [Vent 1] -- Servo  |
-|       Custom Component  <----------->| [Vent 2] -- Servo  |
-|                           |  (IPv6)  | [Vent N] -- Servo  |
-| OTBR (Docker)             |          |                     |
-|   +-- nRF52840 USB -------|--------->| (ESP32-C6 MTD/SED) |
-| Hub Service (Python)      |          +---------------------+
-|   +-- Device Registry     |
-|   +-- Group Manager       |
-|   +-- CoAP Client         |
-+---------------------------+
-```
+![Architecture Overview](diagrams/architecture-simple.svg)
 
 ### 4.1 Communication Flow
 
@@ -85,18 +71,7 @@ RPi 4B (Hub)                           Thread Mesh (802.15.4)
 
 ### 5.3 State Machine
 
-```
-         set_target(180)
-  Closed ──────────────> Moving
-    ^                      │
-    │   set_target(90)     │ reached target
-    │ <────────────────    v
-    │                    Open
-    │                      │
-    │   set_target(N)      │ set_target(N)
-    │ <────────────────    v
-    └─────── Partial <─────┘
-```
+![State Machine](diagrams/state-machine.svg)
 
 ### 5.4 Device Identity
 

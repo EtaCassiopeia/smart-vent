@@ -24,42 +24,7 @@ Comprehensive architecture reference for the Smart Vent Control System. Covers e
 
 The system controls HVAC register vents (the grilles in your floor/wall/ceiling) by attaching a small servo motor to each vent's damper. A microcontroller at each vent communicates wirelessly to a central hub, which exposes everything to Home Assistant for dashboards, automations, and voice control.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        HOME NETWORK                                 │
-│                                                                     │
-│  ┌──────────────────────────────┐    ┌───────────────────────────┐  │
-│  │    Raspberry Pi 4B (Hub)     │    │    Thread Mesh Network    │  │
-│  │                              │    │                           │  │
-│  │  ┌────────────────────────┐  │    │  ┌─────┐  ┌─────┐       │  │
-│  │  │   Home Assistant       │  │    │  │Vent │  │Vent │  ...  │  │
-│  │  │   ┌─────────────────┐  │  │    │  │  1  │  │  2  │       │  │
-│  │  │   │  Vent Control   │  │  │    │  └──┬──┘  └──┬──┘       │  │
-│  │  │   │  Component      │  │  │    │     │        │           │  │
-│  │  │   └────────┬────────┘  │  │    │  ┌──┴──┐  ┌──┴──┐       │  │
-│  │  └────────────┼───────────┘  │    │  │Servo│  │Servo│       │  │
-│  │               │              │    │  └─────┘  └─────┘       │  │
-│  │  ┌────────────┴───────────┐  │    │                           │  │
-│  │  │   Hub Service          │  │    │  ESP32-C6 nodes running   │  │
-│  │  │   (Python + aiocoap)   │──┼────│  Rust firmware with       │  │
-│  │  │   ┌──────┐ ┌────────┐ │  │    │  OpenThread + CoAP        │  │
-│  │  │   │SQLite│ │CoAP    │ │  │    │                           │  │
-│  │  │   │  DB  │ │Client  │ │  │    └───────────────────────────┘  │
-│  │  │   └──────┘ └────────┘ │  │          ▲                        │
-│  │  └────────────────────────┘  │          │ 802.15.4 radio        │
-│  │                              │          │                        │
-│  │  ┌────────────────────────┐  │          │                        │
-│  │  │   OTBR (Docker)        ├──┼──────────┘                        │
-│  │  │   ┌──────────────────┐ │  │                                   │
-│  │  │   │ nRF52840 Dongle  │ │  │                                   │
-│  │  │   │ (RCP firmware)   │ │  │                                   │
-│  │  │   └──────────────────┘ │  │                                   │
-│  │  └────────────────────────┘  │                                   │
-│  └──────────────────────────────┘                                   │
-│                                                                     │
-│  User accesses Home Assistant via browser/app on local network      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+![System Overview](diagrams/system-overview.svg)
 
 **No cloud services are used.** All communication stays within the local network. The Thread mesh does not require — and should not have — internet access.
 
@@ -71,28 +36,7 @@ The system controls HVAC register vents (the grilles in your floor/wall/ceiling)
 
 Each HVAC vent gets one controller node consisting of:
 
-```
-┌─────────────────────────────────┐
-│        ESP32-C6 Dev Board       │
-│  ┌───────────┐  ┌────────────┐  │
-│  │ RISC-V    │  │ 802.15.4   │  │
-│  │ Core      │  │ Radio      │  │     ┌────────────┐
-│  │ 160 MHz   │  │ (Thread)   │  │     │  SG90      │
-│  └─────┬─────┘  └────────────┘  │     │  Servo     │
-│        │                        │     │            │
-│  ┌─────┴─────┐                  │     │  ┌──────┐  │
-│  │ LEDC PWM  │──── GPIO 6 ─────┼─────│  │Motor │  │
-│  │ (50 Hz)   │                  │     │  └──────┘  │
-│  └───────────┘                  │     │  Range:    │
-│                                 │     │  90°-180°  │
-│  ┌───────────┐  ┌────────────┐  │     └────────────┘
-│  │ NVS Flash │  │ eFuse      │  │
-│  │ (config)  │  │ (EUI-64)   │  │
-│  └───────────┘  └────────────┘  │
-│                                 │
-│  Power: USB-C or 3×AA battery   │
-└─────────────────────────────────┘
-```
+![Vent Controller Node](diagrams/vent-node.svg)
 
 | Component | Part | Purpose |
 |-----------|------|---------|
@@ -104,25 +48,7 @@ Each HVAC vent gets one controller node consisting of:
 
 ### 2.2 Hub
 
-```
-┌──────────────────────────────────────────┐
-│           Raspberry Pi 4B                │
-│                                          │
-│  ┌──────┐  ┌──────────────────────────┐  │
-│  │ CPU  │  │ USB Port                 │  │
-│  │ ARM  │  │  ┌────────────────────┐  │  │
-│  │ A72  │  │  │ nRF52840 Dongle   │  │  │
-│  └──────┘  │  │ (RCP firmware)    │  │  │
-│            │  │ 802.15.4 radio    │  │  │
-│            │  └────────────────────┘  │  │
-│            └──────────────────────────┘  │
-│                                          │
-│  Software:                               │
-│  ├── OTBR (Docker container)             │
-│  ├── Hub Service (Python)                │
-│  └── Home Assistant (Docker container)   │
-└──────────────────────────────────────────┘
-```
+![Hub Hardware](diagrams/hub-hardware.svg)
 
 The nRF52840 dongle acts purely as a **Radio Co-Processor (RCP)** — it does no application processing. It forwards raw 802.15.4 radio frames to the OTBR software running on the Pi, which handles all Thread protocol logic.
 
@@ -132,24 +58,7 @@ The nRF52840 dongle acts purely as a **Radio Co-Processor (RCP)** — it does no
 
 ### 3.1 Protocol Stack
 
-```
-┌─────────────────────────────────────────┐
-│  Application    CoAP resources          │  ← hub/firmware talk here
-│                 (GET/PUT vent, device)   │
-├─────────────────────────────────────────┤
-│  Encoding       CBOR binary payload     │  ← compact binary JSON
-├─────────────────────────────────────────┤
-│  Transport      CoAP over UDP           │  ← lightweight HTTP-like
-├─────────────────────────────────────────┤
-│  Network        IPv6 (mesh-local)       │  ← every node gets an address
-├─────────────────────────────────────────┤
-│  Adaptation     6LoWPAN                 │  ← compresses IPv6 for radio
-├─────────────────────────────────────────┤
-│  MAC            IEEE 802.15.4           │  ← low-power radio protocol
-├─────────────────────────────────────────┤
-│  Physical       2.4 GHz radio           │  ← actual radio waves
-└─────────────────────────────────────────┘
-```
+![Protocol Stack](diagrams/protocol-stack.svg)
 
 Each layer explained:
 
@@ -530,29 +439,7 @@ When entering deep sleep, the ESP32-C6's main RAM is powered off. Critical state
 
 ## 9. Security Model
 
-```
-┌────────────────────────────────────────────────────────┐
-│                    TRUST BOUNDARY                       │
-│                                                        │
-│  Thread Network (AES-128 encrypted at MAC layer)       │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  All devices share a network key                 │  │
-│  │  Network membership = authorization              │  │
-│  │  Joining requires the network key (commissioning)│  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-│  CoAP: No additional authentication                    │
-│  Rationale: if you're on the Thread network, you're    │
-│  trusted. The network key IS the credential.           │
-│                                                        │
-│  OTBR REST API: Localhost only (127.0.0.1:8081)        │
-│  Home Assistant: Local network, has its own auth        │
-│                                                        │
-│  NO INTERNET ACCESS for Thread mesh                    │
-│  NO CLOUD SERVICES                                     │
-│  NO REMOTE ACCESS (unless user configures HA proxy)    │
-└────────────────────────────────────────────────────────┘
-```
+![Security Model](diagrams/security-model.svg)
 
 | Threat | Mitigation |
 |--------|-----------|
@@ -568,31 +455,7 @@ When entering deep sleep, the ESP32-C6's main RAM is powered off. Critical state
 
 ## 10. Testing Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Test Pyramid                                               │
-│                                                             │
-│       ╱╲                                                    │
-│      ╱  ╲       Integration tests                           │
-│     ╱    ╲      Hub CLI → CoAP → Simulator                  │
-│    ╱──────╲     (tests/integration/)                        │
-│   ╱        ╲                                                │
-│  ╱   Hub    ╲   Unit tests with mocked CoAP                 │
-│ ╱   Tests    ╲  34 tests (hub/tests/)                       │
-│╱──────────────╲                                             │
-│╲   Firmware   ╱  Host-side unit tests                       │
-│ ╲   Tests    ╱   5 tests (cargo test)                       │
-│  ╲──────────╱    State machine + CBOR roundtrip             │
-│                                                             │
-│  Simulator replaces real hardware for all hub/HA testing    │
-│                                                             │
-│  vent-sim start --count 5                                   │
-│       ↓                                                     │
-│  5 virtual vents on ports 5683-5687                         │
-│  Full CoAP resource tree, in-memory state                   │
-│  Hub and HA cannot tell them from real devices              │
-└─────────────────────────────────────────────────────────────┘
-```
+![Testing Architecture](diagrams/test-architecture.svg)
 
 ---
 

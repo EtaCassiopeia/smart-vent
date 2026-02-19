@@ -1,0 +1,43 @@
+direction: right
+
+esp32: ESP32-C6 Dev Board {
+  style.fill: "#e3f2fd"
+  style.stroke: "#1565c0"
+
+  cpu: RISC-V Core\n160 MHz {
+    style.fill: "#bbdefb"
+  }
+  radio: 802.15.4 Radio\n(Thread) {
+    style.fill: "#bbdefb"
+  }
+  ledc: LEDC PWM\n(50 Hz) {
+    style.fill: "#c8e6c9"
+  }
+  nvs: NVS Flash\n(config) {
+    style.fill: "#fff9c4"
+  }
+  efuse: eFuse\n(EUI-64) {
+    style.fill: "#ffccbc"
+  }
+
+  cpu -> ledc
+}
+
+servo: SG90 Servo {
+  style.fill: "#f3e5f5"
+  style.stroke: "#7b1fa2"
+
+  motor: Motor
+  range: "Range: 90-180 deg"
+}
+
+esp32.ledc -> servo.motor: GPIO 6 {
+  style.stroke: "#388e3c"
+  style.stroke-width: 2
+}
+
+power: "Power: USB-C or 3xAA battery" {
+  style.fill: "#fff3e0"
+  style.stroke: "#ef6c00"
+  shape: text
+}

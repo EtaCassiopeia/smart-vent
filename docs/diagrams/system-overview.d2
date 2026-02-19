@@ -1,0 +1,72 @@
+direction: right
+
+home_network: HOME NETWORK {
+  style.fill: "#f8f9fa"
+  style.stroke: "#dee2e6"
+
+  rpi: Raspberry Pi 4B {
+    style.fill: "#e3f2fd"
+    style.stroke: "#1976d2"
+
+    ha: Home Assistant {
+      style.fill: "#fff3e0"
+      style.stroke: "#f57c00"
+
+      vc: Vent Control Component
+    }
+
+    hub: Hub Service {
+      style.fill: "#e8f5e9"
+      style.stroke: "#388e3c"
+
+      db: SQLite DB
+      coap: CoAP Client
+    }
+
+    otbr: OTBR (Docker) {
+      style.fill: "#fce4ec"
+      style.stroke: "#c62828"
+
+      dongle: nRF52840 Dongle\n(RCP firmware)
+    }
+
+    ha.vc -> hub.coap: polls
+  }
+
+  mesh: Thread Mesh Network {
+    style.fill: "#f3e5f5"
+    style.stroke: "#7b1fa2"
+
+    v1: Vent 1 {
+      mcu1: ESP32-C6
+      s1: Servo
+      mcu1 -> s1: PWM
+    }
+    v2: Vent 2 {
+      mcu2: ESP32-C6
+      s2: Servo
+      mcu2 -> s2: PWM
+    }
+    vn: Vent N {
+      mcun: ESP32-C6
+      sn: Servo
+      mcun -> sn: PWM
+    }
+  }
+
+  rpi.hub.coap -> mesh: CoAP over IPv6 {
+    style.stroke-dash: 3
+    style.font-size: 14
+  }
+  rpi.otbr.dongle -> mesh: 802.15.4 radio {
+    style.stroke: "#c62828"
+    style.font-size: 14
+  }
+}
+
+note: |md
+  **No cloud services.** All communication stays on local network.
+| {
+  style.fill: "#fffde7"
+  style.stroke: "#f9a825"
+}

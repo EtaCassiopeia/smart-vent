@@ -4,16 +4,7 @@ Per-room HVAC vent control using ESP32-C6 + SG90 servos over Thread, managed by 
 
 ## Architecture
 
-```
-RPi 4B (Hub)                           Thread Mesh (802.15.4)
-+---------------------------+          +---------------------+
-| Home Assistant            |   CoAP   | [Vent 1] -- Servo  |
-|   +-- Vent Control      <----------->| [Vent 2] -- Servo  |
-| OTBR (Docker)             |  (IPv6)  | [Vent N] -- Servo  |
-|   +-- nRF52840 USB -------|--------->| (ESP32-C6 MTD/SED) |
-| Hub Service (Python)      |          +---------------------+
-+---------------------------+
-```
+![Architecture Overview](docs/diagrams/architecture-simple.svg)
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture reference, including data flow diagrams, device lifecycle, power management, security model, and a glossary of all technologies used.
 

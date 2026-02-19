@@ -1,0 +1,52 @@
+direction: down
+
+app: Application {
+  label: "Application — CoAP resources (GET/PUT vent, device)"
+  style.fill: "#e3f2fd"
+  style.stroke: "#1565c0"
+  style.font-size: 16
+}
+enc: Encoding {
+  label: "Encoding — CBOR binary payload"
+  style.fill: "#e8f5e9"
+  style.stroke: "#388e3c"
+  style.font-size: 16
+}
+transport: Transport {
+  label: "Transport — CoAP over UDP"
+  style.fill: "#fff3e0"
+  style.stroke: "#f57c00"
+  style.font-size: 16
+}
+network: Network {
+  label: "Network — IPv6 (mesh-local)"
+  style.fill: "#fce4ec"
+  style.stroke: "#c62828"
+  style.font-size: 16
+}
+adapt: Adaptation {
+  label: "Adaptation — 6LoWPAN"
+  style.fill: "#f3e5f5"
+  style.stroke: "#7b1fa2"
+  style.font-size: 16
+}
+mac: MAC {
+  label: "MAC — IEEE 802.15.4"
+  style.fill: "#e0f2f1"
+  style.stroke: "#00695c"
+  style.font-size: 16
+}
+phy: Physical {
+  label: "Physical — 2.4 GHz radio"
+  style.fill: "#efebe9"
+  style.stroke: "#4e342e"
+  style.font-size: 16
+}
+
+app -> enc -> transport -> network -> adapt -> mac -> phy
+
+app.note: "Hub and firmware talk here" {
+  shape: text
+  style.font-size: 13
+  style.font-color: "#666"
+}

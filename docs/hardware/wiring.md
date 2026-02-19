@@ -17,18 +17,7 @@
 
 ## Wiring Diagram
 
-```
-ESP32-C6                SG90 Servo
-+----------+           +----------+
-|          |           |          |
-|  GPIO 6  |---[signal]---| Orange   |
-|          |           |          |
-|  5V/VIN  |---[power]----| Red      |
-|          |           |          |
-|  GND     |---[ground]---| Brown    |
-|          |           |          |
-+----------+           +----------+
-```
+![Wiring Diagram](../diagrams/wiring.svg)
 
 ## Pin Assignment
 

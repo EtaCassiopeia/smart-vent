@@ -1,0 +1,26 @@
+rpi: Raspberry Pi 4B {
+  style.fill: "#e3f2fd"
+  style.stroke: "#1565c0"
+
+  cpu: CPU\nARM Cortex-A72 {
+    style.fill: "#bbdefb"
+  }
+
+  usb: USB Port {
+    style.fill: "#e8eaf6"
+
+    dongle: nRF52840 Dongle\n(RCP firmware)\n802.15.4 radio {
+      style.fill: "#ffccbc"
+      style.stroke: "#d84315"
+    }
+  }
+
+  software: Software Stack {
+    style.fill: "#e8f5e9"
+    style.stroke: "#2e7d32"
+
+    otbr: OTBR\n(Docker container)
+    hub: Hub Service\n(Python)
+    ha: Home Assistant\n(Docker container)
+  }
+}

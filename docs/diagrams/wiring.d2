@@ -1,0 +1,44 @@
+direction: right
+
+esp32: ESP32-C6 {
+  style.fill: "#e3f2fd"
+  style.stroke: "#1565c0"
+
+  gpio6: GPIO 6\n(LEDC PWM Ch 0) {
+    style.fill: "#bbdefb"
+  }
+  v5: 5V / VIN {
+    style.fill: "#c8e6c9"
+  }
+  gnd: GND {
+    style.fill: "#efebe9"
+  }
+}
+
+servo: SG90 Servo {
+  style.fill: "#f3e5f5"
+  style.stroke: "#7b1fa2"
+
+  signal: Signal\n(Orange wire) {
+    style.fill: "#ffe0b2"
+  }
+  vcc: VCC\n(Red wire) {
+    style.fill: "#ffcdd2"
+  }
+  ground: GND\n(Brown wire) {
+    style.fill: "#d7ccc8"
+  }
+}
+
+esp32.gpio6 -> servo.signal: PWM signal {
+  style.stroke: "#ff9800"
+  style.stroke-width: 2
+}
+esp32.v5 -> servo.vcc: +5V power {
+  style.stroke: "#f44336"
+  style.stroke-width: 2
+}
+esp32.gnd -> servo.ground: ground {
+  style.stroke: "#795548"
+  style.stroke-width: 2
+}

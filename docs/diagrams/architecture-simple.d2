@@ -1,0 +1,38 @@
+direction: right
+
+hub: RPi 4B (Hub) {
+  style.fill: "#e3f2fd"
+  style.stroke: "#1565c0"
+
+  ha: Home Assistant {
+    vc: Vent Control
+  }
+  otbr: OTBR (Docker) {
+    nrf: nRF52840 USB
+  }
+  service: Hub Service (Python) {
+    registry: Device Registry
+    gm: Group Manager
+    coap: CoAP Client
+  }
+}
+
+mesh: Thread Mesh (802.15.4) {
+  style.fill: "#f3e5f5"
+  style.stroke: "#7b1fa2"
+
+  v1: "[Vent 1] -- Servo"
+  v2: "[Vent 2] -- Servo"
+  vn: "[Vent N] -- Servo"
+  role: "(ESP32-C6 MTD/SED)" {
+    shape: text
+    style.font-size: 13
+  }
+}
+
+hub.service.coap -> mesh: "CoAP (IPv6)" {
+  style.stroke-dash: 3
+}
+hub.otbr.nrf -> mesh: 802.15.4 {
+  style.stroke: "#c62828"
+}

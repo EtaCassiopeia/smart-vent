@@ -1,0 +1,45 @@
+trust: TRUST BOUNDARY {
+  style.fill: "#fce4ec"
+  style.stroke: "#c62828"
+  style.stroke-width: 3
+
+  thread: Thread Network {
+    style.fill: "#e8f5e9"
+    style.stroke: "#2e7d32"
+
+    encryption: AES-128 encrypted\nat MAC layer {
+      style.fill: "#c8e6c9"
+    }
+    membership: Network membership\n= authorization {
+      style.fill: "#c8e6c9"
+    }
+    joining: Joining requires\nnetwork key {
+      style.fill: "#c8e6c9"
+    }
+  }
+
+  coap: CoAP {
+    label: "CoAP: No additional auth\nOn the Thread network = trusted\nThe network key IS the credential"
+    style.fill: "#fff3e0"
+    style.stroke: "#ef6c00"
+  }
+
+  otbr_api: OTBR REST API {
+    label: "OTBR REST API\nLocalhost only (127.0.0.1:8081)"
+    style.fill: "#e3f2fd"
+    style.stroke: "#1565c0"
+  }
+
+  ha: Home Assistant {
+    label: "Home Assistant\nLocal network, has its own auth"
+    style.fill: "#e3f2fd"
+    style.stroke: "#1565c0"
+  }
+}
+
+no_internet: "NO INTERNET ACCESS for Thread mesh\nNO CLOUD SERVICES\nNO REMOTE ACCESS" {
+  shape: text
+  style.font-size: 14
+  style.font-color: "#c62828"
+  style.bold: true
+}
