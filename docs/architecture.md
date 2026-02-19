@@ -166,24 +166,34 @@ Each layer explained:
 
 ### 3.2 Thread Mesh Topology
 
+```mermaid
+graph TD
+    OTBR["OTBR (BR)<br/>Border Router on RPi<br/>Bridges Thread ↔ local IPv6"]
+
+    R1["Router 1 (FTD)"]
+    R2["Router 2 (FTD)"]
+    R3["Router 3 (FTD)"]
+
+    VA["Vent A (MTD)"]
+    VB["Vent B (SED)"]
+
+    OTBR --- R1
+    OTBR --- R2
+    OTBR --- R3
+    R1 --- VA
+    R2 --- VB
+
+    style OTBR fill:#4a9eff,color:#fff
+    style R1 fill:#5cb85c,color:#fff
+    style R2 fill:#5cb85c,color:#fff
+    style R3 fill:#5cb85c,color:#fff
+    style VA fill:#f0ad4e,color:#fff
+    style VB fill:#f0ad4e,color:#fff
 ```
-                    ┌─────────┐
-                    │  OTBR   │  ← Border Router (on RPi)
-                    │  (BR)   │     Bridges Thread ↔ local IPv6 network
-                    └────┬────┘
-                         │
-              ┌──────────┼──────────┐
-              │          │          │
-         ┌────┴───┐ ┌───┴────┐ ┌───┴────┐
-         │Router 1│ │Router 2│ │Router 3│  ← Full Thread Devices
-         │ (FTD)  │ │ (FTD)  │ │ (FTD)  │     Can relay messages
-         └────┬───┘ └───┬────┘ └────────┘
-              │         │
-         ┌────┴───┐ ┌───┴────┐
-         │ Vent A │ │ Vent B │  ← Minimal Thread Devices (MTD)
-         │ (MTD)  │ │ (SED)  │     Or Sleepy End Devices (SED)
-         └────────┘ └────────┘     Only talk to their parent router
-```
+
+- **Blue:** Border Router — bridges Thread mesh to local IP network
+- **Green:** Full Thread Devices (FTD) — can relay messages for other devices
+- **Orange:** Minimal/Sleepy End Devices (MTD/SED) — only talk to their parent router
 
 **Our vent devices are MTDs (or SEDs when battery-powered).** They don't relay messages for other devices — they only talk to their parent router. This saves power at the cost of not contributing to mesh routing.
 
@@ -237,32 +247,19 @@ The integer-to-field mapping is defined in `firmware/shared-protocol/src/lib.rs`
 
 ### 4.3 Request/Response Flow
 
-```
-Hub (Python)                              Vent Device (Rust)
-     │                                         │
-     │  CoAP PUT /vent/target                  │
-     │  Payload: CBOR {0: 135}                 │
-     │────────────────────────────────────────>│
-     │                                         │  decode CBOR
-     │                                         │  clamp angle to [90, 180]
-     │                                         │  set state machine target
-     │                                         │  start servo movement
-     │  CoAP 2.04 Changed                      │
-     │  Payload: CBOR {0:135, 1:3, 2:90}      │
-     │<────────────────────────────────────────│
-     │              ↑         ↑       ↑        │
-     │           angle    Moving   previous    │
-     │                                         │
-     │         (servo steps 1°/15ms)           │
-     │                                         │
-     │  CoAP GET /vent/position                │
-     │────────────────────────────────────────>│
-     │                                         │
-     │  CoAP 2.05 Content                      │
-     │  Payload: CBOR {0:135, 1:2}             │
-     │<────────────────────────────────────────│
-     │              ↑         ↑                │
-     │           angle    Partial              │
+```mermaid
+sequenceDiagram
+    participant Hub as Hub (Python)
+    participant Device as Vent Device (Rust)
+
+    Hub->>Device: CoAP PUT /vent/target<br/>CBOR {0: 135}
+    Note right of Device: Decode CBOR<br/>Clamp angle to [90,180]<br/>Set state machine target<br/>Start servo movement
+    Device-->>Hub: 2.04 Changed<br/>CBOR {0:135, 1:3, 2:90}<br/>(angle, Moving, previous)
+
+    Note right of Device: Servo steps 1°/15ms...
+
+    Hub->>Device: CoAP GET /vent/position
+    Device-->>Hub: 2.05 Content<br/>CBOR {0:135, 1:2}<br/>(angle, Partial)
 ```
 
 ---
@@ -400,135 +397,127 @@ tools/simulator/src/vent_simulator/
 
 ### 6.1 User Sets Vent to 50% via HA Dashboard
 
-```
- Browser        Home Assistant       Coordinator       CoAP Client       Device
-    │                │                    │                 │               │
-    │  Slider→50%    │                    │                 │               │
-    │───────────────>│                    │                 │               │
-    │                │  set_cover_pos(50) │                 │               │
-    │                │───────────────────>│                 │               │
-    │                │                    │  50%→135°       │               │
-    │                │                    │  set_vent_pos() │               │
-    │                │                    │────────────────>│               │
-    │                │                    │                 │  CoAP PUT     │
-    │                │                    │                 │  /vent/target │
-    │                │                    │                 │  {0: 135}     │
-    │                │                    │                 │──────────────>│
-    │                │                    │                 │               │ servo
-    │                │                    │                 │  2.04 Changed │ moves
-    │                │                    │                 │<──────────────│
-    │                │                    │  refresh()      │               │
-    │                │                    │────────────────>│               │
-    │                │                    │                 │  CoAP GET     │
-    │                │                    │                 │  /vent/pos    │
-    │                │                    │                 │──────────────>│
-    │                │                    │                 │  {0:135,1:2}  │
-    │                │                    │                 │<──────────────│
-    │                │  state update      │                 │               │
-    │                │<───────────────────│                 │               │
-    │  UI updates    │                    │                 │               │
-    │<───────────────│                    │                 │               │
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant HA as Home Assistant
+    participant Coord as Coordinator
+    participant CoAP as CoAP Client
+    participant Device
+
+    Browser->>HA: Slider → 50%
+    HA->>Coord: set_cover_position(50)
+    Note over Coord: 50% → 135°
+    Coord->>CoAP: set_vent_position(135°)
+    CoAP->>Device: CoAP PUT /vent/target<br/>{0: 135}
+    Note right of Device: Servo moves
+    Device-->>CoAP: 2.04 Changed
+    Coord->>CoAP: refresh()
+    CoAP->>Device: CoAP GET /vent/position
+    Device-->>CoAP: {0:135, 1:2}
+    CoAP-->>Coord: position data
+    Coord-->>HA: state update
+    HA-->>Browser: UI updates
 ```
 
 ### 6.2 Device Discovery
 
-```
- Hub CLI          Discovery         OTBR REST API       CoAP Client      New Device
-    │                 │                   │                  │                │
-    │  discover       │                   │                  │                │
-    │────────────────>│                   │                  │                │
-    │                 │  GET /dataset     │                  │                │
-    │                 │──────────────────>│                  │                │
-    │                 │  200 OK           │                  │                │
-    │                 │<──────────────────│                  │                │
-    │                 │                   │                  │                │
-    │                 │  GET /neighbors   │                  │                │
-    │                 │──────────────────>│                  │                │
-    │                 │  [{IPv6: fd::1}]  │                  │                │
-    │                 │<──────────────────│                  │                │
-    │                 │                   │                  │                │
-    │                 │  probe(fd::1)     │                  │                │
-    │                 │─────────────────────────────────────>│                │
-    │                 │                   │                  │  GET /identity │
-    │                 │                   │                  │───────────────>│
-    │                 │                   │                  │  {eui64:...}   │
-    │                 │                   │                  │<───────────────│
-    │                 │                   │                  │  GET /position │
-    │                 │                   │                  │───────────────>│
-    │                 │                   │                  │  {0:90, 1:1}   │
-    │                 │                   │                  │<───────────────│
-    │                 │  VentDevice       │                  │                │
-    │                 │<─────────────────────────────────────│                │
-    │                 │                   │                  │                │
-    │                 │  upsert(device)   │                  │                │
-    │                 │  → SQLite         │                  │                │
-    │                 │                   │                  │                │
-    │  "Discovered    │                   │                  │                │
-    │   1 new device" │                   │                  │                │
-    │<────────────────│                   │                  │                │
+```mermaid
+sequenceDiagram
+    participant CLI as Hub CLI
+    participant Disc as Discovery
+    participant OTBR as OTBR REST API
+    participant CoAP as CoAP Client
+    participant Dev as New Device
+
+    CLI->>Disc: discover
+    Disc->>OTBR: GET /dataset
+    OTBR-->>Disc: 200 OK
+    Disc->>OTBR: GET /neighbors
+    OTBR-->>Disc: [{IPv6: fd::1}]
+
+    Disc->>CoAP: probe(fd::1)
+    CoAP->>Dev: GET /identity
+    Dev-->>CoAP: {eui64: ...}
+    CoAP->>Dev: GET /position
+    Dev-->>CoAP: {0:90, 1:1}
+    CoAP-->>Disc: VentDevice
+
+    Note over Disc: upsert(device) → SQLite
+    Disc-->>CLI: "Discovered 1 new device"
 ```
 
 ---
 
 ## 7. Device Lifecycle
 
-```
-  ┌─────────────┐
-  │  UNBOXED    │  Fresh ESP32-C6, no firmware
-  └──────┬──────┘
-         │  flash firmware via USB
-         ▼
-  ┌─────────────┐
-  │  FIRST BOOT │  NVS empty, eFuse has EUI-64
-  │             │  Writes "initialized" flag to NVS
-  │             │  Defaults: angle=90° (closed), no room/floor
-  └──────┬──────┘
-         │  OpenThread joins network
-         ▼
-  ┌─────────────┐
-  │  JOINING    │  Attempts to attach to Thread network
-  │             │  Gets IPv6 mesh-local address
-  │             │  Starts CoAP server on port 5683
-  └──────┬──────┘
-         │  hub runs "discover"
-         ▼
-  ┌─────────────┐
-  │  DISCOVERED │  Hub probes via CoAP, gets EUI-64
-  │             │  Added to SQLite registry
-  │             │  No room/floor assigned yet
-  └──────┬──────┘
-         │  hub runs "assign <eui64> bedroom 2"
-         ▼
-  ┌─────────────┐
-  │  ASSIGNED   │  Room/floor stored in device NVS + hub DB
-  │             │  Appears in HA with area suggestion
-  └──────┬──────┘
-         │  normal operation
-         ▼
-  ┌─────────────┐
-  │  OPERATING  │  Responds to CoAP commands
-  │             │  Servo moves to commanded angles
-  │             │  Position persisted to NVS on change
-  │             │  Hub polls periodically for status
-  └─────────────┘
-         │
-    ┌────┴────┐
-    ▼         ▼
-┌────────┐ ┌────────┐
-│ SLEEP  │ │ REBOOT │
-│ (SED)  │ │        │
-│ Wakes  │ │ Reads  │
-│ on     │ │ last   │
-│ poll   │ │ angle  │
-│ timer  │ │ from   │
-└───┬────┘ │ NVS    │
-    │      └───┬────┘
-    └──────────┘
-         │
-         ▼
-  ┌─────────────┐
-  │  OPERATING  │  Resumes normal operation
-  └─────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> Unboxed
+    Unboxed --> FirstBoot : Flash firmware via USB
+
+    state FirstBoot {
+        direction LR
+        [*] --> init : NVS empty, eFuse has EUI-64
+        init --> done : Write "initialized" flag
+        note right of init : Defaults: angle=90° (closed), no room/floor
+    }
+
+    FirstBoot --> Joining : OpenThread joins network
+
+    state Joining {
+        direction LR
+        [*] --> attach : Attach to Thread network
+        attach --> ready : Get IPv6 mesh-local address
+        note right of ready : Start CoAP server on port 5683
+    }
+
+    Joining --> Discovered : Hub runs "discover"
+
+    state Discovered {
+        direction LR
+        [*] --> probed : Hub probes via CoAP, gets EUI-64
+        probed --> registered : Added to SQLite registry
+        note right of registered : No room/floor assigned yet
+    }
+
+    Discovered --> Assigned : Hub runs "assign ‹eui64› bedroom 2"
+
+    state Assigned {
+        direction LR
+        [*] --> stored : Room/floor in device NVS + hub DB
+        note right of stored : Appears in HA with area suggestion
+    }
+
+    Assigned --> Operating : Normal operation
+
+    state Operating {
+        direction LR
+        [*] --> active : Responds to CoAP commands
+        note right of active
+            Servo moves to commanded angles
+            Position persisted to NVS
+            Hub polls periodically
+        end note
+    }
+
+    Operating --> Sleep : Battery mode (SED)
+    Operating --> Reboot : Power cycle / crash
+
+    state Sleep {
+        direction LR
+        [*] --> sleeping : Deep sleep
+        sleeping --> waking : Poll timer fires
+        note right of sleeping : Wakes on poll timer
+    }
+
+    state Reboot {
+        direction LR
+        [*] --> booting : Reads last angle from NVS
+    }
+
+    Sleep --> Operating : Resume
+    Reboot --> Operating : Resume
 ```
 
 ---
