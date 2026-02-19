@@ -47,9 +47,9 @@ pub fn handle_put_target(state: &mut AppState, payload: &[u8]) -> CoapResponse {
 
     let clamped = clamp_angle(req.angle);
 
-    // Write-ahead: persist target + clear finalized BEFORE moving
-    if let Err(e) = state.identity.save_pending_target(clamped) {
-        warn!("Failed to write-ahead target: {:?}", e);
+    // WAL: persist intent before moving so it survives power loss
+    if let Err(e) = state.identity.write_ahead(clamped) {
+        warn!("WAL write-ahead failed: {:?}", e);
         return CoapResponse::InternalError;
     }
 

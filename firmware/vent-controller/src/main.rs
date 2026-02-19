@@ -47,32 +47,32 @@ fn main() {
         Err(e) => warn!("Could not check boot status: {:?}", e),
     }
 
-    // Recover vent angle — check if previous move was interrupted
-    let finalized = device_id.is_finalized().unwrap_or(true);
-    let (initial_angle, pending_target) = if finalized {
-        // Normal boot: restore last finalized angle
+    // WAL recovery — check if previous move was committed
+    let committed = device_id.is_committed().unwrap_or(true);
+    let (initial_angle, pending_target) = if committed {
+        // Normal boot: restore last checkpoint
         let angle = device_id
-            .get_saved_angle()
+            .checkpoint_angle()
             .ok()
             .flatten()
             .unwrap_or(ANGLE_CLOSED);
-        info!("Restoring finalized angle: {}°", angle);
+        info!("Restoring checkpoint: {}°", angle);
         (angle, None)
     } else {
-        // Interrupted move: a command was written-ahead but never finalized.
-        // Drive servo to the last finalized angle first, then replay the
-        // pending target so the move completes as originally intended.
-        let saved = device_id
-            .get_saved_angle()
+        // Uncommitted move: intent was written-ahead but never committed.
+        // Restore the last checkpoint first (known-good position), then
+        // replay the pending target to complete the interrupted move.
+        let checkpoint = device_id
+            .checkpoint_angle()
             .ok()
             .flatten()
             .unwrap_or(ANGLE_CLOSED);
-        let target = device_id.get_pending_target().ok().flatten();
+        let pending = device_id.get_pending().ok().flatten();
         warn!(
-            "Previous move interrupted! Saved: {}°, pending target: {:?}",
-            saved, target
+            "WAL recovery: uncommitted move detected. Checkpoint: {}°, pending: {:?}",
+            checkpoint, pending
         );
-        (saved, target)
+        (checkpoint, pending)
     };
 
     // Initialize servo via LEDC PWM
@@ -142,14 +142,14 @@ fn main() {
             servo.set_angle(app_state.vent.current_angle()).ok();
             sleep(Duration::from_millis(servo::STEP_DELAY_MS as u64));
 
-            // Finalize when movement completes: save angle + set flag
+            // Commit when movement completes: checkpoint angle + set WAL flag
             if !app_state.vent.is_moving() {
                 let final_angle = app_state.vent.current_angle();
-                if let Err(e) = app_state.identity.finalize_move(final_angle) {
-                    error!("Failed to finalize move: {:?}", e);
+                if let Err(e) = app_state.identity.commit(final_angle) {
+                    error!("WAL commit failed: {:?}", e);
                 }
                 info!(
-                    "Vent reached target: {}° ({}) — finalized",
+                    "Vent reached target: {}° ({}) — committed",
                     final_angle,
                     app_state.vent.state().as_str()
                 );

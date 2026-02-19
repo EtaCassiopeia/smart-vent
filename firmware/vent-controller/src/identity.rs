@@ -106,8 +106,23 @@ impl DeviceIdentity {
         Ok(())
     }
 
-    /// Get the last finalized vent angle from NVS.
-    pub fn get_saved_angle(&self) -> Result<Option<u8>, EspError> {
+    // -- Write-Ahead Log (WAL) for servo position recovery --
+    //
+    // NVS keys:
+    //   "angle"  — checkpoint: last committed (known-good) angle
+    //   "target" — write-ahead: intent recorded before the move starts
+    //   "wal"    — commit flag: 1 = committed, 0 = pending
+    //
+    // Protocol:
+    //   1. write_ahead(target)  — persist intent + clear commit flag
+    //   2. servo moves
+    //   3. commit(angle)        — persist final angle + set commit flag
+    //
+    // Recovery (boot with wal=0):
+    //   restore checkpoint, replay pending target
+
+    /// Get the last committed (checkpoint) vent angle from NVS.
+    pub fn checkpoint_angle(&self) -> Result<Option<u8>, EspError> {
         let mut buf = [0u8; 1];
         match self.nvs.get_raw("angle", &mut buf) {
             Ok(Some(val)) => Ok(Some(val[0])),
@@ -116,22 +131,16 @@ impl DeviceIdentity {
         }
     }
 
-    /// Save finalized vent angle to NVS.
-    pub fn save_angle(&mut self, angle: u8) -> Result<(), EspError> {
-        self.nvs.set_raw("angle", &[angle])?;
-        Ok(())
-    }
-
-    /// Record a pending move command (write-ahead). Called before
-    /// the servo starts moving so the target survives a power loss.
-    pub fn save_pending_target(&mut self, target: u8) -> Result<(), EspError> {
+    /// Write-ahead: record target intent and clear the commit flag.
+    /// Must be called BEFORE the servo starts moving.
+    pub fn write_ahead(&mut self, target: u8) -> Result<(), EspError> {
         self.nvs.set_raw("target", &[target])?;
-        self.nvs.set_raw("fin", &[0u8])?; // clear finalized flag
+        self.nvs.set_raw("wal", &[0u8])?;
         Ok(())
     }
 
-    /// Get the pending target angle written before the last move started.
-    pub fn get_pending_target(&self) -> Result<Option<u8>, EspError> {
+    /// Get the pending (write-ahead) target from the last uncommitted move.
+    pub fn get_pending(&self) -> Result<Option<u8>, EspError> {
         let mut buf = [0u8; 1];
         match self.nvs.get_raw("target", &mut buf) {
             Ok(Some(val)) => Ok(Some(val[0])),
@@ -140,21 +149,21 @@ impl DeviceIdentity {
         }
     }
 
-    /// Mark the current move as complete. Saves final angle and sets
-    /// the finalized flag atomically (as far as NVS allows).
-    pub fn finalize_move(&mut self, angle: u8) -> Result<(), EspError> {
-        self.save_angle(angle)?;
-        self.nvs.set_raw("fin", &[1u8])?;
+    /// Commit: save the final angle as the new checkpoint and set the
+    /// commit flag. Called after the servo reaches its target.
+    pub fn commit(&mut self, angle: u8) -> Result<(), EspError> {
+        self.nvs.set_raw("angle", &[angle])?;
+        self.nvs.set_raw("wal", &[1u8])?;
         Ok(())
     }
 
-    /// Check whether the last move command completed successfully.
-    /// Returns false if power was lost mid-move.
-    pub fn is_finalized(&self) -> Result<bool, EspError> {
+    /// Check whether the last move was committed.
+    /// Returns false if power was lost between write_ahead and commit.
+    pub fn is_committed(&self) -> Result<bool, EspError> {
         let mut buf = [0u8; 1];
-        match self.nvs.get_raw("fin", &mut buf) {
+        match self.nvs.get_raw("wal", &mut buf) {
             Ok(Some(val)) => Ok(val[0] == 1),
-            Ok(None) => Ok(true), // no flag = no pending command = finalized
+            Ok(None) => Ok(true), // no WAL entry = no pending move = committed
             Err(e) => Err(e),
         }
     }

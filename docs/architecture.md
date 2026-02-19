@@ -423,17 +423,68 @@ Timeline:
                   5000ms sleep              5000ms sleep
 ```
 
-### 8.3 RTC Memory
+### 8.3 NVS Persistence
 
 When entering deep sleep, the ESP32-C6's main RAM is powered off. Critical state is saved to NVS (flash) before sleeping:
 
-| Data | Storage | Survives |
+| Data | NVS Key | Survives |
 |------|---------|----------|
-| Current vent angle | NVS flash | Reboot + deep sleep |
-| Room/floor/name | NVS flash | Reboot + deep sleep |
-| Thread credentials | NVS flash | Reboot + deep sleep |
-| EUI-64 | eFuse | Everything (permanent) |
+| Last committed angle (checkpoint) | `angle` | Reboot + deep sleep |
+| Pending target (write-ahead) | `target` | Reboot + deep sleep |
+| WAL commit flag | `wal` | Reboot + deep sleep |
+| Room/floor/name | `room`, `floor`, `name` | Reboot + deep sleep |
+| Thread credentials | (managed by OpenThread) | Reboot + deep sleep |
+| EUI-64 | eFuse (not NVS) | Everything (permanent) |
 | Power mode config | NVS flash | Reboot + deep sleep |
+
+### 8.4 Write-Ahead Log (WAL) Recovery
+
+The servo takes time to physically move (1 degree per 15ms, so a full 90-degree sweep takes ~1.35 seconds). If power is lost mid-move, the device must recover to a consistent state on reboot. A write-ahead log pattern ensures no command is silently lost.
+
+**The problem without WAL:** The device saves the vent angle to NVS only after a move completes. If power dies mid-move, the saved angle is stale (the position before the move started). On reboot the servo snaps back to that stale position and the in-flight command is lost — the hub thinks the vent moved, but it didn't.
+
+**WAL protocol:**
+
+```
+1. WRITE-AHEAD    Command received → persist target + clear commit flag
+                  NVS: target=150, wal=0
+
+2. EXECUTE        Servo steps toward target (1 deg/15ms)
+                  RAM only — NVS not touched during movement
+
+3. COMMIT         Servo reaches target → persist final angle + set commit flag
+                  NVS: angle=150, wal=1
+```
+
+**Recovery on boot:**
+
+```
+Read NVS "wal" flag
+  │
+  ├── wal=1 (committed)
+  │   Normal boot. Restore "angle" as checkpoint.
+  │   Servo drives to checkpoint position.
+  │
+  └── wal=0 (uncommitted)
+      Previous move was interrupted.
+      1. Restore "angle" (last checkpoint — known-good position)
+      2. Read "target" (the write-ahead intent)
+      3. Drive servo to checkpoint first
+      4. Replay: set_target(pending) to complete the interrupted move
+      5. When move completes → commit as usual
+```
+
+**Scenarios:**
+
+| NVS State | What Happened | Boot Behavior |
+|-----------|--------------|---------------|
+| `wal=1, angle=150` | Move completed normally | Restore to 150 deg |
+| `wal=0, angle=90, target=150` | Power lost mid-move | Restore to 90 deg, then replay move to 150 deg |
+| No WAL keys | First boot ever | Default to 90 deg (closed) |
+
+**Why restore-then-replay instead of jumping straight to the target?** The SG90 servo is absolute-position — it moves to whatever angle the PWM signal commands, regardless of where the shaft physically is. After a power loss the shaft could be anywhere between checkpoint and target. Driving to the checkpoint first establishes a known starting point, then replaying the move produces the same gradual 1-degree steps the original command intended. This avoids a sudden full-speed snap that could stress the damper linkage.
+
+**NVS write ordering matters.** In `write_ahead()`, the target is written before the commit flag is cleared. If power dies between the two writes, the worst case is `wal=1` with a stale target — which is treated as "committed" and the stale target is harmlessly ignored. The reverse order would risk `wal=0` with no valid target, which would be harder to recover from.
 
 ---
 
@@ -548,3 +599,5 @@ When entering deep sleep, the ESP32-C6's main RAM is powered off. Critical state
 | **SQLite** | — | A lightweight file-based SQL database. The hub stores its device registry in a SQLite file (`devices.db`). No separate database server needed. |
 | **REST API** | Representational State Transfer Application Programming Interface | An HTTP-based interface for querying/modifying resources. The OTBR exposes a REST API at `http://localhost:8081` for Thread network management. |
 | **RSSI** | Received Signal Strength Indicator | A measurement of radio signal strength, in dBm. Higher (less negative) = stronger signal. -50 dBm is strong, -90 dBm is weak. Reported in device health for diagnostics. |
+| **WAL** | Write-Ahead Log | A crash-recovery pattern where intent is persisted to durable storage before an operation begins, and a commit flag is set after completion. On recovery, uncommitted entries are replayed. Used in the firmware to survive power loss during servo moves (see section 8.4). |
+| **Checkpoint** | — | In WAL terminology, the last committed (known-good) state. For the vent firmware, this is the last angle that was successfully reached and committed to NVS. |
