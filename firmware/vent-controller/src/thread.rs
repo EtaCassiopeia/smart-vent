@@ -140,15 +140,14 @@ impl ThreadManager {
         }
     }
 
-    /// Get the RSSI of the last received packet.
+    /// Get the average RSSI of the link to the parent router.
     pub fn get_rssi(&self) -> i8 {
         unsafe {
             let instance = esp_idf_sys::esp_openthread_get_instance();
-            let mut parent_info: esp_idf_sys::otRouterInfo = std::mem::zeroed();
-            if esp_idf_sys::otThreadGetParentInfo(instance, &mut parent_info)
-                == esp_idf_sys::OT_ERROR_NONE as u32
-            {
-                parent_info.mRloc16 as i8
+            let mut avg_rssi: i8 = -128;
+            let err = esp_idf_sys::otThreadGetParentAverageRssi(instance, &mut avg_rssi);
+            if err == esp_idf_sys::OT_ERROR_NONE as u32 {
+                avg_rssi
             } else {
                 -128
             }
