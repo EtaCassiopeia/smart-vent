@@ -7,6 +7,8 @@ const KEY_ROOM: &str = "room";
 const KEY_FLOOR: &str = "floor";
 const KEY_NAME: &str = "name";
 const KEY_INITIALIZED: &str = "init";
+const KEY_POWER_MODE: &str = "pwr_mode";
+const KEY_POLL_PERIOD: &str = "poll_ms";
 
 /// Device identity manager using NVS for persistent config.
 pub struct DeviceIdentity {
@@ -85,6 +87,35 @@ impl DeviceIdentity {
     /// Set device name in NVS.
     pub fn set_name(&mut self, name: &str) -> Result<(), EspError> {
         self.set_string(KEY_NAME, name)
+    }
+
+    /// Get power mode from NVS. Returns None if unset (default: always_on).
+    pub fn get_power_mode(&self) -> Result<Option<String>, EspError> {
+        self.get_string(KEY_POWER_MODE)
+    }
+
+    /// Set power mode in NVS ("always_on" or "sed").
+    pub fn set_power_mode(&mut self, mode: &str) -> Result<(), EspError> {
+        self.set_string(KEY_POWER_MODE, mode)
+    }
+
+    /// Get SED poll period from NVS (milliseconds). Returns None if unset.
+    pub fn get_poll_period(&self) -> Result<Option<u32>, EspError> {
+        let mut buf = [0u8; 4];
+        match self.nvs.get_raw(KEY_POLL_PERIOD, &mut buf) {
+            Ok(Some(val)) => {
+                let ms = u32::from_le_bytes([val[0], val[1], val[2], val[3]]);
+                Ok(Some(ms))
+            }
+            Ok(None) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Set SED poll period in NVS (milliseconds).
+    pub fn set_poll_period(&mut self, ms: u32) -> Result<(), EspError> {
+        self.nvs.set_raw(KEY_POLL_PERIOD, &ms.to_le_bytes())?;
+        Ok(())
     }
 
     fn get_string(&self, key: &str) -> Result<Option<String>, EspError> {
