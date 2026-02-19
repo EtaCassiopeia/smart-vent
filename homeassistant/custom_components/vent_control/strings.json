@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Vent Hub",
+        "description": "Enter the connection details for your vent control hub.",
+        "data": {
+          "hub_host": "Hub Host",
+          "hub_port": "Hub Port",
+          "poll_interval": "Poll Interval (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This hub is already configured."
+    }
+  }
+}

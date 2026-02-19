@@ -1,0 +1,20 @@
+[package]
+name = "vent-controller"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+esp-idf-svc = { version = "0.50", features = ["binstart"] }
+esp-idf-hal = "0.45"
+esp-idf-sys = { version = "0.36", features = ["binstart"] }
+log = "0.4"
+esp_idf_logger = "0.1"
+minicbor = { version = "0.24", features = ["alloc", "derive"] }
+vent-protocol = { path = "../shared-protocol", default-features = false }
+
+[build-dependencies]
+embuild = "0.32"
+
+[[bin]]
+name = "vent-controller"
+harness = false

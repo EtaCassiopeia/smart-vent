@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vent-simulator"
+version = "0.1.0"
+description = "Simulated vent devices for testing"
+requires-python = ">=3.11"
+dependencies = [
+    "aiocoap[all]>=0.4.7",
+    "cbor2>=5.6",
+    "click>=8.1",
+]
+
+[project.scripts]
+vent-sim = "vent_simulator.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vent_simulator"]
