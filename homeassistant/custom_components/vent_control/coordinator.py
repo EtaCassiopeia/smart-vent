@@ -33,6 +33,7 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self._entry = entry
         self._coap_context: Context | None = None
         self._devices: dict[str, dict[str, Any]] = {}
+        self._target_angles: dict[str, int] = {}  # address -> target angle
 
     async def _async_setup(self) -> None:
         """Set up the CoAP client context."""
@@ -74,6 +75,13 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 result["angle"] = data.get(0, 90)
                 state_names = {0: "open", 1: "closed", 2: "partial", 3: "moving"}
                 result["state"] = state_names.get(data.get(1, 1), "closed")
+
+                # Carry over stored target angle for direction detection
+                if address in self._target_angles:
+                    result["target_angle"] = self._target_angles[address]
+                    # Clear target once movement completes
+                    if result["state"] != "moving":
+                        del self._target_angles[address]
         except Exception:
             return None
 
@@ -134,7 +142,10 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         try:
             resp = await self._coap_context.request(msg).response
-            return resp.code.is_successful()
+            if resp.code.is_successful():
+                self._target_angles[address] = angle
+                return True
+            return False
         except Exception as err:
             _LOGGER.error("Failed to set position for %s: %s", address, err)
             return False
