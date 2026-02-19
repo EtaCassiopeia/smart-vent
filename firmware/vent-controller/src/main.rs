@@ -41,7 +41,9 @@ fn main() {
     match device_id.is_first_boot() {
         Ok(true) => {
             info!("First boot detected — initializing defaults");
-            device_id.mark_initialized().ok();
+            if let Err(e) = device_id.mark_initialized() {
+                warn!("Failed to mark initialized: {:?}", e);
+            }
         }
         Ok(false) => info!("Device previously initialized"),
         Err(e) => warn!("Could not check boot status: {:?}", e),
@@ -91,7 +93,9 @@ fn main() {
     .expect("Failed to init LEDC channel");
 
     let mut servo = ServoDriver::new(ledc_driver).expect("Failed to init servo");
-    servo.set_angle(initial_angle).ok();
+    if let Err(e) = servo.set_angle(initial_angle) {
+        error!("Failed to set initial servo angle: {:?}", e);
+    }
 
     // Initialize state machine at last known position
     let mut vent_state = VentStateMachine::new(initial_angle);
@@ -113,7 +117,9 @@ fn main() {
     }
 
     // Configure SED if battery-powered
-    power_mgr.configure_sed().ok();
+    if let Err(e) = power_mgr.configure_sed() {
+        error!("Failed to configure SED mode: {:?}", e);
+    }
 
     // Register CoAP resources
     if let Err(e) = register_coap_resources() {
@@ -140,7 +146,9 @@ fn main() {
         // Step servo toward target if moving
         if app_state.vent.is_moving() {
             app_state.vent.step();
-            servo.set_angle(app_state.vent.current_angle()).ok();
+            if let Err(e) = servo.set_angle(app_state.vent.current_angle()) {
+                error!("Servo step failed: {:?}", e);
+            }
             sleep(Duration::from_millis(servo::STEP_DELAY_MS as u64));
 
             // Commit when movement completes: checkpoint angle + set WAL flag
