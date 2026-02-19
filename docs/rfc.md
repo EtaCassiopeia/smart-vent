@@ -78,6 +78,8 @@ The system provides per-vent, per-room, and per-floor control of vent positions 
 - Primary ID: EUI-64 read from ESP32-C6 eFuse (permanent, unique)
 - User config (room, floor, name) stored in NVS flash
 - First boot detected by absence of NVS `initialized` key
+- Power mode persisted in NVS: `pwr_mode` key (`"always_on"` or `"sed"`), `poll_ms` key (u32 LE bytes)
+- On boot, power mode is read from NVS to configure SED behavior (defaults to always-on if unset)
 
 ## 6. Hub Service (Python)
 
@@ -111,10 +113,12 @@ Periodically queries OTBR REST API for Thread device list, correlates with known
 ## 7. Home Assistant Integration
 
 - Custom component `vent_control`
-- Each vent exposed as a `cover` entity (position 0–100%)
-- Position mapping: 0% = closed (90°), 100% = open (180°)
+- Each vent exposed as a `cover` entity (position 0-100%)
+- Position mapping: 0% = closed (90 deg), 100% = open (180 deg)
 - Devices auto-assigned to HA areas based on room config
-- Data update coordinator polls devices every 30s (configurable)
+- Data update coordinator polls devices every 30s (configurable): position, identity, config, and health
+- Cover entity exposes rssi, power_source, free_heap, battery_mv as extra state attributes
+- `is_opening`/`is_closing` reflect movement direction (current angle vs coordinator-tracked target)
 
 ## 8. Testing Strategy
 
@@ -140,4 +144,4 @@ Periodically queries OTBR REST API for Thread device list, correlates with known
 | Always-on | MTD | N/A | USB-powered vents |
 | SED | SED | Poll period (configurable) | Battery-powered vents |
 
-SED poll period default: 5 seconds. Configurable via `/device/config` CoAP resource.
+SED poll period default: 5 seconds. Persisted in NVS as `poll_ms` (u32, little-endian). Power mode is set by writing the `pwr_mode` NVS key (`"always_on"` or `"sed"`). Changes take effect on next reboot.
