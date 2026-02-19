@@ -101,6 +101,21 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         except Exception:
             pass
 
+        # Get health
+        try:
+            msg = Message(code=Code.GET, uri=f"coap://[{address}]/device/health")
+            resp = await self._coap_context.request(msg).response
+            if resp.code.is_successful():
+                data = cbor2.loads(resp.payload)
+                result["rssi"] = data.get(0, 0)
+                result["poll_period_ms"] = data.get(1, 0)
+                power_sources = {0: "usb", 1: "battery"}
+                result["power_source"] = power_sources.get(data.get(2, 0), "usb")
+                result["free_heap"] = data.get(3, 0)
+                result["battery_mv"] = data.get(4)
+        except Exception:
+            pass
+
         return result
 
     async def async_set_vent_position(self, address: str, angle: int) -> bool:
