@@ -168,14 +168,14 @@ Each layer explained:
 
 ```mermaid
 graph TD
-    OTBR["OTBR (BR)<br/>Border Router on RPi<br/>Bridges Thread ↔ local IPv6"]
+    OTBR["OTBR - Border Router on RPi"]
 
-    R1["Router 1 (FTD)"]
-    R2["Router 2 (FTD)"]
-    R3["Router 3 (FTD)"]
+    R1["Router 1 - FTD"]
+    R2["Router 2 - FTD"]
+    R3["Router 3 - FTD"]
 
-    VA["Vent A (MTD)"]
-    VB["Vent B (SED)"]
+    VA["Vent A - MTD"]
+    VB["Vent B - SED"]
 
     OTBR --- R1
     OTBR --- R2
@@ -249,17 +249,17 @@ The integer-to-field mapping is defined in `firmware/shared-protocol/src/lib.rs`
 
 ```mermaid
 sequenceDiagram
-    participant Hub as Hub (Python)
-    participant Device as Vent Device (Rust)
+    participant Hub as Hub - Python
+    participant Device as Vent Device - Rust
 
-    Hub->>Device: CoAP PUT /vent/target<br/>CBOR {0: 135}
-    Note right of Device: Decode CBOR<br/>Clamp angle to [90,180]<br/>Set state machine target<br/>Start servo movement
-    Device-->>Hub: 2.04 Changed<br/>CBOR {0:135, 1:3, 2:90}<br/>(angle, Moving, previous)
+    Hub->>Device: CoAP PUT /vent/target CBOR 0=135
+    Note right of Device: Decode CBOR, clamp angle,<br/>set state machine target,<br/>start servo movement
+    Device-->>Hub: 2.04 Changed CBOR 0=135 1=3 2=90<br/>angle / Moving / previous
 
-    Note right of Device: Servo steps 1°/15ms...
+    Note right of Device: Servo steps 1 deg per 15ms
 
     Hub->>Device: CoAP GET /vent/position
-    Device-->>Hub: 2.05 Content<br/>CBOR {0:135, 1:2}<br/>(angle, Partial)
+    Device-->>Hub: 2.05 Content CBOR 0=135 1=2<br/>angle / Partial
 ```
 
 ---
@@ -405,16 +405,16 @@ sequenceDiagram
     participant CoAP as CoAP Client
     participant Device
 
-    Browser->>HA: Slider → 50%
-    HA->>Coord: set_cover_position(50)
-    Note over Coord: 50% → 135°
-    Coord->>CoAP: set_vent_position(135°)
-    CoAP->>Device: CoAP PUT /vent/target<br/>{0: 135}
+    Browser->>HA: Slider to 50%
+    HA->>Coord: set_cover_position 50
+    Note over Coord: 50% maps to 135 deg
+    Coord->>CoAP: set_vent_position 135
+    CoAP->>Device: CoAP PUT /vent/target 0=135
     Note right of Device: Servo moves
     Device-->>CoAP: 2.04 Changed
-    Coord->>CoAP: refresh()
+    Coord->>CoAP: refresh
     CoAP->>Device: CoAP GET /vent/position
-    Device-->>CoAP: {0:135, 1:2}
+    Device-->>CoAP: 0=135 1=2
     CoAP-->>Coord: position data
     Coord-->>HA: state update
     HA-->>Browser: UI updates
@@ -434,17 +434,17 @@ sequenceDiagram
     Disc->>OTBR: GET /dataset
     OTBR-->>Disc: 200 OK
     Disc->>OTBR: GET /neighbors
-    OTBR-->>Disc: [{IPv6: fd::1}]
+    OTBR-->>Disc: IPv6 fd::1
 
-    Disc->>CoAP: probe(fd::1)
+    Disc->>CoAP: probe fd::1
     CoAP->>Dev: GET /identity
-    Dev-->>CoAP: {eui64: ...}
+    Dev-->>CoAP: eui64 data
     CoAP->>Dev: GET /position
-    Dev-->>CoAP: {0:90, 1:1}
+    Dev-->>CoAP: 0=90 1=1
     CoAP-->>Disc: VentDevice
 
-    Note over Disc: upsert(device) → SQLite
-    Disc-->>CLI: "Discovered 1 new device"
+    Note over Disc: upsert device into SQLite
+    Disc-->>CLI: Discovered 1 new device
 ```
 
 ---
@@ -455,70 +455,26 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> Unboxed
     Unboxed --> FirstBoot : Flash firmware via USB
-
-    state FirstBoot {
-        direction LR
-        [*] --> init : NVS empty, eFuse has EUI-64
-        init --> done : Write "initialized" flag
-        note right of init : Defaults: angle=90° (closed), no room/floor
-    }
-
     FirstBoot --> Joining : OpenThread joins network
-
-    state Joining {
-        direction LR
-        [*] --> attach : Attach to Thread network
-        attach --> ready : Get IPv6 mesh-local address
-        note right of ready : Start CoAP server on port 5683
-    }
-
-    Joining --> Discovered : Hub runs "discover"
-
-    state Discovered {
-        direction LR
-        [*] --> probed : Hub probes via CoAP, gets EUI-64
-        probed --> registered : Added to SQLite registry
-        note right of registered : No room/floor assigned yet
-    }
-
-    Discovered --> Assigned : Hub runs "assign ‹eui64› bedroom 2"
-
-    state Assigned {
-        direction LR
-        [*] --> stored : Room/floor in device NVS + hub DB
-        note right of stored : Appears in HA with area suggestion
-    }
-
+    Joining --> Discovered : Hub runs discover
+    Discovered --> Assigned : Hub runs assign
     Assigned --> Operating : Normal operation
-
-    state Operating {
-        direction LR
-        [*] --> active : Responds to CoAP commands
-        note right of active
-            Servo moves to commanded angles
-            Position persisted to NVS
-            Hub polls periodically
-        end note
-    }
-
-    Operating --> Sleep : Battery mode (SED)
-    Operating --> Reboot : Power cycle / crash
-
-    state Sleep {
-        direction LR
-        [*] --> sleeping : Deep sleep
-        sleeping --> waking : Poll timer fires
-        note right of sleeping : Wakes on poll timer
-    }
-
-    state Reboot {
-        direction LR
-        [*] --> booting : Reads last angle from NVS
-    }
-
+    Operating --> Sleep : Battery mode SED
+    Operating --> Reboot : Power cycle
     Sleep --> Operating : Resume
     Reboot --> Operating : Resume
 ```
+
+| State | What Happens |
+|-------|-------------|
+| **Unboxed** | Fresh ESP32-C6, no firmware |
+| **First Boot** | NVS empty, eFuse has EUI-64. Writes "initialized" flag. Defaults: angle=90 deg (closed), no room/floor |
+| **Joining** | Attaches to Thread network, gets IPv6 mesh-local address, starts CoAP server on port 5683 |
+| **Discovered** | Hub probes via CoAP, gets EUI-64, adds to SQLite registry. No room/floor assigned yet |
+| **Assigned** | Room/floor stored in device NVS + hub DB. Appears in HA with area suggestion |
+| **Operating** | Responds to CoAP commands, servo moves to commanded angles, position persisted to NVS, hub polls periodically |
+| **Sleep** | Deep sleep (SED mode). Wakes on poll timer, checks for queued messages, returns to Operating |
+| **Reboot** | Reads last angle from NVS, re-joins Thread, returns to Operating |
 
 ---
 
