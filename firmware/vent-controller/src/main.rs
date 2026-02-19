@@ -47,13 +47,33 @@ fn main() {
         Err(e) => warn!("Could not check boot status: {:?}", e),
     }
 
-    // Restore or default vent angle
-    let initial_angle = device_id
-        .get_saved_angle()
-        .ok()
-        .flatten()
-        .unwrap_or(ANGLE_CLOSED);
-    info!("Restoring vent angle: {}°", initial_angle);
+    // Recover vent angle — check if previous move was interrupted
+    let finalized = device_id.is_finalized().unwrap_or(true);
+    let (initial_angle, pending_target) = if finalized {
+        // Normal boot: restore last finalized angle
+        let angle = device_id
+            .get_saved_angle()
+            .ok()
+            .flatten()
+            .unwrap_or(ANGLE_CLOSED);
+        info!("Restoring finalized angle: {}°", angle);
+        (angle, None)
+    } else {
+        // Interrupted move: a command was written-ahead but never finalized.
+        // Drive servo to the last finalized angle first, then replay the
+        // pending target so the move completes as originally intended.
+        let saved = device_id
+            .get_saved_angle()
+            .ok()
+            .flatten()
+            .unwrap_or(ANGLE_CLOSED);
+        let target = device_id.get_pending_target().ok().flatten();
+        warn!(
+            "Previous move interrupted! Saved: {}°, pending target: {:?}",
+            saved, target
+        );
+        (saved, target)
+    };
 
     // Initialize servo via LEDC PWM
     let timer_config = TimerConfig::default().frequency(50.Hz().into());
@@ -73,8 +93,14 @@ fn main() {
     let mut servo = ServoDriver::new(ledc_driver).expect("Failed to init servo");
     servo.set_angle(initial_angle).ok();
 
-    // Initialize state machine
+    // Initialize state machine at last known position
     let mut vent_state = VentStateMachine::new(initial_angle);
+
+    // If a pending target exists from an interrupted move, replay it
+    if let Some(target) = pending_target {
+        info!("Replaying interrupted command: target {}°", target);
+        vent_state.set_target(target);
+    }
 
     // Determine power mode from NVS (default: always-on)
     let power_mode = PowerMode::AlwaysOn; // TODO: read from NVS config
@@ -116,15 +142,15 @@ fn main() {
             servo.set_angle(app_state.vent.current_angle()).ok();
             sleep(Duration::from_millis(servo::STEP_DELAY_MS as u64));
 
-            // Save angle when movement completes
+            // Finalize when movement completes: save angle + set flag
             if !app_state.vent.is_moving() {
-                app_state
-                    .identity
-                    .save_angle(app_state.vent.current_angle())
-                    .ok();
+                let final_angle = app_state.vent.current_angle();
+                if let Err(e) = app_state.identity.finalize_move(final_angle) {
+                    error!("Failed to finalize move: {:?}", e);
+                }
                 info!(
-                    "Vent reached target: {}° ({})",
-                    app_state.vent.current_angle(),
+                    "Vent reached target: {}° ({}) — finalized",
+                    final_angle,
                     app_state.vent.state().as_str()
                 );
             }

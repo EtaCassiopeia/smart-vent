@@ -106,7 +106,7 @@ impl DeviceIdentity {
         Ok(())
     }
 
-    /// Get the stored vent angle from NVS (for recovery after reboot).
+    /// Get the last finalized vent angle from NVS.
     pub fn get_saved_angle(&self) -> Result<Option<u8>, EspError> {
         let mut buf = [0u8; 1];
         match self.nvs.get_raw("angle", &mut buf) {
@@ -116,9 +116,46 @@ impl DeviceIdentity {
         }
     }
 
-    /// Save current vent angle to NVS.
+    /// Save finalized vent angle to NVS.
     pub fn save_angle(&mut self, angle: u8) -> Result<(), EspError> {
         self.nvs.set_raw("angle", &[angle])?;
         Ok(())
+    }
+
+    /// Record a pending move command (write-ahead). Called before
+    /// the servo starts moving so the target survives a power loss.
+    pub fn save_pending_target(&mut self, target: u8) -> Result<(), EspError> {
+        self.nvs.set_raw("target", &[target])?;
+        self.nvs.set_raw("fin", &[0u8])?; // clear finalized flag
+        Ok(())
+    }
+
+    /// Get the pending target angle written before the last move started.
+    pub fn get_pending_target(&self) -> Result<Option<u8>, EspError> {
+        let mut buf = [0u8; 1];
+        match self.nvs.get_raw("target", &mut buf) {
+            Ok(Some(val)) => Ok(Some(val[0])),
+            Ok(None) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Mark the current move as complete. Saves final angle and sets
+    /// the finalized flag atomically (as far as NVS allows).
+    pub fn finalize_move(&mut self, angle: u8) -> Result<(), EspError> {
+        self.save_angle(angle)?;
+        self.nvs.set_raw("fin", &[1u8])?;
+        Ok(())
+    }
+
+    /// Check whether the last move command completed successfully.
+    /// Returns false if power was lost mid-move.
+    pub fn is_finalized(&self) -> Result<bool, EspError> {
+        let mut buf = [0u8; 1];
+        match self.nvs.get_raw("fin", &mut buf) {
+            Ok(Some(val)) => Ok(val[0] == 1),
+            Ok(None) => Ok(true), // no flag = no pending command = finalized
+            Err(e) => Err(e),
+        }
     }
 }

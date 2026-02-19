@@ -45,14 +45,22 @@ pub fn handle_put_target(state: &mut AppState, payload: &[u8]) -> CoapResponse {
         Err(_) => return CoapResponse::BadRequest,
     };
 
+    let clamped = clamp_angle(req.angle);
+
+    // Write-ahead: persist target + clear finalized BEFORE moving
+    if let Err(e) = state.identity.save_pending_target(clamped) {
+        warn!("Failed to write-ahead target: {:?}", e);
+        return CoapResponse::InternalError;
+    }
+
     let previous_angle = state.vent.set_target(req.angle);
     let resp = TargetResponse {
-        angle: clamp_angle(req.angle),
+        angle: clamped,
         state: state.vent.state(),
         previous_angle,
     };
 
-    info!("Target set: {}° -> {}°", previous_angle, clamp_angle(req.angle));
+    info!("Target set: {}° -> {}°", previous_angle, clamped);
 
     match to_vec(&resp) {
         Ok(bytes) => CoapResponse::Changed(bytes),
