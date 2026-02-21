@@ -86,6 +86,12 @@ pytest tests/integration/
 
 ## IDE Setup
 
+Both editors need rust-analyzer configured to target the ESP32-C6 chip, otherwise you'll see false errors on ESP-IDF code.
+
+### Zed
+
+Settings are already included in the repo at `.zed/settings.json`. No setup needed.
+
 ### VS Code
 
 Recommended extensions:
@@ -93,7 +99,7 @@ Recommended extensions:
 - `ms-python.python` — Python support
 - `ms-python.pylint` — Linting
 
-Settings for the firmware workspace:
+Add to `.vscode/settings.json`:
 
 ```json
 {

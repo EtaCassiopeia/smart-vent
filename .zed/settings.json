@@ -1,0 +1,14 @@
+{
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "cargo": {
+          "target": "riscv32imac-esp-espidf"
+        },
+        "check": {
+          "allTargets": false
+        }
+      }
+    }
+  }
+}
