@@ -40,9 +40,6 @@ The first build will download and compile ESP-IDF (takes several minutes).
 # State machine and protocol tests run on your host machine
 cd firmware/shared-protocol
 cargo test
-
-cd ../vent-controller
-cargo test --lib
 ```
 
 ## Python Environment (Hub + Simulator)
