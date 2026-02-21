@@ -6,6 +6,12 @@ use minicbor::{to_vec, Decoder};
 use vent_protocol::*;
 use std::time::Instant;
 
+// openthread/coap.h is not included in esp-idf-sys bindings header,
+// but otCoapStart is compiled into libopenthread.a via ot_coap_config component.
+extern "C" {
+    fn otCoapStart(instance: *mut esp_idf_sys::otInstance, port: u16) -> esp_idf_sys::otError;
+}
+
 
 const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -182,8 +188,12 @@ pub enum CoapMethod {
 /// that post to our Rust handler via a channel.
 pub fn register_coap_resources() -> Result<(), esp_idf_sys::EspError> {
     info!("Registering CoAP resources...");
-    // TODO: Enable OPENTHREAD_CONFIG_COAP_API_ENABLE in sdkconfig to use otCoapStart.
-    // CoAP resource handlers are defined above but not yet wired to OT CoAP callbacks.
+
+    unsafe {
+        let instance = esp_idf_sys::esp_openthread_get_instance();
+        otCoapStart(instance, 5683);
+    }
+
     info!("CoAP server started on port 5683");
     Ok(())
 }
