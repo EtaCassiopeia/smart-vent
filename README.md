@@ -10,22 +10,29 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture refer
 
 ## Quick Start
 
+> **First time?** Start with the [development environment setup guide](docs/guides/setup-dev-env.md) to install Python, Rust, and IDE configuration.
+
 ### Development (no hardware)
 
+The simulator creates virtual vent devices on localhost that respond to CoAP requests, replacing real ESP32 hardware for testing.
+
 ```bash
-# 1. Start the simulator
-cd tools/simulator && pip install -e .
-vent-sim start --count 3
-
-# 2. Install and use the hub CLI
-cd hub && pip install -e ".[dev]"
-vent-hub --help
-vent-hub list
-
-# 3. Run tests
+# Run all tests (hub unit tests + integration tests against the simulator)
 pytest hub/tests/
 pytest tests/integration/
 ```
+
+The integration tests automatically start and stop the simulator. You can also run it manually to explore the CLI:
+
+```bash
+# Terminal 1: start 3 virtual vents (runs in foreground, Ctrl+C to stop)
+vent-sim start --count 3
+
+# Terminal 2: explore hub commands
+vent-hub --help
+```
+
+> **Note:** `vent-hub discover` requires a Thread Border Router and won't find simulator vents. The simulator is for integration tests and direct CoAP interaction.
 
 ### Hardware Setup
 
