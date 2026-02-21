@@ -5,7 +5,7 @@ mod servo;
 mod state;
 mod thread;
 
-use coap::{register_coap_resources, AppState, CoapMethod, CoapResponse};
+use coap::{register_coap_resources, AppState};
 use identity::DeviceIdentity;
 use power::{PowerManager, PowerMode};
 use servo::ServoDriver;
@@ -13,7 +13,7 @@ use state::VentStateMachine;
 use thread::{ThreadConfig, ThreadManager};
 use vent_protocol::{PowerSource, ANGLE_CLOSED};
 
-use esp_idf_hal::ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver, SpeedMode};
+use esp_idf_hal::ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver};
 use esp_idf_hal::peripherals::Peripherals;
 use esp_idf_hal::prelude::*;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;

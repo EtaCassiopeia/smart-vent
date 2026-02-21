@@ -73,7 +73,7 @@ pub fn handle_put_target(state: &mut AppState, payload: &[u8]) -> CoapResponse {
 /// Handle GET /device/identity
 pub fn handle_get_identity(state: &AppState) -> CoapResponse {
     let uptime = state.start_time.elapsed().as_secs() as u32;
-    let identity = DeviceIdentity {
+    let identity = vent_protocol::DeviceIdentity {
         eui64: state.identity.eui64().into(),
         firmware_version: FIRMWARE_VERSION.into(),
         uptime_s: uptime,

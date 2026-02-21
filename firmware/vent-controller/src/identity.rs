@@ -122,7 +122,8 @@ impl DeviceIdentity {
         let mut buf = [0u8; 64];
         match self.nvs.get_raw(key, &mut buf) {
             Ok(Some(val)) => {
-                let s = core::str::from_utf8(&buf[..val.len()])
+                let len = val.len();
+                let s = core::str::from_utf8(&buf[..len])
                     .unwrap_or_default()
                     .to_string();
                 Ok(Some(s))

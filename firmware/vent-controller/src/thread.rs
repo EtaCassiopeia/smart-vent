@@ -66,7 +66,7 @@ impl ThreadManager {
             let name_bytes = self.config.network_name.as_bytes();
             let len = name_bytes.len().min(16);
             dataset.mNetworkName.m8[..len].copy_from_slice(
-                &name_bytes[..len].iter().map(|&b| b as i8).collect::<Vec<_>>(),
+                &name_bytes[..len],
             );
 
             esp_idf_sys::otDatasetSetActive(instance, &dataset);
