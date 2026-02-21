@@ -33,7 +33,7 @@ async def services(simulator, tmp_path):
     for vent in simulator.vents:
         device = VentDevice(
             eui64=vent.eui64,
-            ipv6_address=f"::1%25{vent.port}",
+            ipv6_address=f"[::1]:{vent.port}",
             room=vent.room,
             floor=vent.floor,
             name=vent.name,

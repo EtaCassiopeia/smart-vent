@@ -33,7 +33,7 @@ async def coap():
 @pytest.mark.asyncio
 async def test_get_identity(simulator, coap):
     vent = simulator.vents[0]
-    identity = await coap.get_identity(f"::1%25{vent.port}")
+    identity = await coap.get_identity(f"[::1]:{vent.port}")
     assert identity["eui64"] == vent.eui64
     assert "sim" in identity["firmware_version"]
 
@@ -41,7 +41,7 @@ async def test_get_identity(simulator, coap):
 @pytest.mark.asyncio
 async def test_get_position_default_closed(simulator, coap):
     vent = simulator.vents[0]
-    angle, state = await coap.get_position(f"::1%25{vent.port}")
+    angle, state = await coap.get_position(f"[::1]:{vent.port}")
     assert angle == 90
     assert state == VentState.CLOSED
 
@@ -49,7 +49,7 @@ async def test_get_position_default_closed(simulator, coap):
 @pytest.mark.asyncio
 async def test_set_target_and_read_back(simulator, coap):
     vent = simulator.vents[0]
-    addr = f"::1%25{vent.port}"
+    addr = f"[::1]:{vent.port}"
 
     await coap.set_target(addr, 135)
     angle, state = await coap.get_position(addr)
@@ -60,7 +60,7 @@ async def test_set_target_and_read_back(simulator, coap):
 @pytest.mark.asyncio
 async def test_set_config(simulator, coap):
     vent = simulator.vents[1]
-    addr = f"::1%25{vent.port}"
+    addr = f"[::1]:{vent.port}"
 
     await coap.set_config(addr, room="kitchen", floor="1", name="kitchen-main")
     config = await coap.get_config(addr)
@@ -72,7 +72,7 @@ async def test_set_config(simulator, coap):
 @pytest.mark.asyncio
 async def test_get_health(simulator, coap):
     vent = simulator.vents[0]
-    health = await coap.get_health(f"::1%25{vent.port}")
+    health = await coap.get_health(f"[::1]:{vent.port}")
     assert "rssi" in health
     assert health["power_source"] == "usb"
 
@@ -80,7 +80,7 @@ async def test_get_health(simulator, coap):
 @pytest.mark.asyncio
 async def test_probe_device(simulator, coap):
     vent = simulator.vents[0]
-    device = await coap.probe_device(f"::1%25{vent.port}")
+    device = await coap.probe_device(f"[::1]:{vent.port}")
     assert device is not None
     assert device.eui64 == vent.eui64
     assert device.angle == 90

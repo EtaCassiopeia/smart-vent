@@ -33,10 +33,22 @@ class CoapClient:
             await self._context.shutdown()
             self._context = None
 
+    @staticmethod
+    def _build_uri(address: str, path: str) -> str:
+        """Build a CoAP URI from an address and path.
+
+        Address formats:
+          - Plain IPv6: "fd00::1" → coap://[fd00::1]/path (default port 5683)
+          - With port:  "[::1]:15683" → coap://[::1]:15683/path
+        """
+        if address.startswith("["):
+            return f"coap://{address}/{path}"
+        return f"coap://[{address}]/{path}"
+
     async def _get(self, address: str, path: str) -> dict[str, Any]:
         """Send a CoAP GET request and decode the CBOR response."""
         assert self._context is not None, "Client not started"
-        uri = f"coap://[{address}]/{path}"
+        uri = self._build_uri(address, path)
         request = Message(code=Code.GET, uri=uri)
         response = await self._context.request(request).response
         if response.code.is_successful():
@@ -46,7 +58,7 @@ class CoapClient:
     async def _put(self, address: str, path: str, payload: dict) -> dict[str, Any]:
         """Send a CoAP PUT request with CBOR payload."""
         assert self._context is not None, "Client not started"
-        uri = f"coap://[{address}]/{path}"
+        uri = self._build_uri(address, path)
         encoded = cbor2.dumps(payload)
         request = Message(
             code=Code.PUT,
