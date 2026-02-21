@@ -6,6 +6,7 @@ use minicbor::{to_vec, Decoder};
 use vent_protocol::*;
 use std::time::Instant;
 
+
 const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Shared application state accessible by CoAP handlers.
@@ -181,12 +182,8 @@ pub enum CoapMethod {
 /// that post to our Rust handler via a channel.
 pub fn register_coap_resources() -> Result<(), esp_idf_sys::EspError> {
     info!("Registering CoAP resources...");
-
-    unsafe {
-        let instance = esp_idf_sys::esp_openthread_get_instance();
-        esp_idf_sys::otCoapStart(instance, 5683);
-    }
-
+    // TODO: Enable OPENTHREAD_CONFIG_COAP_API_ENABLE in sdkconfig to use otCoapStart.
+    // CoAP resource handlers are defined above but not yet wired to OT CoAP callbacks.
     info!("CoAP server started on port 5683");
     Ok(())
 }

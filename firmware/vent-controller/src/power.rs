@@ -67,6 +67,7 @@ impl PowerManager {
 
     /// Enter deep sleep for the specified duration.
     /// State should be saved to NVS before calling this.
+    #[allow(unreachable_code)]
     pub fn enter_deep_sleep(&self, duration: Duration) -> ! {
         let us = duration.as_micros() as u64;
         info!("Entering deep sleep for {}ms", duration.as_millis());

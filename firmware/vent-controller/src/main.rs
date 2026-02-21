@@ -1,8 +1,14 @@
+#[allow(dead_code)]
 mod coap;
+#[allow(dead_code)]
 mod identity;
+#[allow(dead_code)]
 mod power;
+#[allow(dead_code)]
 mod servo;
+#[allow(dead_code)]
 mod state;
+#[allow(dead_code)]
 mod thread;
 
 use coap::{register_coap_resources, AppState};

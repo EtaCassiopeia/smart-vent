@@ -1,8 +1,5 @@
-use esp_idf_hal::ledc::{LedcDriver, LedcTimerDriver, config::TimerConfig};
-use esp_idf_hal::ledc::SpeedMode;
-use esp_idf_hal::prelude::*;
+use esp_idf_hal::ledc::LedcDriver;
 use esp_idf_sys::EspError;
-use log::info;
 
 /// SG90 servo PWM parameters.
 const PWM_FREQ_HZ: u32 = 50;

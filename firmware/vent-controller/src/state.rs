@@ -1,4 +1,4 @@
-use vent_protocol::{clamp_angle, VentState, ANGLE_CLOSED, ANGLE_OPEN};
+use vent_protocol::{clamp_angle, VentState};
 
 /// Vent state machine managing position and transitions.
 pub struct VentStateMachine {
@@ -60,6 +60,7 @@ impl VentStateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use vent_protocol::{ANGLE_CLOSED, ANGLE_OPEN};
 
     #[test]
     fn test_initial_state_closed() {

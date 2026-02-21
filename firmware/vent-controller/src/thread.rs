@@ -58,10 +58,11 @@ impl ThreadManager {
             let instance = esp_idf_sys::esp_openthread_get_instance();
             let mut dataset: esp_idf_sys::otOperationalDataset = std::mem::zeroed();
 
-            esp_idf_sys::otDatasetCreateNewNetwork(instance, &mut dataset);
-
             dataset.mChannel = self.config.channel as u16;
+            dataset.mComponents.mIsChannelPresent = true;
             dataset.mPanId = self.config.panid;
+            dataset.mComponents.mIsPanIdPresent = true;
+            dataset.mComponents.mIsNetworkNamePresent = true;
 
             let name_bytes = self.config.network_name.as_bytes();
             let len = name_bytes.len().min(16);
@@ -146,7 +147,7 @@ impl ThreadManager {
             let instance = esp_idf_sys::esp_openthread_get_instance();
             let mut avg_rssi: i8 = -128;
             let err = esp_idf_sys::otThreadGetParentAverageRssi(instance, &mut avg_rssi);
-            if err == esp_idf_sys::OT_ERROR_NONE as u32 {
+            if err == esp_idf_sys::otError_OT_ERROR_NONE as u32 {
                 avg_rssi
             } else {
                 -128
