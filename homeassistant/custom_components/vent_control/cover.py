@@ -55,6 +55,7 @@ class VentCoverEntity(CoordinatorEntity[VentCoordinator], CoverEntity):
     """A vent represented as a Home Assistant cover entity."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
+    _attr_icon = "mdi:air-filter"
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
