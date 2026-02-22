@@ -92,17 +92,31 @@ docker run -d \
     --restart unless-stopped \
     --network host \
     --privileged \
-    -p 80:80 \
-    -p 8081:8081 \
     -v /dev:/dev \
     -e RADIO_URL="spinel+hdlc+uart://${DONGLE_DEV}?uart-baudrate=${BAUD_RATE}" \
     -e BACKBONE_INTERFACE=eth0 \
     openthread/otbr:latest
 
+# Wait for OTBR to start and verify
+echo "Waiting for OTBR to start..."
+sleep 5
+
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/v1/node/state 2>/dev/null | grep -q "200"; then
+    echo ""
+    echo "OTBR is running and responding!"
+else
+    echo ""
+    echo "OTBR container started (ports may take a moment to become available)."
+    echo "Check status with: docker logs otbr"
+fi
+
 echo ""
-echo "OTBR is running!"
 echo "  REST API: http://localhost:8081"
 echo "  Web GUI:  http://localhost:80"
+echo ""
+echo "NOTE: 'docker ps' will NOT show ports in the PORTS column when using"
+echo "      --network host. This is normal — all ports are exposed directly."
+echo "      Verify with: curl http://localhost:8081/v1/node/state"
 echo ""
 echo "Next steps:"
 echo "  1. Open the web GUI and form a new Thread network"
