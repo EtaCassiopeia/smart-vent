@@ -1,48 +1,53 @@
-# Flashing Firmware to ESP32-C6
+# Flashing Firmware to XIAO ESP32C6
 
 ## Prerequisites
 
-- ESP32-C6 development board
+- Seeed Studio XIAO ESP32C6
 - USB-C cable
 - Rust ESP toolchain installed (see `setup-dev-env.md`)
+- `espflash` installed (`cargo install espflash`)
 
 ## 1. Connect the Board
 
-Connect ESP32-C6 to your computer via USB-C. The board should appear as a serial device:
+Connect the XIAO ESP32C6 to your computer via USB-C. The board should appear
+as a serial device:
 
 ```bash
 # macOS
-ls /dev/cu.usbserial-*
+ls /dev/cu.usbmodem*
 
 # Linux
-ls /dev/ttyUSB* /dev/ttyACM*
+ls /dev/ttyACM* /dev/ttyUSB*
 ```
 
-## 2. Build the Firmware
+## 2. Build and Flash
+
+Always use `--release` — the debug build exceeds the flash partition size.
 
 ```bash
 cd firmware/vent-controller
-cargo build --release
+cargo espflash flash --release --port /dev/cu.usbmodem101 --monitor
 ```
 
-## 3. Flash
+This builds the firmware, flashes it, and opens a serial monitor.
 
-```bash
-cargo run --release
+Expected output:
+
+```
+App/part. size:    822,208/1,536,000 bytes, 53.53%
+Flashing has completed!
 ```
 
-This uses `espflash` (configured in `.cargo/config.toml`) to flash and open a serial monitor.
-
-Alternatively, flash without monitoring:
+To flash without monitoring:
 
 ```bash
-espflash flash target/riscv32imac-esp-espidf/release/vent-controller
+cargo espflash flash --release --port /dev/cu.usbmodem101
 ```
 
-## 4. Monitor Serial Output
+## 3. Monitor Serial Output
 
 ```bash
-espflash monitor
+cargo espflash monitor --port /dev/cu.usbmodem101
 ```
 
 Expected output on first boot:
@@ -54,13 +59,12 @@ INFO vent_controller::identity: Device EUI-64: aa:bb:cc:dd:ee:ff:00:01
 INFO vent_controller: First boot detected — initializing defaults
 INFO vent_controller: Restoring vent angle: 90°
 INFO vent_controller::thread: Initializing OpenThread stack...
-INFO vent_controller::thread: OpenThread started on channel 15, PAN ID 0x1234
 INFO vent_controller::coap: Registering CoAP resources...
 INFO vent_controller::coap: CoAP server started on port 5683
 INFO vent_controller: Vent controller running. Waiting for CoAP commands...
 ```
 
-## 5. Verify CoAP
+## 4. Verify CoAP
 
 From the hub (or any machine on the Thread network):
 
@@ -73,7 +77,8 @@ aiocoap-client coap://[<device-ipv6>]/device/identity
 
 | Issue | Solution |
 |-------|----------|
-| `espflash` can't find device | Check USB cable, try a different port |
+| Device not found (`/dev/cu.usbmodem*`) | Check USB-C cable (some are charge-only), try a different port |
+| Image too big error | Make sure you're building with `--release` |
 | Build fails with linker errors | Run `source ~/export-esp.sh` |
 | Thread won't connect | Verify OTBR is running and network credentials match |
-| Servo doesn't move | Check wiring (see `hardware/wiring.md`) |
+| Servo doesn't move | Check wiring — signal goes to D2/GPIO2 (see `hardware/wiring.md`) |
