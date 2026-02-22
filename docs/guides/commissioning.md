@@ -283,6 +283,18 @@ automatically on the next poll cycle — no HA restart needed.
 2. The Vent Control integration should show the new device
 3. Assign it to an area matching the room
 
+### Scheduled vent control (blueprints)
+
+The integration includes HA blueprints for time-based open/close schedules.
+Import them via **Settings -> Automations -> Blueprints -> Import Blueprint**
+using the raw GitHub URLs:
+
+- **By floor:** `https://raw.githubusercontent.com/EtaCassiopeia/smart-vent/main/homeassistant/blueprints/automation/vent_control/schedule_vent_by_floor.yaml`
+- **By room:** `https://raw.githubusercontent.com/EtaCassiopeia/smart-vent/main/homeassistant/blueprints/automation/vent_control/schedule_vent_by_room.yaml`
+
+After importing, create an automation from the blueprint and fill in the
+floor/room name, open/close times, and positions.
+
 ## Adding Multiple Devices
 
 Flash and power on each device one at a time. Run `vent-hub discover` after

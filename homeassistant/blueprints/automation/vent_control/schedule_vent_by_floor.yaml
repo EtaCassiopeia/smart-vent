@@ -1,0 +1,71 @@
+blueprint:
+  name: Schedule Vent by Floor
+  description: >-
+    Open and close all vents on a given floor at specified times each day.
+    Uses the vent_control.set_floor service.
+  domain: automation
+  input:
+    floor:
+      name: Floor
+      description: Floor identifier matching your hub configuration (e.g. "1", "2", "basement").
+      selector:
+        text:
+    open_time:
+      name: Open Time
+      description: Time of day to open the vents.
+      default: "07:00:00"
+      selector:
+        time:
+    close_time:
+      name: Close Time
+      description: Time of day to close the vents.
+      default: "22:00:00"
+      selector:
+        time:
+    open_position:
+      name: Open Position
+      description: Vent position when opening (0 = closed, 100 = fully open).
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    close_position:
+      name: Close Position
+      description: Vent position when closing (0 = closed, 100 = fully open).
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+
+trigger:
+  - platform: time
+    at: !input open_time
+    id: open
+  - platform: time
+    at: !input close_time
+    id: close
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: open
+        sequence:
+          - action: vent_control.set_floor
+            data:
+              floor: !input floor
+              position: !input open_position
+      - conditions:
+          - condition: trigger
+            id: close
+        sequence:
+          - action: vent_control.set_floor
+            data:
+              floor: !input floor
+              position: !input close_position
