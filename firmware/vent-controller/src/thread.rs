@@ -15,6 +15,8 @@ pub struct ThreadConfig {
     pub channel: u8,
     pub panid: u16,
     pub network_key: [u8; 16],
+    pub ext_panid: [u8; 8],
+    pub mesh_local_prefix: [u8; 8],
 }
 
 impl Default for ThreadConfig {
@@ -28,6 +30,9 @@ impl Default for ThreadConfig {
                 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
             ],
+            ext_panid: [0x67, 0xf4, 0xc2, 0x4b, 0x9e, 0xe4, 0x54, 0xab],
+            // fd9e:0bdc:12bc:1c11::/64
+            mesh_local_prefix: [0xfd, 0x9e, 0x0b, 0xdc, 0x12, 0xbc, 0x1c, 0x11],
         }
     }
 }
@@ -112,6 +117,14 @@ impl ThreadManager {
             // Network key — required to join an existing network
             dataset.mNetworkKey.m8 = self.config.network_key;
             dataset.mComponents.mIsNetworkKeyPresent = true;
+
+            // Extended PAN ID
+            dataset.mExtendedPanId.m8 = self.config.ext_panid;
+            dataset.mComponents.mIsExtendedPanIdPresent = true;
+
+            // Mesh-local prefix
+            dataset.mMeshLocalPrefix.m8 = self.config.mesh_local_prefix;
+            dataset.mComponents.mIsMeshLocalPrefixPresent = true;
 
             esp_idf_sys::otDatasetSetActive(instance, &dataset);
 
