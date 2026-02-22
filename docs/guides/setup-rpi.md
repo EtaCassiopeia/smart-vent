@@ -132,6 +132,34 @@ Verify the active dataset:
 docker exec otbr ot-ctl dataset active
 ```
 
+> **Security note:** The default "Form" action generates a random dataset, but
+> some OTBR images ship with demo/default credentials. For production use,
+> generate your own unique network credentials:
+>
+> ```bash
+> # Generate a new random dataset
+> docker exec otbr ot-ctl dataset init new
+>
+> # Optionally customize the network name and channel
+> docker exec otbr ot-ctl dataset networkname MyVentNet
+> docker exec otbr ot-ctl dataset channel 25
+>
+> # Commit and activate
+> docker exec otbr ot-ctl dataset commit active
+> docker exec otbr ot-ctl ifconfig up
+> docker exec otbr ot-ctl thread start
+> ```
+>
+> Verify your unique credentials are active:
+>
+> ```bash
+> docker exec otbr ot-ctl dataset active
+> ```
+>
+> The output should show your custom network name, a unique Network Key, and
+> a unique PSKc. **Save these values** — you will need the Network Key to
+> commission devices onto the network.
+
 ## 7. Install Home Assistant
 
 Run the provided setup script:
