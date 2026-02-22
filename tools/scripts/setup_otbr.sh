@@ -32,6 +32,16 @@ if ! command -v docker &> /dev/null; then
     exit 0
 fi
 
+# Ensure ip6tables kernel modules are loaded (required by OTBR firewall)
+if ! lsmod | grep -q ip6table_filter; then
+    echo "Loading ip6tables kernel modules..."
+    sudo modprobe ip6table_filter
+    sudo modprobe ip6_tables
+    # Persist across reboots
+    grep -q ip6table_filter /etc/modules 2>/dev/null || echo "ip6table_filter" | sudo tee -a /etc/modules
+    grep -q ip6_tables /etc/modules 2>/dev/null || echo "ip6_tables" | sudo tee -a /etc/modules
+fi
+
 # Determine serial device and baud rate based on dongle type
 DONGLE_DEV="${DONGLE_DEV:-}"
 BAUD_RATE="${BAUD_RATE:-}"

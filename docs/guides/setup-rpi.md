@@ -66,7 +66,24 @@ universal-silabs-flasher --device /dev/ttyUSB0 \
 
 The SLZB-07 uses a CP2102N USB-UART chip and appears as `/dev/ttyUSB0`.
 
-## 4. Install OTBR
+## 4. Load Kernel Modules
+
+OTBR requires `ip6tables` kernel modules for firewall and routing. These are
+not loaded by default on Raspberry Pi OS:
+
+```bash
+sudo modprobe ip6table_filter
+sudo modprobe ip6_tables
+```
+
+Make them load automatically on boot:
+
+```bash
+echo "ip6table_filter" | sudo tee -a /etc/modules
+echo "ip6_tables" | sudo tee -a /etc/modules
+```
+
+## 5. Install OTBR
 
 Run the provided setup script:
 
@@ -98,7 +115,7 @@ docker run -d --name otbr --network host --privileged \
 > This is normal — all container ports are exposed directly on the host.
 > Verify with: `curl http://localhost:8081/v1/node/state`
 
-## 5. Form Thread Network
+## 6. Form Thread Network
 
 1. Open OTBR web GUI: `http://<rpi-ip>:80`
 2. Click "Form" to create a new Thread network
@@ -110,7 +127,7 @@ Verify via REST API:
 curl http://localhost:8081/v1/node/dataset/active
 ```
 
-## 6. Install Home Assistant
+## 7. Install Home Assistant
 
 Run the provided setup script:
 
@@ -126,7 +143,7 @@ docker run -d --name homeassistant --network host \
     ghcr.io/home-assistant/home-assistant:stable
 ```
 
-## 7. Install Vent Control Component
+## 8. Install Vent Control Component
 
 Copy the custom component:
 
