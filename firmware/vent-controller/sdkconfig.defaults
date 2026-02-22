@@ -13,6 +13,9 @@ CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 
 # CoAP — enabled via components/ot_coap_config (OPENTHREAD_CONFIG_COAP_API_ENABLE)
 
+# Partition table — use large app partition (1.5MB) for OpenThread firmware
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+
 # NVS
 CONFIG_NVS_ENABLED=y
 

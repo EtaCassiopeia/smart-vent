@@ -19,5 +19,8 @@ embuild = { version = "0.32", features = ["espidf"] }
 name = "vent-controller"
 harness = false
 
+[profile.release]
+opt-level = "s"
+
 [package.metadata.esp-idf-sys]
 extra_components = [{ component_dirs = ["components"] }]
