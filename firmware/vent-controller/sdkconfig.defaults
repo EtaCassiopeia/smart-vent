@@ -7,6 +7,13 @@ CONFIG_OPENTHREAD_SRP_CLIENT=y
 CONFIG_OPENTHREAD_DNS_CLIENT=y
 CONFIG_IEEE802154_ENABLED=y
 
+# VFS eventfd — required by OpenThread task queue and radio driver
+CONFIG_VFS_SUPPORT_SELECT=y
+CONFIG_ESP_EVENTFD=y
+
+# Stack sizes — OpenThread requires larger stacks than defaults
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
+
 # Power management
 CONFIG_PM_ENABLE=y
 CONFIG_FREERTOS_USE_TICKLESS_IDLE=y

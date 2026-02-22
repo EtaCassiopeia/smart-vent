@@ -50,10 +50,27 @@ impl ThreadManager {
     }
 
     /// Initialize the IEEE 802.15.4 radio and OpenThread stack.
+    ///
+    /// Sets up VFS eventfd, event loop, netif, and the OpenThread platform.
+    /// The dataset is configured and Thread is enabled so that the device
+    /// joins the network once the mainloop starts processing.
     pub fn init(&mut self) -> Result<(), EspError> {
         info!("Initializing OpenThread stack...");
 
         unsafe {
+            // Register VFS eventfd — required by OpenThread task queue and radio driver.
+            // 3 fds: netif + task queue + radio driver
+            let eventfd_config = esp_idf_sys::esp_vfs_eventfd_config_t {
+                max_fds: 3,
+            };
+            esp_idf_sys::esp!(esp_idf_sys::esp_vfs_eventfd_register(&eventfd_config))?;
+
+            // Create default event loop (used by OpenThread netif glue)
+            esp_idf_sys::esp!(esp_idf_sys::esp_event_loop_create_default())?;
+
+            // Initialize TCP/IP stack (required for OpenThread netif)
+            esp_idf_sys::esp!(esp_idf_sys::esp_netif_init())?;
+
             let cfg = esp_idf_sys::esp_openthread_platform_config_t {
                 radio_config: esp_idf_sys::esp_openthread_radio_config_t {
                     radio_mode: esp_idf_sys::esp_openthread_radio_mode_t_RADIO_MODE_NATIVE,
@@ -64,7 +81,11 @@ impl ThreadManager {
                         esp_idf_sys::esp_openthread_host_connection_mode_t_HOST_CONNECTION_MODE_NONE,
                     ..Default::default()
                 },
-                port_config: Default::default(),
+                port_config: esp_idf_sys::esp_openthread_port_config_t {
+                    storage_partition_name: b"nvs\0".as_ptr() as *const _,
+                    netif_queue_size: 10,
+                    task_queue_size: 10,
+                },
             };
 
             esp_idf_sys::esp!(esp_idf_sys::esp_openthread_init(&cfg))?;

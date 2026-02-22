@@ -19,7 +19,7 @@ use state::VentStateMachine;
 use thread::{ThreadConfig, ThreadManager};
 use vent_protocol::{PowerSource, ANGLE_CLOSED};
 
-use esp_idf_hal::ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver};
+use esp_idf_hal::ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver, Resolution};
 use esp_idf_hal::peripherals::Peripherals;
 use esp_idf_hal::prelude::*;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
@@ -84,7 +84,9 @@ fn main() {
     };
 
     // Initialize servo via LEDC PWM
-    let timer_config = TimerConfig::default().frequency(50.Hz().into());
+    let timer_config = TimerConfig::default()
+        .frequency(50.Hz().into())
+        .resolution(Resolution::Bits14);
     let timer = LedcTimerDriver::new(
         peripherals.ledc.timer0,
         &timer_config,
