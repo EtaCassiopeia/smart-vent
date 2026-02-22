@@ -41,7 +41,8 @@ Every vent entity exposes these state attributes:
 
 ### From Developer Tools
 
-**Settings -> Developer tools -> Actions**:
+Open **Developer tools -> Actions** (in HA 2026.2+ this moved under
+**Settings -> Developer tools**):
 
 ```yaml
 action: cover.open_cover
@@ -110,8 +111,8 @@ data:
 | `floor`    | string | Floor identifier (case-insensitive)  |
 | `position` | int    | 0 (closed) to 100 (fully open)       |
 
-Both actions can be called from **Settings -> Developer tools -> Actions**,
-from automations, or from scripts.
+Both actions can be called from **Developer tools -> Actions**, from
+automations, or from scripts.
 
 ## Scheduling with blueprints
 
@@ -338,7 +339,7 @@ reload the integration: **Settings -> Devices & Services -> Vent Control
 
 The `vent_control.set_room` and `vent_control.set_floor` actions are
 registered when the first config entry loads. If they don't appear in
-**Settings -> Developer tools -> Actions**:
+**Developer tools -> Actions**:
 1. Confirm the integration is set up under **Devices & Services**
 2. Restart Home Assistant
 3. Check the HA log for errors from `vent_control`

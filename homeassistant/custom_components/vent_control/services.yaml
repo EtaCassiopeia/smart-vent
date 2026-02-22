@@ -1,27 +1,41 @@
 set_floor:
+  name: Set floor position
+  description: Set all vents on a given floor to the same position.
   fields:
     floor:
+      name: Floor
+      description: Floor identifier matching your hub configuration (e.g. "1", "2", "basement").
       required: true
       selector:
         text:
     position:
+      name: Position
+      description: Vent position (0 = closed, 100 = fully open).
       required: true
       selector:
         number:
           min: 0
           max: 100
+          step: 1
           unit_of_measurement: "%"
 
 set_room:
+  name: Set room position
+  description: Set all vents in a given room to the same position.
   fields:
     room:
+      name: Room
+      description: Room identifier matching your hub configuration (e.g. "bedroom", "kitchen").
       required: true
       selector:
         text:
     position:
+      name: Position
+      description: Vent position (0 = closed, 100 = fully open).
       required: true
       selector:
         number:
           min: 0
           max: 100
+          step: 1
           unit_of_measurement: "%"
