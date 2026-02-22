@@ -123,7 +123,19 @@ If the device doesn't appear, verify:
 
 ## 4. Discover the Device
 
-Use the hub CLI to discover new devices on the Thread network:
+Run the following commands **on the Raspberry Pi hub** (not on the machine you
+used to flash the firmware).
+
+If you haven't installed the hub CLI yet, install it first:
+
+```bash
+cd vent/hub
+pip install -e .
+```
+
+> See `setup-dev-env.md` for full Python environment setup.
+
+Then discover new devices on the Thread network:
 
 ```bash
 vent-hub discover
