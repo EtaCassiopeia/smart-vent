@@ -140,8 +140,20 @@ fn main() {
         error!("Failed to configure SED mode: {:?}", e);
     }
 
-    // Register CoAP resources
-    if let Err(e) = register_coap_resources() {
+    // Build app state and register CoAP resources (must happen before mainloop starts)
+    let app_state = AppState {
+        vent: vent_state,
+        identity: device_id,
+        thread: thread_mgr,
+        start_time: Instant::now(),
+        power_source: match power_mode {
+            PowerMode::AlwaysOn => PowerSource::Usb,
+            PowerMode::Sed { .. } => PowerSource::Battery,
+        },
+        poll_period_ms: power_mode.poll_period_ms(),
+    };
+
+    if let Err(e) = register_coap_resources(app_state) {
         error!("Failed to register CoAP resources: {:?}", e);
     }
 
@@ -160,42 +172,35 @@ fn main() {
         })
         .expect("Failed to spawn OpenThread task");
 
-    // Build shared app state
-    let mut app_state = AppState {
-        vent: vent_state,
-        identity: device_id,
-        thread: thread_mgr,
-        start_time: Instant::now(),
-        power_source: match power_mode {
-            PowerMode::AlwaysOn => PowerSource::Usb,
-            PowerMode::Sed { .. } => PowerSource::Battery,
-        },
-        poll_period_ms: power_mode.poll_period_ms(),
-    };
-
     info!("Vent controller running. Waiting for CoAP commands...");
 
     // Main loop: process servo steps and Thread events
     loop {
-        // Step servo toward target if moving
-        if app_state.vent.is_moving() {
-            app_state.vent.step();
-            if let Err(e) = servo.set_angle(app_state.vent.current_angle()) {
+        let is_moving = coap::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
+
+        if is_moving {
+            coap::with_app_state(|s| s.vent.step());
+
+            let current_angle = coap::with_app_state(|s| s.vent.current_angle()).unwrap_or(ANGLE_CLOSED);
+            if let Err(e) = servo.set_angle(current_angle) {
                 error!("Servo step failed: {:?}", e);
             }
             sleep(Duration::from_millis(servo::STEP_DELAY_MS as u64));
 
             // Commit when movement completes: checkpoint angle + set WAL flag
-            if !app_state.vent.is_moving() {
-                let final_angle = app_state.vent.current_angle();
-                if let Err(e) = app_state.identity.commit(final_angle) {
-                    error!("WAL commit failed: {:?}", e);
-                }
-                info!(
-                    "Vent reached target: {}° ({}) — committed",
-                    final_angle,
-                    app_state.vent.state().as_str()
-                );
+            let still_moving = coap::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
+            if !still_moving {
+                coap::with_app_state(|s| {
+                    let final_angle = s.vent.current_angle();
+                    if let Err(e) = s.identity.commit(final_angle) {
+                        error!("WAL commit failed: {:?}", e);
+                    }
+                    info!(
+                        "Vent reached target: {}° ({}) — committed",
+                        final_angle,
+                        s.vent.state().as_str()
+                    );
+                });
             }
         } else {
             // Idle — sleep briefly to yield CPU
