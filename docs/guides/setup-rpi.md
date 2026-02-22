@@ -83,12 +83,14 @@ Or manually:
 ```bash
 # nRF52840: /dev/ttyACM0 at 1000000 baud
 docker run -d --name otbr --network host --privileged \
+    -p 80:80 -p 8081:8081 \
     -v /dev:/dev \
     -e RADIO_URL="spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=1000000" \
     openthread/otbr:latest
 
 # SLZB-07: /dev/ttyUSB0 at 460800 baud
 docker run -d --name otbr --network host --privileged \
+    -p 80:80 -p 8081:8081 \
     -v /dev:/dev \
     -e RADIO_URL="spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800" \
     openthread/otbr:latest

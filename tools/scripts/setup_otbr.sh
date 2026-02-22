@@ -92,6 +92,8 @@ docker run -d \
     --restart unless-stopped \
     --network host \
     --privileged \
+    -p 80:80 \
+    -p 8081:8081 \
     -v /dev:/dev \
     -e RADIO_URL="spinel+hdlc+uart://${DONGLE_DEV}?uart-baudrate=${BAUD_RATE}" \
     -e BACKBONE_INTERFACE=eth0 \
