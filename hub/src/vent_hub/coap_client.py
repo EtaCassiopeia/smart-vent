@@ -55,7 +55,7 @@ class CoapClient:
             return cbor2.loads(response.payload)
         raise CoapError(f"GET {path} failed: {response.code}")
 
-    async def _put(self, address: str, path: str, payload: dict) -> dict[str, Any]:
+    async def _put(self, address: str, path: str, payload: Any) -> Any:
         """Send a CoAP PUT request with CBOR payload."""
         assert self._context is not None, "Client not started"
         uri = self._build_uri(address, path)
@@ -82,7 +82,7 @@ class CoapClient:
     async def set_target(self, address: str, angle: int) -> dict[str, Any]:
         """Set target vent angle on a device."""
         angle = max(90, min(180, angle))
-        return await self._put(address, "vent/target", {0: angle})
+        return await self._put(address, "vent/target", [angle])
 
     async def get_identity(self, address: str) -> dict[str, Any]:
         """Get device identity information."""
@@ -92,37 +92,29 @@ class CoapClient:
     async def get_config(self, address: str) -> dict[str, str]:
         """Get device configuration."""
         data = await self._get(address, "device/config")
-        if isinstance(data, list):
-            return {
-                "room": data[0] if len(data) > 0 else "",
-                "floor": data[1] if len(data) > 1 else "",
-                "name": data[2] if len(data) > 2 else "",
-            }
-        return {
-            "room": data.get(0, ""),
-            "floor": data.get(1, ""),
-            "name": data.get(2, ""),
-        }
+        return self._parse_config(data)
 
     async def set_config(
         self, address: str, room: str | None = None, floor: str | None = None, name: str | None = None
     ) -> dict[str, str]:
         """Update device configuration."""
-        payload: dict[int, str] = {}
-        if room is not None:
-            payload[0] = room
-        if floor is not None:
-            payload[1] = floor
-        if name is not None:
-            payload[2] = name
-        data = await self._put(address, "device/config", payload)
+        data = await self._put(address, "device/config", [room, floor, name])
+        return self._parse_config(data)
+
+    @staticmethod
+    def _parse_config(data: Any) -> dict[str, str]:
+        """Parse a config response (CBOR array or map) into a dict."""
         if isinstance(data, list):
             return {
-                "room": data[0] if len(data) > 0 else "",
-                "floor": data[1] if len(data) > 1 else "",
-                "name": data[2] if len(data) > 2 else "",
+                "room": data[0] or "" if len(data) > 0 else "",
+                "floor": data[1] or "" if len(data) > 1 else "",
+                "name": data[2] or "" if len(data) > 2 else "",
             }
-        return {"room": data.get(0, ""), "floor": data.get(1, ""), "name": data.get(2, "")}
+        return {
+            "room": data.get(0, "") or "",
+            "floor": data.get(1, "") or "",
+            "name": data.get(2, "") or "",
+        }
 
     async def get_health(self, address: str) -> dict[str, Any]:
         """Get device health information."""
