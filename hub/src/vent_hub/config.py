@@ -12,7 +12,7 @@ import yaml
 class HubConfig:
     """Hub service configuration."""
 
-    otbr_url: str = "http://localhost:8081"
+    otbr_cmd: str = "docker exec otbr ot-ctl"
     db_path: str = "devices.db"
     poll_interval_s: int = 30
     discovery_interval_s: int = 300
@@ -30,7 +30,7 @@ class HubConfig:
             data = yaml.safe_load(f) or {}
 
         return cls(
-            otbr_url=data.get("otbr_url", cls.otbr_url),
+            otbr_cmd=data.get("otbr_cmd", cls.otbr_cmd),
             db_path=data.get("db_path", cls.db_path),
             poll_interval_s=data.get("poll_interval_s", cls.poll_interval_s),
             discovery_interval_s=data.get("discovery_interval_s", cls.discovery_interval_s),
@@ -41,7 +41,7 @@ class HubConfig:
     def save(self, path: str | Path = "config.yaml") -> None:
         """Save configuration to a YAML file."""
         data = {
-            "otbr_url": self.otbr_url,
+            "otbr_cmd": self.otbr_cmd,
             "db_path": self.db_path,
             "poll_interval_s": self.poll_interval_s,
             "discovery_interval_s": self.discovery_interval_s,

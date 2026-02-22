@@ -40,7 +40,7 @@ async def _get_services(config: HubConfig):
     await registry.open()
     coap = CoapClient()
     await coap.start()
-    discovery = DeviceDiscovery(registry, coap, config.otbr_url)
+    discovery = DeviceDiscovery(registry, coap, config.otbr_cmd)
     group_mgr = GroupManager(registry, coap)
     return registry, coap, discovery, group_mgr
 

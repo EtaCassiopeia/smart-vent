@@ -1,12 +1,11 @@
-"""Device discovery via OTBR REST API."""
+"""Device discovery via OTBR ot-ctl."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import shlex
 from typing import Any
-
-import aiohttp
 
 from .coap_client import CoapClient
 from .device_registry import DeviceRegistry
@@ -22,11 +21,11 @@ class DeviceDiscovery:
         self,
         registry: DeviceRegistry,
         coap: CoapClient,
-        otbr_url: str = "http://localhost:8081",
+        otbr_cmd: str = "docker exec otbr ot-ctl",
     ) -> None:
         self._registry = registry
         self._coap = coap
-        self._otbr_url = otbr_url.rstrip("/")
+        self._otbr_cmd = shlex.split(otbr_cmd)
 
     async def discover(self) -> list[VentDevice]:
         """Query OTBR for Thread devices and probe each one via CoAP.
@@ -57,43 +56,57 @@ class DeviceDiscovery:
 
         return new_devices
 
-    async def _get_thread_addresses(self) -> list[str]:
-        """Get IPv6 addresses of Thread devices from OTBR REST API."""
+    async def _run_ot_ctl(self, command: str) -> str | None:
+        """Run an ot-ctl command and return its stdout, or None on failure."""
         try:
-            async with aiohttp.ClientSession() as session:
-                # Get the active dataset to verify the network is up
-                async with session.get(
-                    f"{self._otbr_url}/v1/node/dataset/active",
-                    timeout=aiohttp.ClientTimeout(total=5),
-                ) as resp:
-                    if resp.status != 200:
-                        logger.warning("OTBR dataset query failed: %d", resp.status)
-                        return []
-
-                # Get neighbor table for mesh-local addresses
-                async with session.get(
-                    f"{self._otbr_url}/v1/node/neighbor-table",
-                    timeout=aiohttp.ClientTimeout(total=5),
-                ) as resp:
-                    if resp.status != 200:
-                        logger.warning("OTBR neighbor query failed: %d", resp.status)
-                        return []
-                    neighbors = await resp.json()
-
-            addresses = []
-            for neighbor in neighbors:
-                if "IPv6Address" in neighbor:
-                    addresses.append(neighbor["IPv6Address"])
-                elif "Rloc16" in neighbor:
-                    # Fall back to mesh-local from RLOC
-                    rloc = neighbor["Rloc16"]
-                    addresses.append(f"fdde:ad00:beef:0:0:ff:fe00:{rloc:04x}")
-
-            return addresses
-
+            proc = await asyncio.create_subprocess_exec(
+                *self._otbr_cmd, command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=10)
+            if proc.returncode != 0:
+                logger.warning(
+                    "ot-ctl %s failed (rc=%d): %s",
+                    command, proc.returncode, stderr.decode().strip(),
+                )
+                return None
+            return stdout.decode()
+        except asyncio.TimeoutError:
+            logger.error("ot-ctl %s timed out", command)
+            return None
         except Exception as e:
-            logger.error("OTBR discovery failed: %s", e)
+            logger.error("ot-ctl %s error: %s", command, e)
+            return None
+
+    async def _get_thread_addresses(self) -> list[str]:
+        """Get IPv6 addresses of Thread child devices from ot-ctl."""
+        # Verify the Thread network is up
+        state = await self._run_ot_ctl("state")
+        if state is None:
             return []
+
+        state = state.strip().lower()
+        if state in ("disabled", "detached"):
+            logger.warning("OTBR Thread state is '%s', skipping discovery", state)
+            return []
+
+        # Get child IPv6 addresses via childip6
+        output = await self._run_ot_ctl("childip6")
+        if output is None:
+            return []
+
+        addresses = []
+        for line in output.strip().splitlines():
+            # Format: "0xa801: fd0a:9540:e1a1:0:2c2a:1afa:8c69:db9e"
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(": ", 1)
+            if len(parts) == 2:
+                addresses.append(parts[1].strip())
+
+        return addresses
 
     async def poll_all(self) -> int:
         """Poll all known devices and update their status in the registry.

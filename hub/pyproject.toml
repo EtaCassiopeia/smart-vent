@@ -9,7 +9,6 @@ description = "Smart vent control hub service"
 requires-python = ">=3.11"
 dependencies = [
     "aiocoap>=0.4.7",
-    "aiohttp>=3.9",
     "cbor2>=5.6",
     "aiosqlite>=0.19",
     "click>=8.1",
