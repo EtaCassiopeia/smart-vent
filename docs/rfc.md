@@ -26,7 +26,7 @@ The system provides per-vent, per-room, and per-floor control of vent positions 
 
 ### 3.2 Hub
 - **SBC**: Raspberry Pi 4B
-- **Thread radio**: Nordic nRF52840 USB dongle
+- **Thread radio**: Nordic nRF52840 USB dongle or SMLIGHT SLZB-07 (flashed with OT RCP firmware)
 - **Software**: Home Assistant OS/Container + OTBR (Docker)
 
 ## 4. Architecture

@@ -50,7 +50,7 @@ Each HVAC vent gets one controller node consisting of:
 
 ![Hub Hardware](diagrams/hub-hardware.svg)
 
-The nRF52840 dongle acts purely as a **Radio Co-Processor (RCP)** — it does no application processing. It forwards raw 802.15.4 radio frames to the OTBR software running on the Pi, which handles all Thread protocol logic.
+The USB dongle (nRF52840 or SMLIGHT SLZB-07) acts purely as a **Radio Co-Processor (RCP)** — it does no application processing. It forwards raw 802.15.4 radio frames to the OTBR software running on the Pi, which handles all Thread protocol logic.
 
 ---
 
@@ -540,7 +540,7 @@ Read NVS "wal" flag
 |------|-----------|-----------|
 | **ESP32-C6** | Espressif ESP32-C6 | A microcontroller with built-in WiFi, Bluetooth LE, and IEEE 802.15.4 radio. Uses a RISC-V CPU at 160 MHz. This is the brain inside each vent controller. |
 | **SG90** | — | A small, cheap hobby servo motor. Rotates a shaft to a specific angle (0-180°) based on a PWM signal. We use the 90°-180° range to open/close vent dampers. |
-| **nRF52840** | Nordic nRF52840 | A microcontroller from Nordic Semiconductor with an 802.15.4 radio. Used here as a USB dongle plugged into the Raspberry Pi, running Radio Co-Processor firmware to give the Pi access to the Thread mesh. |
+| **nRF52840** | Nordic nRF52840 | A microcontroller from Nordic Semiconductor with an 802.15.4 radio. Used here as a USB dongle plugged into the Raspberry Pi, running Radio Co-Processor firmware to give the Pi access to the Thread mesh. The SMLIGHT SLZB-07 (EFR32MG21 chip) is also supported as an alternative RCP dongle. |
 | **RPi 4B** | Raspberry Pi 4B | A single-board computer (ARM, Linux) acting as the hub. Runs Home Assistant, OTBR, and the hub service. |
 
 ### Networking Protocols
@@ -560,9 +560,9 @@ Read NVS "wal" flag
 
 | Term | Full Name | What It Is |
 |------|-----------|-----------|
-| **OTBR** | OpenThread Border Router | Software that runs on the Raspberry Pi (in a Docker container) and bridges between the Thread mesh network and the Pi's local IP network. It talks to the nRF52840 dongle for radio access and provides a REST API for device management. |
+| **OTBR** | OpenThread Border Router | Software that runs on the Raspberry Pi (in a Docker container) and bridges between the Thread mesh network and the Pi's local IP network. It talks to the RCP dongle (nRF52840 or SLZB-07) for radio access and provides a REST API for device management. |
 | **OpenThread** | — | Google's open-source implementation of the Thread protocol. Used both in the OTBR software on the Pi and in the ESP32-C6 firmware (via ESP-IDF integration). |
-| **RCP** | Radio Co-Processor | A firmware mode for the nRF52840 dongle where it just forwards raw radio frames to the host (the Pi) without doing any Thread processing itself. All protocol logic runs on the Pi's CPU in the OTBR software. |
+| **RCP** | Radio Co-Processor | A firmware mode for the USB dongle (nRF52840 or SLZB-07) where it just forwards raw radio frames to the host (the Pi) without doing any Thread processing itself. All protocol logic runs on the Pi's CPU in the OTBR software. |
 | **MTD** | Minimal Thread Device | A Thread device that does not route messages for other devices. It only communicates with its parent router. Lower resource usage than an FTD. Our USB-powered vents run as MTDs. |
 | **FTD** | Full Thread Device | A Thread device that can act as a router, relaying messages for other devices. Requires being always-on. Our vent devices are NOT FTDs — they're end devices, not routers. |
 | **SED** | Sleepy End Device | An MTD that spends most of its time in deep sleep. It wakes periodically (poll period) to ask its parent router "any messages for me?" The parent holds messages until the SED wakes up. Our battery-powered vents use this mode. |
