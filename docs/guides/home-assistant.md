@@ -41,7 +41,7 @@ Every vent entity exposes these state attributes:
 
 ### From Developer Tools
 
-**Settings -> Developer Tools -> Services**:
+**Settings -> Developer tools -> Actions**:
 
 ```yaml
 action: cover.open_cover
@@ -110,8 +110,8 @@ data:
 | `floor`    | string | Floor identifier (case-insensitive)  |
 | `position` | int    | 0 (closed) to 100 (fully open)       |
 
-Both services can be called from **Developer Tools -> Services**, from
-automations, or from scripts.
+Both actions can be called from **Settings -> Developer tools -> Actions**,
+from automations, or from scripts.
 
 ## Scheduling with blueprints
 
@@ -334,10 +334,11 @@ command, the UI updates on the next poll cycle. To force a refresh,
 reload the integration: **Settings -> Devices & Services -> Vent Control
 -> three dots -> Reload**.
 
-### Services not showing in Developer Tools
+### Actions not showing in Developer Tools
 
-The `vent_control.set_room` and `vent_control.set_floor` services are
-registered when the first config entry loads. If they don't appear:
+The `vent_control.set_room` and `vent_control.set_floor` actions are
+registered when the first config entry loads. If they don't appear in
+**Settings -> Developer tools -> Actions**:
 1. Confirm the integration is set up under **Devices & Services**
 2. Restart Home Assistant
 3. Check the HA log for errors from `vent_control`
