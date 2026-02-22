@@ -7,7 +7,8 @@
         "data": {
           "hub_host": "Hub Host",
           "hub_port": "Hub Port",
-          "poll_interval": "Poll Interval (seconds)"
+          "poll_interval": "Poll Interval (seconds)",
+          "db_path": "Hub Database Path"
         }
       }
     },

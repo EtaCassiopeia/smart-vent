@@ -8,6 +8,7 @@
   "iot_class": "local_polling",
   "requirements": [
     "aiocoap>=0.4.7",
+    "aiosqlite>=0.19",
     "cbor2>=5.6"
   ],
   "version": "0.1.0"

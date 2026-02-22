@@ -93,6 +93,16 @@ fi
 
 echo "Using dongle at: $DONGLE_DEV (baud: $BAUD_RATE)"
 
+# Detect backbone interface (first UP non-loopback interface with a default route)
+BACKBONE="${BACKBONE_INTERFACE:-}"
+if [ -z "$BACKBONE" ]; then
+    BACKBONE=$(ip -br link show | awk '/UP/ && !/^lo / {print $1; exit}')
+    if [ -z "$BACKBONE" ]; then
+        BACKBONE="eth0"
+    fi
+fi
+echo "Using backbone interface: $BACKBONE"
+
 # Pull and run OTBR Docker container
 echo "Starting OTBR container..."
 docker pull nrfconnect/otbr:latest 2>/dev/null || docker pull openthread/otbr:latest
@@ -104,7 +114,7 @@ docker run -d \
     --privileged \
     -v /dev:/dev \
     -e RADIO_URL="spinel+hdlc+uart://${DONGLE_DEV}?uart-baudrate=${BAUD_RATE}" \
-    -e BACKBONE_INTERFACE=eth0 \
+    -e BACKBONE_INTERFACE="${BACKBONE}" \
     openthread/otbr:latest
 
 # Wait for OTBR to start and verify

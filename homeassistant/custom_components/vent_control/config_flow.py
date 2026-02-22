@@ -10,9 +10,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import (
+    CONF_DB_PATH,
     CONF_HUB_HOST,
     CONF_HUB_PORT,
     CONF_POLL_INTERVAL,
+    DEFAULT_DB_PATH,
     DEFAULT_HUB_HOST,
     DEFAULT_HUB_PORT,
     DEFAULT_POLL_INTERVAL,
@@ -26,6 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HUB_HOST, default=DEFAULT_HUB_HOST): str,
         vol.Required(CONF_HUB_PORT, default=DEFAULT_HUB_PORT): int,
         vol.Optional(CONF_POLL_INTERVAL, default=DEFAULT_POLL_INTERVAL): int,
+        vol.Optional(CONF_DB_PATH, default=DEFAULT_DB_PATH): str,
     }
 )
 
@@ -58,7 +61,9 @@ class VentControlConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_POLL_INTERVAL: user_input.get(
                         CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
                     ),
-                    "device_addresses": [],
+                    CONF_DB_PATH: user_input.get(
+                        CONF_DB_PATH, DEFAULT_DB_PATH
+                    ),
                 },
             )
 

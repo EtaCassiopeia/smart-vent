@@ -24,6 +24,13 @@ if [ -d "$COMPONENT_SRC" ]; then
     echo "Vent Control component installed to ${HA_CONFIG_DIR}/custom_components/"
 fi
 
+# Locate the hub database for device discovery
+HUB_DB="${HUB_DB:-${PROJECT_DIR}/devices.db}"
+if [ ! -f "$HUB_DB" ]; then
+    echo "WARNING: Hub database not found at $HUB_DB"
+    echo "  Run 'vent-hub discover' first, or set HUB_DB to the correct path."
+fi
+
 # Run Home Assistant container
 echo "Starting Home Assistant..."
 docker run -d \
@@ -31,6 +38,7 @@ docker run -d \
     --restart unless-stopped \
     --network host \
     -v "${HA_CONFIG_DIR}:/config" \
+    -v "${HUB_DB}:/config/devices.db" \
     -v /etc/localtime:/etc/localtime:ro \
     ghcr.io/home-assistant/home-assistant:stable
 

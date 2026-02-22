@@ -29,11 +29,26 @@ async def async_setup_entry(
     """Set up vent cover entities from a config entry."""
     coordinator: VentCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for eui64, data in coordinator.data.items():
-        entities.append(VentCoverEntity(coordinator, eui64, data))
+    known_eui64s: set[str] = set()
 
-    async_add_entities(entities, True)
+    @callback
+    def _async_add_new_entities() -> None:
+        """Check for new devices and add entities for them."""
+        new_entities = []
+        for eui64, data in coordinator.data.items():
+            if eui64 not in known_eui64s:
+                known_eui64s.add(eui64)
+                new_entities.append(VentCoverEntity(coordinator, eui64, data))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    # Add entities for devices already known at startup
+    _async_add_new_entities()
+
+    # Listen for coordinator updates to pick up newly discovered devices
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_new_entities)
+    )
 
 
 class VentCoverEntity(CoordinatorEntity[VentCoordinator], CoverEntity):

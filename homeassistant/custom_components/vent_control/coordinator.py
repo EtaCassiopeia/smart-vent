@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from pathlib import Path
 from typing import Any
 
+import aiosqlite
 import cbor2
 from aiocoap import Context, Message
 from aiocoap.numbers.codes import Code
@@ -14,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
+from .const import CONF_DB_PATH, CONF_POLL_INTERVAL, DEFAULT_DB_PATH, DEFAULT_POLL_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,13 +41,32 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Set up the CoAP client context."""
         self._coap_context = await Context.create_client_context()
 
+    async def _read_device_addresses(self) -> list[str]:
+        """Read device IPv6 addresses from the hub's SQLite database."""
+        db_path = self._entry.data.get(CONF_DB_PATH, DEFAULT_DB_PATH)
+
+        if not Path(db_path).exists():
+            _LOGGER.warning("Hub database not found at %s", db_path)
+            return []
+
+        try:
+            async with aiosqlite.connect(f"file:{db_path}?mode=ro", uri=True) as db:
+                async with db.execute(
+                    "SELECT ipv6_address FROM devices WHERE ipv6_address != ''"
+                ) as cursor:
+                    rows = await cursor.fetchall()
+                    return [row[0] for row in rows]
+        except Exception as err:
+            _LOGGER.error("Failed to read hub database: %s", err)
+            return []
+
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Poll all known vent devices."""
         if self._coap_context is None:
             await self._async_setup()
 
-        # Get device addresses from config entry or discovery
-        addresses: list[str] = self._entry.data.get("device_addresses", [])
+        # Read device addresses from hub's SQLite database
+        addresses = await self._read_device_addresses()
 
         updated: dict[str, dict[str, Any]] = {}
         for addr in addresses:
@@ -60,6 +81,13 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self._devices = updated
         return updated
 
+    @staticmethod
+    def _cbor_get(data: Any, index: int, default: Any = None) -> Any:
+        """Get a value from a CBOR response (array or map)."""
+        if isinstance(data, list):
+            return data[index] if index < len(data) else default
+        return data.get(index, default)
+
     async def _poll_device(self, address: str) -> dict[str, Any] | None:
         """Poll a single device for all its data."""
         assert self._coap_context is not None
@@ -72,9 +100,9 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             resp = await self._coap_context.request(msg).response
             if resp.code.is_successful():
                 data = cbor2.loads(resp.payload)
-                result["angle"] = data.get(0, 90)
+                result["angle"] = self._cbor_get(data, 0, 90)
                 state_names = {0: "open", 1: "closed", 2: "partial", 3: "moving"}
-                result["state"] = state_names.get(data.get(1, 1), "closed")
+                result["state"] = state_names.get(self._cbor_get(data, 1, 1), "closed")
 
                 # Carry over stored target angle for direction detection
                 if address in self._target_angles:
@@ -91,9 +119,9 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             resp = await self._coap_context.request(msg).response
             if resp.code.is_successful():
                 data = cbor2.loads(resp.payload)
-                result["eui64"] = data.get(0, "")
-                result["firmware_version"] = data.get(1, "")
-                result["uptime_s"] = data.get(2, 0)
+                result["eui64"] = self._cbor_get(data, 0, "")
+                result["firmware_version"] = self._cbor_get(data, 1, "")
+                result["uptime_s"] = self._cbor_get(data, 2, 0)
         except Exception:
             pass
 
@@ -103,9 +131,9 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             resp = await self._coap_context.request(msg).response
             if resp.code.is_successful():
                 data = cbor2.loads(resp.payload)
-                result["room"] = data.get(0, "")
-                result["floor"] = data.get(1, "")
-                result["name"] = data.get(2, "")
+                result["room"] = self._cbor_get(data, 0, "") or ""
+                result["floor"] = self._cbor_get(data, 1, "") or ""
+                result["name"] = self._cbor_get(data, 2, "") or ""
         except Exception:
             pass
 
@@ -115,12 +143,12 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             resp = await self._coap_context.request(msg).response
             if resp.code.is_successful():
                 data = cbor2.loads(resp.payload)
-                result["rssi"] = data.get(0, 0)
-                result["poll_period_ms"] = data.get(1, 0)
+                result["rssi"] = self._cbor_get(data, 0, 0)
+                result["poll_period_ms"] = self._cbor_get(data, 1, 0)
                 power_sources = {0: "usb", 1: "battery"}
-                result["power_source"] = power_sources.get(data.get(2, 0), "usb")
-                result["free_heap"] = data.get(3, 0)
-                result["battery_mv"] = data.get(4)
+                result["power_source"] = power_sources.get(self._cbor_get(data, 2, 0), "usb")
+                result["free_heap"] = self._cbor_get(data, 3, 0)
+                result["battery_mv"] = self._cbor_get(data, 4)
         except Exception:
             pass
 
@@ -132,7 +160,7 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             return False
 
         angle = max(90, min(180, angle))
-        payload = cbor2.dumps({0: angle})
+        payload = cbor2.dumps([angle])
         msg = Message(
             code=Code.PUT,
             uri=f"coap://[{address}]/vent/target",
