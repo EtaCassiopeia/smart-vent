@@ -15,5 +15,35 @@
     "abort": {
       "already_configured": "This hub is already configured."
     }
+  },
+  "services": {
+    "set_floor": {
+      "name": "Set floor position",
+      "description": "Set the position of all vents on a given floor.",
+      "fields": {
+        "floor": {
+          "name": "Floor",
+          "description": "The floor identifier (e.g. \"1\", \"2\", \"basement\")."
+        },
+        "position": {
+          "name": "Position",
+          "description": "Target position as a percentage (0 = closed, 100 = fully open)."
+        }
+      }
+    },
+    "set_room": {
+      "name": "Set room position",
+      "description": "Set the position of all vents in a given room.",
+      "fields": {
+        "room": {
+          "name": "Room",
+          "description": "The room name (e.g. \"bedroom\", \"kitchen\")."
+        },
+        "position": {
+          "name": "Position",
+          "description": "Target position as a percentage (0 = closed, 100 = fully open)."
+        }
+      }
+    }
   }
 }

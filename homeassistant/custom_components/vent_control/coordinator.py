@@ -16,7 +16,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DB_PATH, CONF_POLL_INTERVAL, DEFAULT_DB_PATH, DEFAULT_POLL_INTERVAL, DOMAIN
+from .const import (
+    ANGLE_CLOSED,
+    ANGLE_OPEN,
+    CONF_DB_PATH,
+    CONF_POLL_INTERVAL,
+    DEFAULT_DB_PATH,
+    DEFAULT_POLL_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,6 +161,26 @@ class VentCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             pass
 
         return result
+
+    async def async_set_floor_position(self, floor: str, position: int) -> int:
+        """Set position for all vents on a given floor. Returns count of vents commanded."""
+        angle = ANGLE_CLOSED + round(position / 100 * (ANGLE_OPEN - ANGLE_CLOSED))
+        count = 0
+        for device in self._devices.values():
+            if device.get("floor", "").lower() == floor.lower():
+                if await self.async_set_vent_position(device["address"], angle):
+                    count += 1
+        return count
+
+    async def async_set_room_position(self, room: str, position: int) -> int:
+        """Set position for all vents in a given room. Returns count of vents commanded."""
+        angle = ANGLE_CLOSED + round(position / 100 * (ANGLE_OPEN - ANGLE_CLOSED))
+        count = 0
+        for device in self._devices.values():
+            if device.get("room", "").lower() == room.lower():
+                if await self.async_set_vent_position(device["address"], angle):
+                    count += 1
+        return count
 
     async def async_set_vent_position(self, address: str, angle: int) -> bool:
         """Set a vent's target position."""

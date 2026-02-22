@@ -1,0 +1,27 @@
+set_floor:
+  fields:
+    floor:
+      required: true
+      selector:
+        text:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+set_room:
+  fields:
+    room:
+      required: true
+      selector:
+        text:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
