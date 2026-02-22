@@ -92,6 +92,12 @@ class CoapClient:
     async def get_config(self, address: str) -> dict[str, str]:
         """Get device configuration."""
         data = await self._get(address, "device/config")
+        if isinstance(data, list):
+            return {
+                "room": data[0] if len(data) > 0 else "",
+                "floor": data[1] if len(data) > 1 else "",
+                "name": data[2] if len(data) > 2 else "",
+            }
         return {
             "room": data.get(0, ""),
             "floor": data.get(1, ""),
@@ -110,6 +116,12 @@ class CoapClient:
         if name is not None:
             payload[2] = name
         data = await self._put(address, "device/config", payload)
+        if isinstance(data, list):
+            return {
+                "room": data[0] if len(data) > 0 else "",
+                "floor": data[1] if len(data) > 1 else "",
+                "name": data[2] if len(data) > 2 else "",
+            }
         return {"room": data.get(0, ""), "floor": data.get(1, ""), "name": data.get(2, "")}
 
     async def get_health(self, address: str) -> dict[str, Any]:
@@ -120,7 +132,7 @@ class CoapClient:
             "poll_period_ms": data[1],
             "power_source": "usb" if data[2] == 0 else "battery",
             "free_heap": data[3],
-            "battery_mv": data.get(4),
+            "battery_mv": data[4] if len(data) > 4 else None,
         }
 
     async def probe_device(self, address: str) -> VentDevice | None:
