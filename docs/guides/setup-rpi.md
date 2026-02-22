@@ -122,33 +122,30 @@ docker exec otbr ot-ctl state
 
 ## 6. Form Thread Network
 
-1. Open OTBR web GUI: `http://<rpi-ip>:80`
-2. Click "Form" to create a new Thread network
-3. Save the network credentials (you'll need these for commissioning)
+For development, configure the OTBR to use the same credentials as the
+firmware defaults so devices join automatically:
 
-Verify the active dataset:
+```bash
+docker exec otbr ot-ctl dataset clear
+docker exec otbr ot-ctl dataset networkkey 00112233445566778899aabbccddeeff
+docker exec otbr ot-ctl dataset channel 25
+docker exec otbr ot-ctl dataset panid 0xabcd
+docker exec otbr ot-ctl dataset networkname VentNet
+docker exec otbr ot-ctl dataset commit active
+docker exec otbr ot-ctl ifconfig up
+docker exec otbr ot-ctl thread start
+```
+
+Verify the dataset and state:
 
 ```bash
 docker exec otbr ot-ctl dataset active
+docker exec otbr ot-ctl state
 ```
 
-> **Security note:** The default "Form" action generates a random dataset, but
-> some OTBR images ship with demo/default credentials. For production use,
-> generate your own unique network credentials:
->
-> ```bash
-> # Generate a new random dataset
-> docker exec otbr ot-ctl dataset init new
->
-> # Optionally customize the network name and channel
-> docker exec otbr ot-ctl dataset networkname MyVentNet
-> docker exec otbr ot-ctl dataset channel 25
->
-> # Commit and activate
-> docker exec otbr ot-ctl dataset commit active
-> docker exec otbr ot-ctl ifconfig up
-> docker exec otbr ot-ctl thread start
-> ```
+> **Security note:** The default development credentials are not secure. For
+> production, generate unique credentials and update both the OTBR and firmware.
+> See `commissioning.md` for details.
 >
 > Verify your unique credentials are active:
 >
