@@ -17,31 +17,33 @@
 
 ## XIAO ESP32C6 Pinout Reference
 
-[![XIAO ESP32C6 Pin Map](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32C6/img/xiaoc6.jpg)](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)
+[![XIAO ESP32C6 Board](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32C6/img/xiaoc6.jpg)](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)
+
+### Pin List
+
+[![XIAO ESP32C6 Pin List](https://wdcdn.qpic.cn/MTY4ODg1Nzc0ODUwMjM3NA_318648_dMoXitoaQiq2N3-a_1711678067?w=1486&h=1228)](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)
 
 *Source: [Seeed Studio XIAO ESP32C6 Wiki](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)*
 
 Only the header pins (D0–D10) are used. The JTAG pads on the bottom of the
 board (MTMS, MTDI, MTCK, MTDO) are **not** needed.
 
-| Board Label | GPIO | Notes |
-|-------------|------|-------|
-| D0 | GPIO0 | Strapping pin — avoid for general I/O |
-| D1 | GPIO1 | ADC |
-| **D2** | **GPIO2** | **PWM → servo signal** |
-| D3 | GPIO21 | Digital |
-| D4 / SDA | GPIO22 | I2C data |
-| D5 / SCL | GPIO23 | I2C clock |
-| D6 / TX | GPIO16 | UART TX |
-| D7 / RX | GPIO17 | UART RX |
-| D8 / SCK | GPIO19 | SPI clock |
-| D9 / MISO | GPIO20 | SPI data |
-| D10 / MOSI | GPIO18 | SPI data |
-| 5V | VBUS | USB 5V in/out |
-| 3V3 | 3V3 | 3.3V regulated output |
-| GND | — | Ground |
-
-Full pinout: <https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/>
+| Board Label | GPIO | Default Function | Alternate Functions | Notes |
+|-------------|------|------------------|---------------------|-------|
+| D0 | GPIO0 | Analog | LP_GPIO0, ADC | Strapping pin — avoid |
+| D1 | GPIO1 | Analog | LP_GPIO1, ADC | |
+| **D2** | **GPIO2** | **Analog** | **LP_GPIO2, ADC** | **PWM → servo signal** |
+| D3 | GPIO21 | Digital | SDIO_DATA1 | |
+| D4 / SDA | GPIO22 | I2C Data | SDIO_DATA2 | |
+| D5 / SCL | GPIO23 | I2C Clock | SDIO_DATA3 | |
+| D6 / TX | GPIO16 | UART TX | — | |
+| D7 / RX | GPIO17 | UART RX | — | |
+| D8 / SCK | GPIO19 | SPI Clock | SDIO_CLK | |
+| D9 / MISO | GPIO20 | SPI Data | SDIO_DATA0 | |
+| D10 / MOSI | GPIO18 | SPI Data | SDIO_CMD | |
+| 5V | VBUS | Power | — | USB 5V in/out |
+| 3V3 | 3V3 | Power | — | 3.3V regulated output |
+| GND | — | Ground | — | |
 
 ## Wiring Diagram
 
