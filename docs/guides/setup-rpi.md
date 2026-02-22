@@ -128,9 +128,9 @@ firmware defaults so devices join automatically:
 ```bash
 docker exec otbr ot-ctl dataset clear
 docker exec otbr ot-ctl dataset networkkey 00112233445566778899aabbccddeeff
-docker exec otbr ot-ctl dataset channel 25
-docker exec otbr ot-ctl dataset panid 0xabcd
-docker exec otbr ot-ctl dataset networkname VentNet
+docker exec otbr ot-ctl dataset channel 15
+docker exec otbr ot-ctl dataset panid 0x1234
+docker exec otbr ot-ctl dataset networkname OpenThreadDemo
 docker exec otbr ot-ctl dataset commit active
 docker exec otbr ot-ctl ifconfig up
 docker exec otbr ot-ctl thread start

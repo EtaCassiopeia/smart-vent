@@ -20,9 +20,9 @@ pub struct ThreadConfig {
 impl Default for ThreadConfig {
     fn default() -> Self {
         Self {
-            network_name: "VentNet".into(),
-            channel: 25,
-            panid: 0xabcd,
+            network_name: "OpenThreadDemo".into(),
+            channel: 15,
+            panid: 0x1234,
             // Development-only network key. Replace for production.
             network_key: [
                 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
