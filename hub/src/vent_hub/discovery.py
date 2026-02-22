@@ -56,11 +56,11 @@ class DeviceDiscovery:
 
         return new_devices
 
-    async def _run_ot_ctl(self, command: str) -> str | None:
+    async def _run_ot_ctl(self, *args: str) -> str | None:
         """Run an ot-ctl command and return its stdout, or None on failure."""
         try:
             proc = await asyncio.create_subprocess_exec(
-                *self._otbr_cmd, command,
+                *self._otbr_cmd, *args,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -68,43 +68,68 @@ class DeviceDiscovery:
             if proc.returncode != 0:
                 logger.warning(
                     "ot-ctl %s failed (rc=%d): %s",
-                    command, proc.returncode, stderr.decode().strip(),
+                    " ".join(args), proc.returncode, stderr.decode().strip(),
                 )
                 return None
             return stdout.decode()
         except asyncio.TimeoutError:
-            logger.error("ot-ctl %s timed out", command)
+            logger.error("ot-ctl %s timed out", " ".join(args))
             return None
         except Exception as e:
-            logger.error("ot-ctl %s error: %s", command, e)
+            logger.error("ot-ctl %s error: %s", " ".join(args), e)
             return None
 
     async def _get_thread_addresses(self) -> list[str]:
-        """Get IPv6 addresses of Thread child devices from ot-ctl."""
+        """Get IPv6 addresses of Thread child devices from ot-ctl.
+
+        Constructs RLOC addresses from child table and mesh-local prefix.
+        """
         # Verify the Thread network is up
         state = await self._run_ot_ctl("state")
         if state is None:
             return []
 
-        state = state.strip().lower()
-        if state in ("disabled", "detached"):
-            logger.warning("OTBR Thread state is '%s', skipping discovery", state)
+        state_val = state.strip().splitlines()[0].strip().lower()
+        if state_val in ("disabled", "detached"):
+            logger.warning("OTBR Thread state is '%s', skipping discovery", state_val)
             return []
 
-        # Get child IPv6 addresses via childip6
-        output = await self._run_ot_ctl("childip6")
+        # Get mesh-local prefix from active dataset
+        dataset = await self._run_ot_ctl("dataset", "active")
+        if dataset is None:
+            return []
+
+        ml_prefix = None
+        for line in dataset.splitlines():
+            if "Mesh Local Prefix" in line:
+                # "Mesh Local Prefix: fddb:30d6:d32f:d61f::/64"
+                raw = line.split(":", 1)[1].strip().split("/")[0].strip()
+                # Remove trailing :: if present
+                ml_prefix = raw.rstrip(":")
+                break
+
+        if not ml_prefix:
+            logger.error("Could not determine mesh-local prefix")
+            return []
+
+        # Get child RLOC16 values from child table
+        output = await self._run_ot_ctl("child", "table")
         if output is None:
             return []
 
         addresses = []
-        for line in output.strip().splitlines():
-            # Format: "0xa801: fd0a:9540:e1a1:0:2c2a:1afa:8c69:db9e"
+        for line in output.splitlines():
             line = line.strip()
-            if not line:
-                continue
-            parts = line.split(": ", 1)
-            if len(parts) == 2:
-                addresses.append(parts[1].strip())
+            if line.startswith("|") and "RLOC16" not in line and "---" not in line:
+                parts = [p.strip() for p in line.split("|") if p.strip()]
+                if len(parts) >= 2:
+                    rloc_str = parts[1].strip()
+                    try:
+                        rloc = int(rloc_str, 0)
+                        addr = f"{ml_prefix}:0:ff:fe00:{rloc:04x}"
+                        addresses.append(addr)
+                    except ValueError:
+                        continue
 
         return addresses
 
