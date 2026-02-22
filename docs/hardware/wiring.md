@@ -17,6 +17,10 @@
 
 ## XIAO ESP32C6 Pinout Reference
 
+[![XIAO ESP32C6 Pin Map](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32C6/img/xiaoc6.jpg)](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)
+
+*Source: [Seeed Studio XIAO ESP32C6 Wiki](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/)*
+
 Only the header pins (D0–D10) are used. The JTAG pads on the bottom of the
 board (MTMS, MTDI, MTCK, MTDO) are **not** needed.
 
