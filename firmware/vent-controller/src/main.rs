@@ -94,7 +94,7 @@ fn main() {
     let ledc_driver = LedcDriver::new(
         peripherals.ledc.channel0,
         timer,
-        peripherals.pins.gpio6, // SG90 signal pin
+        peripherals.pins.gpio2, // SG90 signal pin (XIAO ESP32C6 D2)
     )
     .expect("Failed to init LEDC channel");
 
