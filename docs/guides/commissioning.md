@@ -85,27 +85,41 @@ cargo espflash flash --release --port /dev/cu.usbmodem101 --monitor
 
 ## 3. Verify Device Joined the Network
 
-The device should join the OTBR's network automatically on boot. Check the
-serial monitor output for:
+The device should join the OTBR's network automatically on boot. Watch the
+serial monitor for the full boot sequence:
 
 ```
-INFO vent_controller::thread: OpenThread started on channel 25, PAN ID 0xabcd, network 'VentNet'
+Vent Controller v0.1.0
+Wakeup cause: fresh_boot
+Initializing OpenThread stack...
+OpenThread started on channel 15, PAN ID 0x1234, network 'OpenThreadDemo'
+CoAP server started on port 5683
+OpenThread mainloop started
+Vent controller running. Waiting for CoAP commands...
 ```
 
-Check the OTBR side to see if the device joined:
+A successful network join shows the role transition within a few seconds:
+
+```
+OPENTHREAD:[N] Mle-----------: Role detached -> child
+```
+
+Check the OTBR side to confirm the device appeared:
 
 ```bash
-# List neighbor devices
-docker exec otbr ot-ctl neighbor table
-
 # List child devices (MTDs like our vent controller)
 docker exec otbr ot-ctl child table
+
+# List neighbor devices
+docker exec otbr ot-ctl neighbor table
 ```
 
 If the device doesn't appear, verify:
 - The network key matches exactly between OTBR and firmware
 - The channel and PAN ID match
 - The OTBR state is `leader` or `router`
+- The serial output shows "OpenThread mainloop started" (if missing, the
+  event loop isn't running)
 
 ## 4. Discover the Device
 

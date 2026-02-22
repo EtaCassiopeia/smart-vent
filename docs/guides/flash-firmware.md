@@ -34,7 +34,7 @@ This builds the firmware, flashes it, and opens a serial monitor.
 Expected output:
 
 ```
-App/part. size:    822,208/1,536,000 bytes, 53.53%
+App/part. size:    922,288/1,536,000 bytes, 60.04%
 Flashing has completed!
 ```
 
@@ -53,15 +53,25 @@ cargo espflash monitor --port /dev/cu.usbmodem101
 Expected output on first boot:
 
 ```
-INFO vent_controller: Vent Controller v0.1.0
-INFO vent_controller: Wakeup cause: fresh_boot
-INFO vent_controller::identity: Device EUI-64: aa:bb:cc:dd:ee:ff:00:01
-INFO vent_controller: First boot detected — initializing defaults
-INFO vent_controller: Restoring vent angle: 90°
-INFO vent_controller::thread: Initializing OpenThread stack...
-INFO vent_controller::coap: Registering CoAP resources...
-INFO vent_controller::coap: CoAP server started on port 5683
-INFO vent_controller: Vent controller running. Waiting for CoAP commands...
+Vent Controller v0.1.0
+Wakeup cause: fresh_boot
+EUI-64: 58:e6:c5:ff:fe:01:0a:dc
+First boot detected — initializing defaults
+Restoring checkpoint: 90°
+Power mode: always_on (default)
+Initializing OpenThread stack...
+OpenThread started on channel 15, PAN ID 0x1234, network 'OpenThreadDemo'
+Registering CoAP resources...
+CoAP server started on port 5683
+OpenThread mainloop started
+Vent controller running. Waiting for CoAP commands...
+```
+
+If the OTBR is running with matching credentials, you should also see the device
+join the network within a few seconds:
+
+```
+OPENTHREAD:[N] Mle-----------: Role detached -> child
 ```
 
 ## 4. Verify CoAP
