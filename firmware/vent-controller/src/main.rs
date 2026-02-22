@@ -143,6 +143,21 @@ fn main() {
         error!("Failed to register CoAP resources: {:?}", e);
     }
 
+    // Start the OpenThread event loop in a dedicated thread.
+    // esp_openthread_launch_mainloop() is blocking — it processes radio
+    // frames, Thread protocol events, and CoAP requests.
+    std::thread::Builder::new()
+        .name("openthread".into())
+        .stack_size(8192)
+        .spawn(|| {
+            info!("OpenThread mainloop started");
+            unsafe {
+                esp_idf_sys::esp_openthread_launch_mainloop();
+            }
+            warn!("OpenThread mainloop exited");
+        })
+        .expect("Failed to spawn OpenThread task");
+
     // Build shared app state
     let mut app_state = AppState {
         vent: vent_state,
