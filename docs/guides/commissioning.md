@@ -301,8 +301,17 @@ vent-hub discover
 To remove a device from the system:
 
 1. Power off the physical device
-2. Remove from hub: `vent-hub delete <eui64>` (if implemented)
-3. Remove from Home Assistant via the UI
+2. Remove from the hub registry:
+   ```bash
+   vent-hub delete <eui64>
+   ```
+3. The device entity in Home Assistant becomes **unavailable** on the next
+   poll cycle (within 30 seconds). Remove it via **Settings -> Devices &
+   Services -> Vent Control -> entity -> Delete**.
+
+To re-add a removed device, power it on and run `vent-hub discover` again.
+The same HA entity is reused automatically (matched by unique ID), preserving
+any automations that reference it.
 
 ## Troubleshooting
 

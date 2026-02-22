@@ -234,5 +234,32 @@ def assign(ctx, eui64, room, floor):
     _run(_assign())
 
 
+@main.command()
+@click.argument("eui64")
+@click.pass_context
+def delete(ctx, eui64):
+    """Remove a vent device from the hub registry."""
+
+    async def _delete():
+        config = ctx.obj["config"]
+        registry = DeviceRegistry(config.db_path)
+        await registry.open()
+        try:
+            device = await registry.get(eui64)
+            if not device:
+                click.echo(f"Device {eui64} not found.")
+                return
+
+            removed = await registry.delete(eui64)
+            if removed:
+                click.echo(f"Removed {eui64} (room='{device.room}', floor='{device.floor}')")
+            else:
+                click.echo(f"Failed to remove {eui64}.")
+        finally:
+            await registry.close()
+
+    _run(_delete())
+
+
 if __name__ == "__main__":
     main()
