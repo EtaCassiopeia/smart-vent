@@ -111,24 +111,24 @@ docker run -d \
 echo "Waiting for OTBR to start..."
 sleep 5
 
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/v1/node/state 2>/dev/null | grep -q "200"; then
+OT_STATE=$(docker exec otbr ot-ctl state 2>/dev/null | tr -d '[:space:]')
+if [ -n "$OT_STATE" ] && [ "$OT_STATE" != "disabled" ]; then
     echo ""
-    echo "OTBR is running and responding!"
+    echo "OTBR is running! Thread state: $OT_STATE"
 else
     echo ""
-    echo "OTBR container started (ports may take a moment to become available)."
-    echo "Check status with: docker logs otbr"
+    echo "OTBR container started but Thread stack may still be initializing."
+    echo "Check status with: docker exec otbr ot-ctl state"
+    echo "Check logs with:   docker logs otbr"
 fi
 
 echo ""
-echo "  REST API: http://localhost:8081"
-echo "  Web GUI:  http://localhost:80"
-echo ""
-echo "NOTE: 'docker ps' will NOT show ports in the PORTS column when using"
-echo "      --network host. This is normal — all ports are exposed directly."
-echo "      Verify with: curl http://localhost:8081/v1/node/state"
+echo "Useful commands:"
+echo "  docker exec otbr ot-ctl state          # Check Thread state"
+echo "  docker exec otbr ot-ctl dataset active  # View active dataset"
+echo "  docker logs otbr                        # View container logs"
 echo ""
 echo "Next steps:"
-echo "  1. Open the web GUI and form a new Thread network"
+echo "  1. Open the web GUI (http://localhost:80) and form a new Thread network"
 echo "  2. Note the network credentials for device commissioning"
 echo "  3. Run setup_ha.sh to install Home Assistant"

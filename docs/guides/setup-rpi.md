@@ -113,7 +113,12 @@ docker run -d --name otbr --network host --privileged \
 
 > **Note:** `docker ps` will not show ports in the PORTS column when using `--network host`.
 > This is normal — all container ports are exposed directly on the host.
-> Verify with: `curl http://localhost:8081/v1/node/state`
+
+Verify OTBR is running:
+
+```bash
+docker exec otbr ot-ctl state
+```
 
 ## 6. Form Thread Network
 
@@ -121,10 +126,10 @@ docker run -d --name otbr --network host --privileged \
 2. Click "Form" to create a new Thread network
 3. Save the network credentials (you'll need these for commissioning)
 
-Verify via REST API:
+Verify the active dataset:
 
 ```bash
-curl http://localhost:8081/v1/node/dataset/active
+docker exec otbr ot-ctl dataset active
 ```
 
 ## 7. Install Home Assistant
@@ -155,6 +160,6 @@ docker restart homeassistant
 
 ## Verification
 
-- OTBR REST API responds: `curl http://localhost:8081/v1/node/state`
+- OTBR is running: `docker exec otbr ot-ctl state` (should show `leader` or `router`)
+- Thread dataset is set: `docker exec otbr ot-ctl dataset active`
 - Home Assistant web UI loads: `http://<rpi-ip>:8123`
-- Thread network is active and ready for devices
