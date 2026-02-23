@@ -3,6 +3,7 @@
 #include <esp_log.h>
 #include <esp_matter.h>
 #include <esp_matter_endpoint.h>
+#include <esp_openthread.h>
 #include <app/server/Server.h>
 
 static const char *TAG = "matter_bridge";
@@ -135,13 +136,25 @@ int matter_bridge_init(matter_position_cb_t position_cb,
 
 int matter_bridge_start(void)
 {
+    ESP_LOGI(TAG, "Configuring OpenThread platform for Matter...");
+
+    // Matter manages the OpenThread stack. Configure the OT platform
+    // with native radio (ESP32-C6 built-in 802.15.4) and NVS storage.
+    esp_openthread_platform_config_t ot_config = {};
+    ot_config.radio_config.radio_mode = RADIO_MODE_NATIVE;
+    ot_config.host_config.host_connection_mode = HOST_CONNECTION_MODE_NONE;
+    ot_config.port_config.storage_partition_name = "nvs";
+    ot_config.port_config.netif_queue_size = 10;
+    ot_config.port_config.task_queue_size = 10;
+    esp_matter::set_openthread_platform_config(&ot_config);
+
     ESP_LOGI(TAG, "Starting Matter event loop...");
     esp_err_t err = esp_matter::start(nullptr);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "esp_matter::start() failed: %d", err);
         return -1;
     }
-    ESP_LOGI(TAG, "Matter started");
+    ESP_LOGI(TAG, "Matter started (Thread managed by Matter SDK)");
     return 0;
 }
 

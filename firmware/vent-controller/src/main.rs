@@ -18,7 +18,7 @@ use identity::DeviceIdentity;
 use power::{PowerManager, PowerMode};
 use servo::ServoDriver;
 use state::{AppState, VentStateMachine};
-use thread::{ThreadConfig, ThreadManager};
+use thread::ThreadManager;
 use vent_protocol::{PowerSource, ANGLE_CLOSED};
 
 use esp_idf_hal::ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver, Resolution};
@@ -131,18 +131,22 @@ fn main() {
     };
     let power_mgr = PowerManager::new(power_mode);
 
-    // Initialize Thread networking
-    let mut thread_mgr = ThreadManager::new(ThreadConfig::default());
-    if let Err(e) = thread_mgr.init() {
-        error!("Failed to init Thread: {:?}", e);
-    }
+    // Thread networking is managed by Matter SDK — only create a query handle
+    let thread_mgr = ThreadManager::new_matter_managed();
 
     // Configure SED if battery-powered
     if let Err(e) = power_mgr.configure_sed() {
         error!("Failed to configure SED mode: {:?}", e);
     }
 
-    // Build app state and register CoAP resources (must happen before mainloop starts)
+    // Initialize Matter (creates node + Window Covering endpoint).
+    // Matter manages the OpenThread stack and its mainloop internally.
+    matter::init();
+    matter::start();
+    matter::log_pairing_info();
+
+    // Build app state and register CoAP resources.
+    // CoAP must be registered after Matter starts, since Matter owns the OT instance.
     let app_state = AppState {
         vent: vent_state,
         identity: device_id,
@@ -158,26 +162,6 @@ fn main() {
     if let Err(e) = register_coap_resources(app_state) {
         error!("Failed to register CoAP resources: {:?}", e);
     }
-
-    // Initialize Matter (creates node + Window Covering endpoint)
-    matter::init();
-    matter::start();
-    matter::log_pairing_info();
-
-    // Start the OpenThread event loop in a dedicated thread.
-    // esp_openthread_launch_mainloop() is blocking — it processes radio
-    // frames, Thread protocol events, and CoAP requests.
-    std::thread::Builder::new()
-        .name("openthread".into())
-        .stack_size(8192)
-        .spawn(|| {
-            info!("OpenThread mainloop started");
-            unsafe {
-                esp_idf_sys::esp_openthread_launch_mainloop();
-            }
-            warn!("OpenThread mainloop exited");
-        })
-        .expect("Failed to spawn OpenThread task");
 
     info!("Vent controller running. Waiting for CoAP/Matter commands...");
 
