@@ -3,6 +3,8 @@ mod coap;
 #[allow(dead_code)]
 mod identity;
 #[allow(dead_code)]
+mod matter;
+#[allow(dead_code)]
 mod power;
 #[allow(dead_code)]
 mod servo;
@@ -157,6 +159,11 @@ fn main() {
         error!("Failed to register CoAP resources: {:?}", e);
     }
 
+    // Initialize Matter (creates node + Window Covering endpoint)
+    matter::init();
+    matter::start();
+    matter::log_pairing_info();
+
     // Start the OpenThread event loop in a dedicated thread.
     // esp_openthread_launch_mainloop() is blocking — it processes radio
     // frames, Thread protocol events, and CoAP requests.
@@ -172,7 +179,7 @@ fn main() {
         })
         .expect("Failed to spawn OpenThread task");
 
-    info!("Vent controller running. Waiting for CoAP commands...");
+    info!("Vent controller running. Waiting for CoAP/Matter commands...");
 
     // Main loop: process servo steps and Thread events
     loop {
@@ -200,6 +207,10 @@ fn main() {
                         final_angle,
                         s.vent.state().as_str()
                     );
+
+                    // Report final position to Matter fabric
+                    matter::report_position(final_angle);
+                    matter::report_operational_status(false);
                 });
             }
         } else {

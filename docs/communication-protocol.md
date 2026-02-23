@@ -146,6 +146,44 @@ All vent devices join the Thread multicast group `ff03::1` (realm-local all node
 
 For broadcast operations (e.g., "close all vents"), the hub sends a CoAP PUT to the multicast address. Devices process the request but do not send individual responses to multicast PUTs.
 
+## Matter Protocol
+
+In addition to CoAP, the device implements the Matter Window Covering device type for compatibility with Google Home, Alexa, and Apple Home.
+
+### Cluster Mapping
+
+| Matter Cluster | Attribute / Command | Vent Equivalent |
+|---------------|-------------------|----------------|
+| Window Covering | `CurrentPositionLiftPercent100ths` | Current angle: 0% = open (180°), 100% = closed (90°) |
+| Window Covering | `TargetPositionLiftPercent100ths` | Target angle (same mapping) |
+| Window Covering | `OperationalStatus` | 0 = stopped, non-zero = moving |
+| Window Covering | `UpOrOpen` command | Set target to 180° (fully open) |
+| Window Covering | `DownOrClose` command | Set target to 90° (fully closed) |
+| Window Covering | `GoToLiftPercentage` command | Set target to mapped angle |
+| Window Covering | `StopMotion` command | Stop at current angle |
+| Basic Information | `VendorName` | "SmartVent" |
+| Basic Information | `ProductName` | "Smart HVAC Vent" |
+| Identify | `Identify` command | Servo wiggle for visual identification |
+
+### Angle ↔ Percent100ths Conversion
+
+Matter Window Covering uses `percent100ths` (0–10000) where 0 = fully open and 10000 = fully closed. The vent servo operates in degrees (90° = closed, 180° = open).
+
+```
+percent100ths = ((180 - angle) * 10000) / 90
+angle = 180 - (percent100ths * 90) / 10000
+```
+
+| Angle | Percent100ths | State |
+|-------|--------------|-------|
+| 180° | 0 | Fully open |
+| 135° | 5000 | Half open |
+| 90° | 10000 | Fully closed |
+
+### Commissioning
+
+Matter devices are commissioned via BLE (Bluetooth Low Energy). The device advertises a BLE beacon with its discriminator and accepts PASE (Passcode-Authenticated Session Establishment) connections. After commissioning, the device joins the Thread network using credentials provided by the commissioner.
+
 ## CBOR Schema (shared-protocol)
 
 ```rust

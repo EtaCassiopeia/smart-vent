@@ -136,6 +136,9 @@ pub fn handle_put_target(state: &mut AppState, payload: &[u8]) -> CoapResponse {
 
     info!("Target set: {}° -> {}°", previous_angle, clamped);
 
+    // Notify Matter that movement has started (cross-protocol sync)
+    crate::matter::report_operational_status(true);
+
     match to_vec(&resp) {
         Ok(bytes) => CoapResponse::Changed(bytes),
         Err(_) => CoapResponse::InternalError,
