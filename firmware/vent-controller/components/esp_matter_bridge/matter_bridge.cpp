@@ -4,7 +4,12 @@
 #include <esp_matter.h>
 #include <esp_matter_endpoint.h>
 #include <esp_openthread.h>
+#include <nvs_flash.h>
+#include <esp_mac.h>
 #include <app/server/Server.h>
+#include <app/server/OnboardingCodesUtil.h>
+#include <setup_payload/ManualSetupPayloadGenerator.h>
+#include <setup_payload/QRCodeSetupPayloadGenerator.h>
 
 static const char *TAG = "matter_bridge";
 
@@ -130,7 +135,13 @@ int matter_bridge_init(matter_position_cb_t position_cb,
         }
     }
 
-    ESP_LOGI(TAG, "Matter node initialized (VID=0xFFF1, PID=0x8001)");
+    // Derive discriminator from EUI-64 lower 12 bits for unique BLE advertising
+    uint8_t mac[8] = {};
+    esp_read_mac(mac, ESP_MAC_IEEE802154);
+    uint16_t discriminator = ((uint16_t)mac[6] << 4 | (mac[7] >> 4)) & 0x0FFF;
+    ESP_LOGI(TAG, "Discriminator derived from EUI-64: %u", discriminator);
+
+    ESP_LOGI(TAG, "Matter node initialized (VID=0xFFF1, PID=0x8001, disc=%u)", discriminator);
     return 0;
 }
 
@@ -184,18 +195,57 @@ bool matter_bridge_is_commissioned(void)
 
 int matter_bridge_get_pairing_code(char *buf, size_t len)
 {
-    // Will be implemented in PR 5 (BLE commissioning)
-    ESP_LOGW(TAG, "matter_bridge_get_pairing_code: not yet implemented");
-    if (len > 0) buf[0] = '\0';
-    return -1;
+    if (len == 0) return -1;
+
+    chip::SetupPayload payload;
+    auto &server = chip::Server::GetInstance();
+    auto &commData = server.GetCommissioningWindowManager().GetOpener();
+
+    CHIP_ERROR err = chip::GetManualPairingCode(payload, chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
+    if (err != CHIP_NO_ERROR) {
+        ESP_LOGW(TAG, "Failed to get manual pairing code");
+        buf[0] = '\0';
+        return -1;
+    }
+
+    std::string code;
+    chip::ManualSetupPayloadGenerator generator(payload);
+    err = generator.payloadDecimalStringRepresentation(code);
+    if (err != CHIP_NO_ERROR) {
+        buf[0] = '\0';
+        return -1;
+    }
+
+    size_t copy_len = code.size() < len - 1 ? code.size() : len - 1;
+    memcpy(buf, code.c_str(), copy_len);
+    buf[copy_len] = '\0';
+    return 0;
 }
 
 int matter_bridge_get_qr_payload(char *buf, size_t len)
 {
-    // Will be implemented in PR 5 (BLE commissioning)
-    ESP_LOGW(TAG, "matter_bridge_get_qr_payload: not yet implemented");
-    if (len > 0) buf[0] = '\0';
-    return -1;
+    if (len == 0) return -1;
+
+    chip::SetupPayload payload;
+    CHIP_ERROR err = chip::GetQRCodePayload(payload, chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
+    if (err != CHIP_NO_ERROR) {
+        ESP_LOGW(TAG, "Failed to get QR payload");
+        buf[0] = '\0';
+        return -1;
+    }
+
+    std::string qr;
+    chip::QRCodeSetupPayloadGenerator generator(payload);
+    err = generator.payloadBase38Representation(qr);
+    if (err != CHIP_NO_ERROR) {
+        buf[0] = '\0';
+        return -1;
+    }
+
+    size_t copy_len = qr.size() < len - 1 ? qr.size() : len - 1;
+    memcpy(buf, qr.c_str(), copy_len);
+    buf[copy_len] = '\0';
+    return 0;
 }
 
 void matter_bridge_factory_reset(void)

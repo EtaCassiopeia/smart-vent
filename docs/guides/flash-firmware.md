@@ -74,7 +74,26 @@ join the network within a few seconds:
 OPENTHREAD:[N] Mle-----------: Role detached -> child
 ```
 
-## 4. Verify CoAP
+## 4. Matter Pairing Information
+
+After boot, the serial output will display the Matter pairing information:
+
+```
+Manual pairing code: 34970112332
+QR code payload: MT:Y3.13OTB00KA0648G00
+```
+
+Use the **manual pairing code** when commissioning via CLI tools (e.g. `chip-tool`), or generate a printable QR code:
+
+```bash
+cd tools/qr-generator
+pip install qrcode[pil]
+python generate_qr.py "MT:Y3.13OTB00KA0648G00" --output vent-qr.png
+```
+
+Scan the QR code with the Google Home, Alexa, or Apple Home app to commission the device.
+
+## 5. Verify CoAP
 
 From the hub (or any machine on the Thread network):
 
