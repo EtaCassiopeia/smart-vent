@@ -35,11 +35,21 @@ The system provides per-vent, per-room, and per-floor control of vent positions 
 
 ### 4.1 Communication Flow
 
+The firmware runs a dual-protocol stack over Thread:
+
+**Matter path (Google Home, Alexa, Apple Home, HA Matter):**
+1. Device advertises via BLE for commissioning
+2. Commissioner provisions Thread credentials and adds to Matter fabric
+3. Ecosystem apps control via Matter Window Covering cluster
+
+**CoAP path (custom hub):**
 1. ESP32-C6 joins Thread network as MTD (Minimal Thread Device)
 2. Device registers multicast group and exposes CoAP resources
 3. Hub discovers devices via OTBR REST API (`/node/rloc` endpoint)
 4. Hub communicates with devices over CoAP/UDP/IPv6
 5. Home Assistant polls hub service for state updates
+
+Both protocols share the same application state and servo — commands from either side are reflected in the other.
 
 ### 4.2 Network Topology
 

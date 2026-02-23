@@ -1,6 +1,6 @@
 # Smart Vent Control System
 
-Per-room HVAC vent control using ESP32-C6 + SG90 servos over Thread, managed by a Raspberry Pi 4B hub running Home Assistant.
+Per-room HVAC vent control using ESP32-C6 + SG90 servos over Thread. Supports **Matter** for Google Home, Alexa, and Apple Home, plus a CoAP protocol for the custom Python hub and Home Assistant integration.
 
 ## Architecture
 
@@ -61,17 +61,30 @@ tests/integration/  End-to-end tests (hub + simulator)
 
 ## Key Features
 
+- **Matter support**: Works with Google Home, Alexa, Apple Home, and HA Matter integration
 - **Per-vent control**: 90° (closed) to 180° (open)
 - **Room/floor grouping**: Batch operations on groups of vents
 - **Permanent device ID**: EUI-64 from ESP32-C6 eFuse
-- **Auto-discovery**: New devices found via OTBR
+- **BLE commissioning**: Scan a QR code to add devices to any ecosystem
+- **Multi-admin**: Control from multiple ecosystems simultaneously
+- **Auto-discovery**: New devices found via OTBR (legacy CoAP) or Matter commissioning
 - **Battery support**: Optional deep sleep (Thread SED mode)
 - **Local only**: No cloud — all traffic stays on Thread mesh
-- **Home Assistant**: Vents appear as cover entities
+- **Home Assistant**: Vents appear as cover entities (via Matter or custom component)
 
 ## Protocol
 
-CoAP over IPv6/Thread with CBOR payloads:
+The firmware runs two protocols simultaneously over Thread:
+
+**Matter** (Window Covering cluster) — Industry standard, used by Google Home/Alexa/Apple Home/HA:
+
+| Cluster | Commands | Purpose |
+|---------|----------|---------|
+| Window Covering | UpOrOpen, DownOrClose, GoToLiftPercentage | Position control |
+| Window Covering | CurrentPositionLiftPercent100ths | Position reporting |
+| Identify | Identify | Servo wiggle for identification |
+
+**CoAP + CBOR** — Custom protocol for the Python hub:
 
 | Resource | Methods | Purpose |
 |----------|---------|---------|
