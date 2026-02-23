@@ -1,11 +1,7 @@
-use crate::identity::DeviceIdentity;
-use crate::state::VentStateMachine;
-use crate::thread::ThreadManager;
+use crate::state::{init_app_state, AppState};
 use log::{info, warn};
 use minicbor::{to_vec, Decoder};
 use std::ffi::c_void;
-use std::sync::Mutex;
-use std::time::Instant;
 use vent_protocol::*;
 
 // --- FFI declarations for OpenThread CoAP (not in esp-idf-sys bindings) ---
@@ -93,16 +89,6 @@ extern "C" {
 }
 
 const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-/// Shared application state accessible by CoAP handlers.
-pub struct AppState {
-    pub vent: VentStateMachine,
-    pub identity: DeviceIdentity,
-    pub thread: ThreadManager,
-    pub start_time: Instant,
-    pub power_source: PowerSource,
-    pub poll_period_ms: u32,
-}
 
 /// CoAP resource handler results.
 pub enum CoapResponse {
@@ -260,18 +246,7 @@ pub enum CoapMethod {
     Put,
 }
 
-// --- Shared state and CoAP callback ---
-
-static APP_STATE: Mutex<Option<AppState>> = Mutex::new(None);
-
-/// Access the shared AppState. Returns None if not yet initialized.
-pub fn with_app_state<F, R>(f: F) -> Option<R>
-where
-    F: FnOnce(&mut AppState) -> R,
-{
-    let mut guard = APP_STATE.lock().unwrap();
-    guard.as_mut().map(f)
-}
+// --- CoAP callback ---
 
 /// Default CoAP request handler called by the OpenThread stack for all incoming requests.
 unsafe extern "C" fn coap_default_handler(
@@ -361,15 +336,12 @@ unsafe extern "C" fn coap_default_handler(
     info!("CoAP: {} {}", match code { OT_COAP_CODE_GET => "GET", _ => "PUT" }, path);
 
     // 4. Route request
-    let mut guard = APP_STATE.lock().unwrap();
-    let response = match guard.as_mut() {
-        Some(state) => route_request(state, path, method, &payload_buf[..payload_len]),
-        None => {
-            warn!("CoAP: AppState not initialized");
-            CoapResponse::InternalError
-        }
-    };
-    drop(guard);
+    let response = crate::state::with_app_state(|state| {
+        route_request(state, path, method, &payload_buf[..payload_len])
+    }).unwrap_or_else(|| {
+        warn!("CoAP: AppState not initialized");
+        CoapResponse::InternalError
+    });
 
     // 5. Build and send response
     let (resp_code, body) = match response {
@@ -425,10 +397,7 @@ pub fn register_coap_resources(app_state: AppState) -> Result<(), esp_idf_sys::E
     info!("Registering CoAP resources...");
 
     // Store app state for the callback
-    {
-        let mut guard = APP_STATE.lock().unwrap();
-        *guard = Some(app_state);
-    }
+    init_app_state(app_state);
 
     unsafe {
         let instance = esp_idf_sys::esp_openthread_get_instance();

@@ -11,11 +11,11 @@ mod state;
 #[allow(dead_code)]
 mod thread;
 
-use coap::{register_coap_resources, AppState};
+use coap::register_coap_resources;
 use identity::DeviceIdentity;
 use power::{PowerManager, PowerMode};
 use servo::ServoDriver;
-use state::VentStateMachine;
+use state::{AppState, VentStateMachine};
 use thread::{ThreadConfig, ThreadManager};
 use vent_protocol::{PowerSource, ANGLE_CLOSED};
 
@@ -176,21 +176,21 @@ fn main() {
 
     // Main loop: process servo steps and Thread events
     loop {
-        let is_moving = coap::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
+        let is_moving = state::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
 
         if is_moving {
-            coap::with_app_state(|s| s.vent.step());
+            state::with_app_state(|s| s.vent.step());
 
-            let current_angle = coap::with_app_state(|s| s.vent.current_angle()).unwrap_or(ANGLE_CLOSED);
+            let current_angle = state::with_app_state(|s| s.vent.current_angle()).unwrap_or(ANGLE_CLOSED);
             if let Err(e) = servo.set_angle(current_angle) {
                 error!("Servo step failed: {:?}", e);
             }
             sleep(Duration::from_millis(servo::STEP_DELAY_MS as u64));
 
             // Commit when movement completes: checkpoint angle + set WAL flag
-            let still_moving = coap::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
+            let still_moving = state::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
             if !still_moving {
-                coap::with_app_state(|s| {
+                state::with_app_state(|s| {
                     let final_angle = s.vent.current_angle();
                     if let Err(e) = s.identity.commit(final_angle) {
                         error!("WAL commit failed: {:?}", e);
