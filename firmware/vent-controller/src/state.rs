@@ -1,4 +1,35 @@
-use vent_protocol::{clamp_angle, VentState};
+use crate::identity::DeviceIdentity;
+use crate::thread::ThreadManager;
+use std::sync::Mutex;
+use std::time::Instant;
+use vent_protocol::{clamp_angle, PowerSource, VentState};
+
+/// Shared application state accessible by CoAP and Matter handlers.
+pub struct AppState {
+    pub vent: VentStateMachine,
+    pub identity: DeviceIdentity,
+    pub thread: ThreadManager,
+    pub start_time: Instant,
+    pub power_source: PowerSource,
+    pub poll_period_ms: u32,
+}
+
+static APP_STATE: Mutex<Option<AppState>> = Mutex::new(None);
+
+/// Initialize the shared AppState. Must be called once before any handler runs.
+pub fn init_app_state(state: AppState) {
+    let mut guard = APP_STATE.lock().unwrap();
+    *guard = Some(state);
+}
+
+/// Access the shared AppState. Returns None if not yet initialized.
+pub fn with_app_state<F, R>(f: F) -> Option<R>
+where
+    F: FnOnce(&mut AppState) -> R,
+{
+    let mut guard = APP_STATE.lock().unwrap();
+    guard.as_mut().map(f)
+}
 
 /// Vent state machine managing position and transitions.
 pub struct VentStateMachine {
