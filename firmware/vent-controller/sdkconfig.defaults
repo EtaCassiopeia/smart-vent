@@ -11,8 +11,9 @@ CONFIG_IEEE802154_ENABLED=y
 CONFIG_VFS_SUPPORT_SELECT=y
 CONFIG_ESP_EVENTFD=y
 
-# Stack sizes — OpenThread requires larger stacks than defaults
-CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
+# Stack sizes — OpenThread + Matter require larger stacks
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_CHIP_TASK_STACK_SIZE=8192
 
 # Power management
 CONFIG_PM_ENABLE=y
@@ -20,8 +21,23 @@ CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 
 # CoAP — enabled via components/ot_coap_config (OPENTHREAD_CONFIG_COAP_API_ENABLE)
 
-# Partition table — use large app partition (1.5MB) for OpenThread firmware
-CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+# Matter
+CONFIG_ESP_MATTER_ENABLE_MATTER_SERVER=y
+CONFIG_ENABLE_CHIP_SHELL=n
+
+# BLE commissioning
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+
+# Crypto — required by Matter (CASE/PASE)
+CONFIG_MBEDTLS_CMAC_C=y
+CONFIG_MBEDTLS_HKDF_C=y
+CONFIG_MBEDTLS_ECJPAKE_C=y
+
+# Custom partition table — 1.9MB app partition for Matter + BLE + Thread
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 
 # NVS
 CONFIG_NVS_ENABLED=y
