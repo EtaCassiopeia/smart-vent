@@ -123,7 +123,23 @@ The hub communicates with devices using their **Mesh-Local EID** — the stable 
 
 ## 4. Application Layer
 
-### 4.1 CoAP Resource Tree
+### 4.1 Dual-Protocol Architecture
+
+The vent firmware runs two application-layer protocols simultaneously over the same Thread network:
+
+| Protocol | Purpose | Ecosystem |
+|----------|---------|-----------|
+| **CoAP + CBOR** | Original protocol; used by the Python hub and HA custom component | Home Assistant (custom) |
+| **Matter** (Window Covering cluster) | Industry-standard smart home protocol | Google Home, Alexa, Apple Home, HA (built-in) |
+
+Both protocols share the same `AppState` (defined in `state.rs`) protected by a `Mutex`. When either protocol changes the vent position, the other is notified via cross-protocol sync:
+
+- CoAP `PUT /vent/target` → updates `AppState` → reports new position to Matter fabric
+- Matter `GoToLiftPercentage` → updates `AppState` → next CoAP `GET /vent/position` reflects the change
+
+The Matter SDK manages the OpenThread stack internally. CoAP continues to operate on port 5683 on the same Thread interface.
+
+### 4.2 CoAP Resource Tree
 
 Each vent device exposes this resource tree on port 5683:
 
@@ -138,7 +154,7 @@ coap://[device-ipv6]:5683/
     └── health      GET         → RSSI, power source, free heap
 ```
 
-### 4.2 CBOR Encoding
+### 4.3 CBOR Encoding
 
 All payloads use CBOR (Concise Binary Object Representation) with **integer keys** for compactness. This is critical because 802.15.4 frames max out at 127 bytes.
 
@@ -154,7 +170,7 @@ CBOR with integer keys (compact, ~10 bytes):
 
 The integer-to-field mapping is defined in `firmware/shared-protocol/src/lib.rs` using minicbor derive macros (`#[n(0)]`, `#[n(1)]`, etc.) and mirrored in the Python hub's client code.
 
-### 4.3 Request/Response Flow
+### 4.4 Request/Response Flow
 
 ```mermaid
 sequenceDiagram
@@ -203,9 +219,13 @@ firmware/vent-controller/src/
 │                   get_rssi() reads live parent RSSI via otThreadGetParentAverageRssi()
 │
 ├── coap.rs         CoAP server and resource handlers
-│                   Defines AppState (owns VentStateMachine, DeviceIdentity, ThreadManager)
 │                   5 endpoints (position, target, identity, config, health)
 │                   CBOR encode/decode via minicbor
+│
+├── matter.rs       Matter SDK FFI wrapper
+│                   Window Covering position ↔ servo angle conversion
+│                   Cross-protocol sync (reports state changes to Matter fabric)
+│                   Calls C bridge in components/esp_matter_bridge/
 │
 └── power.rs        Power management
                     Deep sleep with timer wake
