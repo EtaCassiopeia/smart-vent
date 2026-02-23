@@ -34,6 +34,8 @@ cargo build
 
 The first build will download and compile ESP-IDF (takes several minutes).
 
+**Note:** The firmware uses the [ESP-IDF Component Manager](https://components.espressif.com/) to pull `esp_matter` and its transitive dependencies automatically during the first build. No manual submodule setup is required.
+
 ### 5. Run Host Tests
 
 ```bash
