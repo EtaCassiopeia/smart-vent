@@ -157,6 +157,8 @@ fn main() {
             PowerMode::Sed { .. } => PowerSource::Battery,
         },
         poll_period_ms: power_mode.poll_period_ms(),
+        identify_mode: false,
+        identify_restore_angle: None,
     };
 
     if let Err(e) = register_coap_resources(app_state) {
@@ -183,6 +185,21 @@ fn main() {
             if !still_moving {
                 state::with_app_state(|s| {
                     let final_angle = s.vent.current_angle();
+
+                    // During identify, wiggle back and forth instead of committing
+                    if s.identify_mode {
+                        if let Some(restore) = s.identify_restore_angle {
+                            // Toggle between restore angle and wiggle offset
+                            let next = if final_angle == restore {
+                                restore.saturating_add(10).min(vent_protocol::ANGLE_OPEN)
+                            } else {
+                                restore
+                            };
+                            s.vent.set_target(next);
+                        }
+                        return;
+                    }
+
                     if let Err(e) = s.identity.commit(final_angle) {
                         error!("WAL commit failed: {:?}", e);
                     }

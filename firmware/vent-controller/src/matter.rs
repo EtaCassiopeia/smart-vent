@@ -64,9 +64,35 @@ unsafe extern "C" fn on_position_change(percent100ths: u16, _ctx: *mut c_void) {
     });
 }
 
+/// Identify wiggle amplitude in degrees (each direction from current position).
+const IDENTIFY_WIGGLE_DEGREES: u8 = 10;
+
 unsafe extern "C" fn on_identify(duration_s: u16, _ctx: *mut c_void) {
     info!("Matter: identify requested for {}s", duration_s);
-    // Identify implementation deferred to PR 9
+
+    if duration_s == 0 {
+        // Stop identify: restore original position
+        crate::state::with_app_state(|s| {
+            if let Some(restore_angle) = s.identify_restore_angle.take() {
+                s.identify_mode = false;
+                s.vent.set_target(restore_angle);
+                info!("Matter: identify stopped, restoring to {}°", restore_angle);
+            }
+        });
+        return;
+    }
+
+    // Start identify: save current angle, begin wiggle
+    crate::state::with_app_state(|s| {
+        let current = s.vent.current_angle();
+        s.identify_restore_angle = Some(current);
+        s.identify_mode = true;
+
+        // Wiggle: move to current + offset (clamped to valid range)
+        let wiggle_target = current.saturating_add(IDENTIFY_WIGGLE_DEGREES).min(ANGLE_OPEN);
+        s.vent.set_target(wiggle_target);
+        info!("Matter: identify started from {}°, wiggling to {}°", current, wiggle_target);
+    });
 }
 
 // --- Public Rust API ---

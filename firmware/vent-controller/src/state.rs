@@ -12,6 +12,10 @@ pub struct AppState {
     pub start_time: Instant,
     pub power_source: PowerSource,
     pub poll_period_ms: u32,
+    /// True when the servo is doing an identify wiggle.
+    pub identify_mode: bool,
+    /// Angle to restore after identify completes.
+    pub identify_restore_angle: Option<u8>,
 }
 
 static APP_STATE: Mutex<Option<AppState>> = Mutex::new(None);
