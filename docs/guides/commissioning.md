@@ -2,9 +2,72 @@
 
 ## Overview
 
-Commissioning adds a new ESP32-C6 vent controller to the Thread network and
-registers it with the hub. Both the OTBR and the device must share the same
-Thread network credentials (network key, channel, PAN ID, network name).
+Commissioning adds a new ESP32-C6 vent controller to the Thread network. The firmware supports two commissioning methods:
+
+1. **Matter commissioning (recommended)** — BLE-based onboarding via Google Home, Alexa, Apple Home, or chip-tool. Thread credentials are provisioned automatically during commissioning.
+2. **Legacy CoAP commissioning** — Hardcoded Thread credentials matching the OTBR dataset. Used with the Python hub CLI.
+
+## Matter Commissioning (Recommended)
+
+### 1. Flash the Firmware
+
+See [flash-firmware.md](flash-firmware.md). After boot, the serial output displays the pairing info:
+
+```
+Manual pairing code: 34970112332
+QR code payload: MT:Y3.13OTB00KA0648G00
+```
+
+### 2. Commission via App or CLI
+
+**Google Home / Alexa / Apple Home:**
+1. Open the ecosystem app
+2. Add a new device → scan the QR code (or enter the manual pairing code)
+3. The app provisions Thread credentials and adds the device to the fabric
+
+**chip-tool (development):**
+```bash
+chip-tool pairing ble-thread <node-id> hex:<dataset> <passcode> <discriminator>
+```
+
+### 3. Verify Operation
+
+After commissioning, the device joins the Thread network automatically:
+```
+OPENTHREAD:[N] Mle-----------: Role detached -> child
+Matter: commissioned into fabric
+```
+
+Test via chip-tool:
+```bash
+# Open vent (0% = fully open)
+chip-tool windowcovering up-or-open 1 1
+# Close vent (100% = fully closed)
+chip-tool windowcovering down-or-close 1 1
+# Set to 50%
+chip-tool windowcovering go-to-lift-percentage 5000 1 1
+# Read position
+chip-tool windowcovering read current-position-lift-percent100ths 1 1
+```
+
+### 4. Multi-Admin (Optional)
+
+Matter supports multi-admin — a single device can be controlled by multiple ecosystems simultaneously. After initial commissioning, open a commissioning window from the first controller to add a second:
+
+```bash
+# From chip-tool (as first admin)
+chip-tool pairing open-commissioning-window 1 1 300 1000 3840
+```
+
+Then commission from the second ecosystem app.
+
+---
+
+## Legacy CoAP Commissioning
+
+> **Warning — Dataset Volatility:** The OTBR Docker container does not persist the Thread dataset across container recreation. If you `docker rm otbr` and re-run `docker run`, a new `dataset init new` generates different credentials, silently orphaning all devices on the old network. See the [backup/restore commands](#dataset-backup) below and [ADR-001](../adr/001-thread-credential-provisioning.md) for why Matter commissioning (above) is the recommended alternative — it eliminates hardcoded credential coupling entirely.
+
+For use with the Python hub CLI without Matter. Requires matching Thread credentials between OTBR and firmware.
 
 ## Prerequisites
 
@@ -94,6 +157,30 @@ The state should show `leader` after a few seconds.
 recreate the OTBR container, you must reproduce the exact same dataset
 (including the Extended PAN ID) or reflash the devices. Devices store the
 full dataset and will not rejoin a network with a different Extended PAN ID.
+
+#### Dataset Backup
+
+After forming the network, back up the dataset so it can be restored if the OTBR container is recreated:
+
+```bash
+# Export the active dataset as a hex string
+mkdir -p ~/.thread
+docker exec otbr ot-ctl dataset active -x > ~/.thread/dataset-backup.txt
+chmod 600 ~/.thread/dataset-backup.txt
+echo "Dataset backed up to ~/.thread/dataset-backup.txt"
+```
+
+To restore from backup (after recreating the OTBR container, before forming a new network):
+
+```bash
+# Restore the dataset from backup
+DATASET=$(cat ~/.thread/dataset-backup.txt | tr -d '[:space:]')
+docker exec otbr ot-ctl dataset set active "$DATASET"
+docker exec otbr ot-ctl ifconfig up
+docker exec otbr ot-ctl thread start
+```
+
+> **Security note:** The backup file contains the Thread network key in plaintext. Protect it with appropriate filesystem permissions. See [ADR-003](../adr/003-otbr-dataset-persistence.md) for details.
 
 ### Option B: Match firmware to OTBR (for existing networks)
 
@@ -362,9 +449,11 @@ When the OTBR container is recreated, `dataset init new` generates a new
 Extended PAN ID. Devices that joined the old network store the old Extended
 PAN ID and will not recognize the new network.
 
-Fix: reflash the device firmware so it re-joins using only the network key,
-channel, PAN ID, and network name (which are not constrained to a specific
-Extended PAN ID).
+Fixes (in order of preference):
+
+1. **Restore the dataset from backup** — if you backed up the dataset (see [Dataset Backup](#dataset-backup) above), restore it to the new OTBR container. Devices will reconnect automatically.
+2. **Commission via Matter** — if the device supports Matter (v0.2.0+), recommission it via BLE. The new Thread credentials are provisioned automatically. See [Matter Commissioning](#matter-commissioning-recommended) above.
+3. **Reflash the firmware** — as a last resort, reflash the device so it re-joins using the new credentials.
 
 ### Device visible in hub but not in Home Assistant
 
