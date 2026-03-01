@@ -76,6 +76,23 @@ Choose how to add your smart vent to your smart home ecosystem.
 3. [Add second ecosystem](multi-admin.md)
 4. Repeat for third (up to 5 fabrics)
 
+## Choosing Between Matter and CoAP for Home Assistant
+
+If you're using Home Assistant, you can connect vents via **Matter** (built-in integration), **CoAP** (custom component), or **both**. Here's how they compare:
+
+| | Matter | CoAP (Custom Component) | Both |
+|---|---|---|---|
+| **Setup complexity** | Scan QR code in HA | Configure OTBR credentials, install hub, install custom component | Both setup steps |
+| **Thread credential resilience** | Credentials provisioned dynamically — survives OTBR recreation | Hardcoded — OTBR recreation orphans devices ([ADR-001](../adr/001-thread-credential-provisioning.md)) | Matter path is resilient; CoAP path needs backup |
+| **Multi-ecosystem support** | Google Home, Alexa, Apple Home, HA simultaneously | Home Assistant only | Full multi-ecosystem via Matter |
+| **Extended telemetry** | Standard Matter attributes only | RSSI, free heap, power source, room/floor | Full telemetry via CoAP |
+| **Batch operations** | Per-device only | `set-room`, `set-floor` via hub CLI | Batch via CoAP hub CLI |
+
+**Recommendations:**
+- **New installations** → use Matter. It's simpler to set up and doesn't require credential management.
+- **Existing CoAP installations** → add Matter alongside CoAP. You gain multi-ecosystem support without losing telemetry. See [ADR-002](../adr/002-dual-protocol-architecture.md) for how dual-protocol works.
+- **Need extended telemetry** → use both. Matter handles ecosystem interop; CoAP provides the health data and batch commands.
+
 ## Identifying Your Device
 
 During setup, if you have multiple vents, use the **identify** feature to determine which physical vent corresponds to which device in the app:

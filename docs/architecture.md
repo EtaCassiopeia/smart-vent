@@ -16,7 +16,8 @@ Comprehensive architecture reference for the Smart Vent Control System. Covers e
 8. [Power Architecture](#8-power-architecture)
 9. [Security Model](#9-security-model)
 10. [Testing Architecture](#10-testing-architecture)
-11. [Glossary](#11-glossary)
+11. [Architecture Decision Records](#11-architecture-decision-records)
+12. [Glossary](#12-glossary)
 
 ---
 
@@ -552,7 +553,17 @@ Read NVS "wal" flag
 
 ---
 
-## 11. Glossary
+## 11. Architecture Decision Records
+
+Key architectural decisions are documented as ADRs in [`docs/adr/`](adr/README.md):
+
+- [ADR-001](adr/001-thread-credential-provisioning.md) — Thread Credential Provisioning via Matter BLE
+- [ADR-002](adr/002-dual-protocol-architecture.md) — Dual-Protocol Architecture (CoAP + Matter)
+- [ADR-003](adr/003-otbr-dataset-persistence.md) — OTBR Dataset Persistence for Legacy Deployments
+
+---
+
+## 12. Glossary
 
 ### Hardware
 
