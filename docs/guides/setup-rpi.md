@@ -122,7 +122,31 @@ docker exec otbr ot-ctl state
 
 ## 6. Form Thread Network
 
-For development, configure the OTBR to use the same credentials as the
+### Option A: Matter commissioning (recommended)
+
+If you are using Matter-enabled firmware (v0.2.0+), the OTBR forms a Thread
+network automatically on startup — **no manual credential configuration is
+needed**. During Matter commissioning (via Google Home, Alexa, HA, or
+chip-tool), the controller reads the Thread dataset from the OTBR and pushes
+it to the device via BLE.
+
+Verify the OTBR has formed a network:
+
+```bash
+docker exec otbr ot-ctl state          # Should show "leader"
+docker exec otbr ot-ctl dataset active  # Note for reference (not needed in firmware)
+```
+
+> **Thread resilience:** Because Thread credentials are provisioned during BLE
+> commissioning (not hardcoded in firmware), recreating the OTBR with a new
+> dataset no longer requires reflashing devices. Instead, factory-reset the
+> device and re-commission it. See the
+> [quick start guide](quick-start-matter.md#thread-network-resilience) for
+> recovery steps.
+
+### Option B: Legacy CoAP commissioning (v0.1.x)
+
+For the CoAP-only firmware, configure the OTBR to use the same credentials as the
 firmware defaults so devices join automatically:
 
 ```bash
@@ -147,15 +171,10 @@ docker exec otbr ot-ctl state
 > production, generate unique credentials and update both the OTBR and firmware.
 > See `commissioning.md` for details.
 >
-> Verify your unique credentials are active:
->
-> ```bash
-> docker exec otbr ot-ctl dataset active
-> ```
->
-> The output should show your custom network name, a unique Network Key, and
-> a unique PSKc. **Save these values** — you will need the Network Key to
-> commission devices onto the network.
+> **Important:** If you recreate the OTBR container, `dataset init new`
+> generates a new Extended PAN ID. Devices that joined the old network will NOT
+> rejoin — they must be reflashed. This limitation does not apply to the Matter
+> firmware path (Option A).
 
 ## 7. Install Home Assistant
 
@@ -173,9 +192,20 @@ docker run -d --name homeassistant --network host \
     ghcr.io/home-assistant/home-assistant:stable
 ```
 
-## 8. Install Vent Control Component
+### Enable the Matter integration (recommended)
 
-Copy the custom component:
+1. Open `http://<rpi-ip>:8123`
+2. Go to **Settings** -> **Devices & Services** -> **Add Integration**
+3. Search for **Matter (BETA)** and add it
+4. Follow the setup wizard to connect to the Matter server
+
+This enables HA to commission Matter devices directly and control them as
+standard Cover entities — no custom component needed.
+
+## 8. Install Vent Control Component (Optional)
+
+The custom component provides extended telemetry (RSSI, heap, room/floor)
+via CoAP. It works alongside the Matter integration.
 
 ```bash
 cp -r vent/homeassistant/custom_components/vent_control \
@@ -188,3 +218,9 @@ docker restart homeassistant
 - OTBR is running: `docker exec otbr ot-ctl state` (should show `leader` or `router`)
 - Thread dataset is set: `docker exec otbr ot-ctl dataset active`
 - Home Assistant web UI loads: `http://<rpi-ip>:8123`
+- Matter integration is enabled (if using Matter firmware)
+
+## Next Steps
+
+- **Matter firmware**: Follow the [Quick Start: Matter over Thread](quick-start-matter.md) guide
+- **Legacy CoAP firmware**: Follow the [Commissioning Guide](commissioning.md#legacy-coap-commissioning)

@@ -10,6 +10,8 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture refer
 
 ## Quick Start
 
+> **Want Matter over Thread?** The [Quick Start: Matter over Thread](docs/guides/quick-start-matter.md) guide covers hub setup, flashing, Google Home commissioning, HA multi-admin, and Thread network resilience — all in one page.
+>
 > **First time?** Start with the [development environment setup guide](docs/guides/setup-dev-env.md) to install Python, Rust, and IDE configuration.
 
 ### Development (no hardware)
@@ -34,13 +36,21 @@ vent-hub --help
 
 > **Note:** `vent-hub discover` requires a Thread Border Router and won't find simulator vents. The simulator is for integration tests and direct CoAP interaction.
 
-### Hardware Setup
+### Hardware Setup (Matter)
 
 1. [Set up Raspberry Pi + OTBR](docs/guides/setup-rpi.md)
 2. [Set up development environment](docs/guides/setup-dev-env.md)
 3. [Wire ESP32-C6 + SG90](docs/hardware/wiring.md)
 4. [Flash firmware](docs/guides/flash-firmware.md)
-5. [Commission devices](docs/guides/commissioning.md)
+5. [Commission via Matter](docs/guides/quick-start-matter.md#phase-3-commission-via-google-home) (Google Home, Alexa, or HA)
+
+### Hardware Setup (Legacy CoAP)
+
+1. [Set up Raspberry Pi + OTBR](docs/guides/setup-rpi.md)
+2. [Set up development environment](docs/guides/setup-dev-env.md)
+3. [Wire ESP32-C6 + SG90](docs/hardware/wiring.md)
+4. [Flash firmware](docs/guides/flash-firmware.md)
+5. [Commission via CoAP](docs/guides/commissioning.md#legacy-coap-commissioning)
 
 ## Project Structure
 

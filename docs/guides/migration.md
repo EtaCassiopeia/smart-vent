@@ -2,6 +2,8 @@
 
 This guide covers migrating from the CoAP-only firmware (v0.1.x) to the Matter-enabled firmware (v0.2.0+).
 
+> **Setting up fresh?** Skip this guide and go directly to the [Quick Start: Matter over Thread](quick-start-matter.md) guide.
+
 ## What Changes
 
 | Aspect | CoAP-only (v0.1.x) | Matter + CoAP (v0.2.0+) |
@@ -80,3 +82,13 @@ To revert to CoAP-only firmware:
 | Last vent angle | Yes | NVS WAL checkpoint |
 | Thread credentials | No | New credentials from Matter commissioning |
 | Hub registry | Yes | Hub database unchanged |
+
+## Thread Network Resilience
+
+A key benefit of migrating to Matter: **Thread network changes no longer require
+reflashing.** With Matter, Thread credentials are provisioned during BLE
+commissioning instead of being hardcoded. If the OTBR is recreated with a new
+dataset, factory-reset the device and re-commission — no reflash needed.
+
+See the [Quick Start guide](quick-start-matter.md#thread-network-resilience)
+for detailed recovery steps and a full comparison table.

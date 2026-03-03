@@ -1,10 +1,12 @@
 # Commissioning New Vent Devices
 
+> **Looking for the fastest path?** The [Quick Start: Matter over Thread](quick-start-matter.md) guide covers hub setup, flashing, commissioning, and multi-admin in one page.
+
 ## Overview
 
 Commissioning adds a new ESP32-C6 vent controller to the Thread network. The firmware supports two commissioning methods:
 
-1. **Matter commissioning (recommended)** — BLE-based onboarding via Google Home, Alexa, Apple Home, or chip-tool. Thread credentials are provisioned automatically during commissioning.
+1. **Matter commissioning (recommended)** — BLE-based onboarding via Google Home, Alexa, Apple Home, or chip-tool. Thread credentials are provisioned automatically during commissioning. No hardcoded credentials needed.
 2. **Legacy CoAP commissioning** — Hardcoded Thread credentials matching the OTBR dataset. Used with the Python hub CLI.
 
 ## Matter Commissioning (Recommended)
@@ -412,6 +414,49 @@ To re-add a removed device, power it on and run `vent-hub discover` again.
 The same HA entity is reused automatically (matched by unique ID), preserving
 any automations that reference it.
 
+---
+
+## Thread Network Resilience
+
+One of the key advantages of Matter commissioning over legacy CoAP is
+resilience to Thread network changes.
+
+### The problem (legacy CoAP)
+
+With the CoAP-only firmware, Thread credentials (network key, channel, PAN ID,
+network name) are hardcoded in `ThreadConfig::default()`. The device also
+stores the full Thread dataset — including the Extended PAN ID — in NVS after
+joining the network.
+
+If the OTBR container is recreated with `dataset init new`, a new Extended
+PAN ID is generated. Devices that joined the old network store the old
+Extended PAN ID and **refuse to rejoin** — requiring a firmware reflash.
+
+### The solution (Matter)
+
+With Matter-enabled firmware, Thread credentials are **not hardcoded**. Instead:
+
+1. The device boots with empty Thread state and advertises via BLE
+2. During commissioning, the Matter controller (Google Home, HA, etc.) reads the current Thread dataset from the OTBR
+3. The controller pushes those credentials to the device over BLE
+4. The device joins the Thread network with the provisioned credentials
+5. Credentials are stored in NVS and survive reboots
+
+If the Thread network changes, **factory-reset the device and re-commission**.
+The new credentials are pushed automatically — no reflash needed.
+
+### Data preserved across operations
+
+| Data | Reboot | Re-commission | Factory reset | Reflash |
+|------|--------|--------------|---------------|---------|
+| EUI-64 (eFuse) | Yes | Yes | Yes | Yes |
+| NVS config (room/floor/name) | Yes | Yes | Yes | Yes |
+| Last vent angle (WAL) | Yes | Yes | Yes | Yes |
+| Thread credentials | Yes | Updated | Cleared | Cleared |
+| Matter fabric info | Yes | Updated | Cleared | Cleared |
+
+---
+
 ## Troubleshooting
 
 ### OTBR firewall fails (`ip6tables` error)
@@ -446,14 +491,13 @@ Thread traffic. Check:
 ### Device doesn't rejoin after OTBR recreation
 
 When the OTBR container is recreated, `dataset init new` generates a new
-Extended PAN ID. Devices that joined the old network store the old Extended
-PAN ID and will not recognize the new network.
+Extended PAN ID. The recovery depends on which firmware you're running:
 
 Fixes (in order of preference):
 
 1. **Restore the dataset from backup** — if you backed up the dataset (see [Dataset Backup](#dataset-backup) above), restore it to the new OTBR container. Devices will reconnect automatically.
-2. **Commission via Matter** — if the device supports Matter (v0.2.0+), recommission it via BLE. The new Thread credentials are provisioned automatically. See [Matter Commissioning](#matter-commissioning-recommended) above.
-3. **Reflash the firmware** — as a last resort, reflash the device so it re-joins using the new credentials.
+2. **Re-commission via Matter** — if the device runs Matter firmware (v0.2.0+), factory-reset it (hold boot button 10 seconds) and re-commission via BLE. The new Thread credentials are provisioned automatically. No need to match hardcoded values.
+3. **Reflash the firmware** — for legacy CoAP firmware (v0.1.x), reflash so the device re-joins using the new credentials.
 
 ### Device visible in hub but not in Home Assistant
 

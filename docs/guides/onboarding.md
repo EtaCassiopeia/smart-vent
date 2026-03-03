@@ -1,5 +1,7 @@
 # Onboarding Decision Tree
 
+> **Fastest path:** If you want Matter over Thread with Google Home + Home Assistant, skip straight to the [Quick Start: Matter over Thread](quick-start-matter.md) guide — it covers everything end-to-end.
+
 Choose how to add your smart vent to your smart home ecosystem.
 
 ## Which Ecosystem?
@@ -36,6 +38,9 @@ Choose how to add your smart vent to your smart home ecosystem.
 ```
 
 ## Quick Start by Ecosystem
+
+### Google Home + Home Assistant (recommended)
+1. [Quick Start: Matter over Thread](quick-start-matter.md) — covers hub setup, flashing, Google Home commissioning, and adding HA as second admin
 
 ### Google Home Only
 1. [Flash firmware](flash-firmware.md)

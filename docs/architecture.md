@@ -386,11 +386,41 @@ sequenceDiagram
 
 ## 7. Device Lifecycle
 
+### 7.1 Matter Commissioning (Recommended)
+
 ```mermaid
 stateDiagram-v2
     [*] --> Unboxed
     Unboxed --> FirstBoot : Flash firmware via USB
-    FirstBoot --> Joining : OpenThread joins network
+    FirstBoot --> Advertising : BLE advertising (no Thread yet)
+    Advertising --> Commissioned : Matter commissioner (Google/HA/Alexa)
+    Commissioned --> Operating : Thread credentials provisioned, device joins mesh
+    Operating --> Sleep : Battery mode SED
+    Operating --> Reboot : Power cycle
+    Operating --> FactoryReset : Hold boot button / reflash
+    Sleep --> Operating : Resume
+    Reboot --> Operating : Auto-rejoin Thread
+    FactoryReset --> Advertising : Clears fabrics, BLE restarts
+```
+
+| State | What Happens |
+|-------|-------------|
+| **Unboxed** | Fresh ESP32-C6, no firmware |
+| **First Boot** | NVS empty, eFuse has EUI-64. Writes "initialized" flag. Defaults: angle=90 deg (closed). Starts BLE advertising with Matter pairing info |
+| **Advertising** | Device advertises via BLE. Serial output shows manual pairing code and QR payload. Not on Thread network yet |
+| **Commissioned** | Matter controller (Google Home, HA, Alexa) provisions Thread credentials and fabric info via BLE. Device joins Thread mesh |
+| **Operating** | Responds to Matter and CoAP commands. Position persisted to NVS. Multi-admin: up to 5 fabrics simultaneously |
+| **Sleep** | Deep sleep (SED mode). Wakes on poll timer, checks for queued messages, returns to Operating |
+| **Reboot** | Reads last angle from NVS, re-joins Thread using stored credentials, returns to Operating |
+| **Factory Reset** | Clears all Matter fabrics and Thread credentials. Returns to BLE advertising for re-commissioning. NVS config (room/floor/name/angle) preserved |
+
+### 7.2 Legacy CoAP Commissioning
+
+```mermaid
+stateDiagram-v2
+    [*] --> Unboxed
+    Unboxed --> FirstBoot : Flash firmware via USB
+    FirstBoot --> Joining : OpenThread joins network (hardcoded creds)
     Joining --> Discovered : Hub runs discover
     Discovered --> Assigned : Hub runs assign
     Assigned --> Operating : Normal operation
@@ -404,12 +434,32 @@ stateDiagram-v2
 |-------|-------------|
 | **Unboxed** | Fresh ESP32-C6, no firmware |
 | **First Boot** | NVS empty, eFuse has EUI-64. Writes "initialized" flag. Defaults: angle=90 deg (closed), no room/floor |
-| **Joining** | Attaches to Thread network, gets IPv6 mesh-local address, starts CoAP server on port 5683 |
+| **Joining** | Attaches to Thread network using hardcoded credentials, gets IPv6 mesh-local address, starts CoAP server on port 5683 |
 | **Discovered** | Hub probes via CoAP, gets EUI-64, adds to SQLite registry. No room/floor assigned yet |
 | **Assigned** | Room/floor stored in device NVS + hub DB. Appears in HA with area suggestion |
 | **Operating** | Responds to CoAP commands, servo moves to commanded angles, position persisted to NVS, hub polls periodically |
 | **Sleep** | Deep sleep (SED mode). Wakes on poll timer, checks for queued messages, returns to Operating |
 | **Reboot** | Reads last angle from NVS, re-joins Thread, returns to Operating |
+
+### 7.3 Thread Network Resilience
+
+A key difference between the two commissioning paths is how they handle Thread
+network changes (e.g., OTBR recreated with `dataset init new`):
+
+| Scenario | Matter (v0.2.0+) | Legacy CoAP (v0.1.x) |
+|----------|------------------|----------------------|
+| OTBR recreated | Factory reset + re-commission via BLE | Reflash firmware required |
+| Thread credentials changed | Factory reset + re-commission via BLE | Reflash firmware required |
+| Device power cycled | Auto-rejoin (credentials in NVS) | Auto-rejoin (if creds match) |
+| Firmware update | Thread credentials preserved | Must re-match hardcoded creds |
+
+With Matter, Thread credentials are provisioned during BLE commissioning — not
+hardcoded in firmware. If the network changes, factory-reset the device and
+re-commission. NVS data (room, floor, name, last angle) is preserved across
+factory resets.
+
+See the [Quick Start: Matter over Thread](guides/quick-start-matter.md) guide
+for detailed recovery steps.
 
 ---
 
