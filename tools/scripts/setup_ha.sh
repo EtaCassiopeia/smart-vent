@@ -31,6 +31,41 @@ if [ ! -f "$HUB_DB" ]; then
     echo "  Run 'vent-hub discover' first, or set HUB_DB to the correct path."
 fi
 
+# Create a shared data directory for the Matter server
+MATTER_DATA_DIR="${HOME}/matter-server"
+mkdir -p "$MATTER_DATA_DIR"
+
+# Start the Matter Server container (required for HA Matter integration).
+# HA Container installs do not include the Matter server — it must run as a
+# separate container. The HA Matter integration connects to it via WebSocket
+# on port 5580.
+if docker ps -a --format '{{.Names}}' | grep -q '^matter-server$'; then
+    echo "Matter server container already exists. Starting..."
+    docker start matter-server 2>/dev/null || true
+else
+    echo "Starting Matter server..."
+    docker run -d \
+        --name matter-server \
+        --restart unless-stopped \
+        --network host \
+        --security-opt apparmor=unconfined \
+        -v "${MATTER_DATA_DIR}:/data" \
+        -v /run/dbus:/run/dbus:ro \
+        ghcr.io/home-assistant-libs/python-matter-server:stable \
+        --storage-path /data --paa-root-cert-dir /data/credentials
+fi
+
+# Wait briefly for Matter server to be ready
+echo "Waiting for Matter server to start..."
+sleep 3
+
+# Verify Matter server is listening
+if curl -s -o /dev/null -w '%{http_code}' http://localhost:5580 2>/dev/null | grep -q '4\|2'; then
+    echo "Matter server is running on port 5580"
+else
+    echo "WARNING: Matter server may still be starting. Check: docker logs matter-server"
+fi
+
 # Run Home Assistant container
 echo "Starting Home Assistant..."
 docker run -d \
@@ -45,8 +80,11 @@ docker run -d \
 echo ""
 echo "Home Assistant is starting!"
 echo "  Web UI: http://localhost:8123"
+echo "  Matter server WebSocket: ws://localhost:5580/ws"
 echo ""
 echo "First-time setup:"
 echo "  1. Open http://localhost:8123 and create an account"
 echo "  2. Go to Settings -> Devices & Services -> Add Integration"
-echo "  3. Search for 'Smart Vent Control' and configure the hub"
+echo "  3. Search for 'Matter (BETA)' and add it"
+echo "     - Use WebSocket URL: ws://localhost:5580/ws"
+echo "  4. Optionally add 'Smart Vent Control' for CoAP telemetry"

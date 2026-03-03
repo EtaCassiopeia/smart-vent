@@ -7,15 +7,41 @@ Control your smart vents using Home Assistant's built-in Matter integration (no 
 - Smart vent flashed with Matter-enabled firmware (v0.2.0+)
 - Home Assistant 2023.2+ with Matter integration enabled
 - Thread border router accessible from HA (OTBR or Apple TV/HomePod)
+- **Matter Server** running alongside HA (see below)
 
-## 1. Enable the Matter Integration
+## 1. Start the Matter Server
+
+The HA Matter integration connects to a **separate Matter Server** via WebSocket. This is required for HA Container installs (HA OS/Supervised includes it as a built-in add-on).
+
+```bash
+mkdir -p ~/matter-server
+
+docker run -d \
+    --name matter-server \
+    --restart unless-stopped \
+    --network host \
+    --security-opt apparmor=unconfined \
+    -v ~/matter-server:/data \
+    -v /run/dbus:/run/dbus:ro \
+    ghcr.io/home-assistant-libs/python-matter-server:stable \
+    --storage-path /data --paa-root-cert-dir /data/credentials
+```
+
+Or use the setup script which starts both HA and Matter Server:
+```bash
+cd ~/vent/tools/scripts && ./setup_ha.sh
+```
+
+Verify: `docker logs matter-server 2>&1 | tail -5` should show the server started on port 5580.
+
+## 2. Enable the Matter Integration
 
 1. Go to **Settings** → **Devices & Services**
 2. Click **Add Integration**
 3. Search for **Matter (BETA)** and add it
-4. Follow the setup wizard to connect to your Matter server
+4. When prompted, enter the WebSocket URL: `ws://localhost:5580/ws`
 
-## 2. Commission the Vent
+## 3. Commission the Vent
 
 ### Option A: Direct commissioning (HA as first controller)
 
@@ -34,7 +60,7 @@ If the vent is already commissioned into Google Home or Alexa:
 3. Click **Commission Device**
 4. HA discovers the vent via BLE and joins as a second admin
 
-## 3. Device in Home Assistant
+## 4. Device in Home Assistant
 
 After commissioning, the vent appears as a **Cover** entity:
 
@@ -52,7 +78,7 @@ After commissioning, the vent appears as a **Cover** entity:
 
 **Note:** Home Assistant's cover position convention (0%=closed, 100%=open) is the inverse of Matter's percent100ths (0%=open, 100%=closed). HA handles the conversion automatically.
 
-## 4. Dashboard Card
+## 5. Dashboard Card
 
 Add a cover card to your dashboard:
 
@@ -73,7 +99,7 @@ features:
   - type: cover-position
 ```
 
-## 5. Automations
+## 6. Automations
 
 Example automation to close vents at night:
 
@@ -105,6 +131,7 @@ For most users, the Matter integration is recommended. The custom component is u
 
 | Issue | Solution |
 |-------|----------|
+| "Cannot connect to `ws://localhost:5580/ws`" | The Matter Server container is not running. Start it: `docker start matter-server`. If it doesn't exist, see [Step 1](#1-start-the-matter-server) above. |
 | Commission fails | Ensure HA can reach the Thread network. Check OTBR is running. |
 | "Device not found" | Verify BLE is available on the HA host. Try moving closer. |
 | Position always 0% | Check that the firmware is reporting position correctly (serial log). |

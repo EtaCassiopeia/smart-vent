@@ -138,10 +138,49 @@ This generates a random Thread network. With Matter commissioning, the exact
 credentials don't matter — they're pushed to devices automatically during BLE
 commissioning.
 
-### 1.3 Home Assistant
+### 1.3 Matter Server
+
+The HA Matter integration requires a **separate Matter Server** container
+(`python-matter-server`). This is NOT bundled with HA Container installs —
+only HA OS/Supervised includes it as a built-in add-on.
+
+The `setup_ha.sh` script starts both containers automatically:
 
 ```bash
 ./setup_ha.sh
+```
+
+If you already have HA running and just need the Matter Server:
+
+```bash
+mkdir -p ~/matter-server
+
+docker run -d \
+    --name matter-server \
+    --restart unless-stopped \
+    --network host \
+    --security-opt apparmor=unconfined \
+    -v ~/matter-server:/data \
+    -v /run/dbus:/run/dbus:ro \
+    ghcr.io/home-assistant-libs/python-matter-server:stable \
+    --storage-path /data --paa-root-cert-dir /data/credentials
+```
+
+Verify it's running:
+```bash
+docker logs matter-server 2>&1 | tail -5   # Should show "Started"
+```
+
+Key flags:
+- `--network host` — required so HA (also on host network) can reach it on `localhost:5580`
+- `-v /run/dbus:/run/dbus:ro` — required for BLE commissioning (BlueZ access)
+- `--security-opt apparmor=unconfined` — required on systems with AppArmor (default on Raspberry Pi OS)
+
+### 1.4 Home Assistant
+
+If HA isn't running yet:
+```bash
+./setup_ha.sh   # Starts both Matter server and HA
 ```
 
 Then open `http://<pi-ip>:8123` and:
@@ -149,7 +188,8 @@ Then open `http://<pi-ip>:8123` and:
 1. Create your admin account
 2. Go to **Settings** -> **Devices & Services** -> **Add Integration**
 3. Search for **Matter (BETA)** and add it
-4. Follow the Matter server setup wizard
+4. When prompted for the WebSocket URL, use: `ws://localhost:5580/ws`
+5. The integration connects to the Matter Server and is ready for commissioning
 
 > **Tip:** If you also want the extended telemetry (RSSI, heap, room/floor) from the CoAP custom component, you can install both. See the [HA user guide](home-assistant.md) for the custom component setup.
 
@@ -340,6 +380,7 @@ For batch setup, flash all devices first, then commission them one at a time —
 
 | Issue | Solution |
 |-------|----------|
+| HA Matter: "cannot connect to `ws://localhost:5580/ws`" | The Matter Server container is not running. Start it: `docker start matter-server` or see [Phase 1.3](#13-matter-server). |
 | OTBR `ip6tables` error | `sudo modprobe ip6table_filter && docker restart otbr` |
 | OTBR shows `disabled` not `leader` | Run `docker exec otbr ot-ctl ifconfig up && docker exec otbr ot-ctl thread start` |
 | No `wpan0` routes on Pi | Check kernel modules and backbone interface. See [commissioning.md](commissioning.md#prerequisites) |

@@ -194,10 +194,25 @@ docker run -d --name homeassistant --network host \
 
 ### Enable the Matter integration (recommended)
 
+The HA Matter integration requires a **Matter Server** container. The
+`setup_ha.sh` script starts it automatically. If running HA manually, start
+the Matter Server first:
+
+```bash
+mkdir -p ~/matter-server
+docker run -d --name matter-server --restart unless-stopped --network host \
+    --security-opt apparmor=unconfined \
+    -v ~/matter-server:/data -v /run/dbus:/run/dbus:ro \
+    ghcr.io/home-assistant-libs/python-matter-server:stable \
+    --storage-path /data --paa-root-cert-dir /data/credentials
+```
+
+Then in HA:
+
 1. Open `http://<rpi-ip>:8123`
 2. Go to **Settings** -> **Devices & Services** -> **Add Integration**
 3. Search for **Matter (BETA)** and add it
-4. Follow the setup wizard to connect to the Matter server
+4. When prompted for the WebSocket URL, use: `ws://localhost:5580/ws`
 
 This enables HA to commission Matter devices directly and control them as
 standard Cover entities — no custom component needed.
