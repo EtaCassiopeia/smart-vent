@@ -29,12 +29,20 @@ Add to your shell profile:
 
 ```bash
 cd firmware/vent-controller
-cargo build
+cargo build --release
 ```
 
-The first build will download and compile ESP-IDF (takes several minutes).
+The first build downloads **ESP-IDF v5.2.3** and compiles the CHIP SDK via the
+`esp_matter` component (~1.3.x). This takes several minutes. Subsequent builds
+are incremental.
 
 **Note:** The firmware uses the [ESP-IDF Component Manager](https://components.espressif.com/) to pull `esp_matter` and its transitive dependencies automatically during the first build. No manual submodule setup is required.
+
+> **Version compatibility:** The firmware requires ESP-IDF v5.2.3 with
+> `esp_matter ~1.3.x`. Other ESP-IDF versions (v5.3, v5.4) have known
+> incompatibilities with the CHIP SDK (C++ template parsing errors, missing
+> `operator==` implementations). The version is pinned in
+> `firmware/vent-controller/.cargo/config.toml`.
 
 ### 5. Run Host Tests
 

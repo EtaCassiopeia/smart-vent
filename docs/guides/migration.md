@@ -9,10 +9,12 @@ This guide covers migrating from the CoAP-only firmware (v0.1.x) to the Matter-e
 | Aspect | CoAP-only (v0.1.x) | Matter + CoAP (v0.2.0+) |
 |--------|-------------------|------------------------|
 | Thread init | Hardcoded credentials in `ThreadConfig` | Matter provisions via BLE commissioning |
-| Partition | 1.5MB app (single_app_large) | 1.9MB custom partition |
+| Partition | 1.5MB app (single_app_large) | 3 MB custom partition (`partitions.csv`) |
 | BLE | Not used | Used for commissioning |
 | Ecosystems | Home Assistant only (custom component) | Google Home, Alexa, Apple Home, HA (Matter + custom) |
-| Binary size | ~822KB | ~1.2MB (estimated) |
+| Binary size | ~822 KB | ~2.04 MB |
+| ESP-IDF | v5.2.3 | v5.2.3 + esp_matter ~1.3.x |
+| Bootloader | espflash default | Must use project-built bootloader |
 
 ## Migration Steps
 
@@ -31,8 +33,18 @@ Record: room, floor, name assignments.
 
 ```bash
 cd firmware/vent-controller
-cargo espflash flash --release --port /dev/cu.usbmodem101 --monitor
+cargo build --release
+
+espflash flash \
+    --port /dev/cu.usbmodem101 \
+    --bootloader target/riscv32imac-esp-espidf/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin \
+    --partition-table partitions.csv \
+    target/riscv32imac-esp-espidf/release/vent-controller
 ```
+
+> You must pass `--bootloader` (project-built, ESP-IDF v5.2.3) and
+> `--partition-table partitions.csv` (3 MB app partition). See
+> [flash-firmware.md](flash-firmware.md) for details.
 
 The device will boot with the new firmware but will **not** have Thread credentials — it needs to be commissioned via Matter.
 

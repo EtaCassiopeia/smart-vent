@@ -197,20 +197,50 @@ Then open `http://<pi-ip>:8123` and:
 
 ## Phase 2: Flash the Controller
 
-On your development machine, connect the XIAO ESP32-C6 via USB-C:
+On your development machine, connect the XIAO ESP32-C6 via USB-C.
+
+### Build
 
 ```bash
 cd firmware/vent-controller
-cargo espflash flash --release --port /dev/cu.usbmodem101 --monitor
+cargo build --release
 ```
 
-> Always use `--release` — debug builds exceed the flash partition size.
+The first build downloads ESP-IDF v5.2.3 and the `esp_matter` component (compiles
+the CHIP SDK). This takes several minutes. The release binary is approximately
+**2.04 MB**.
+
+### Flash
+
+The Matter firmware requires a custom partition table (3 MB app partition) and the
+project-built bootloader:
+
+```bash
+espflash flash \
+    --port /dev/cu.usbmodem101 \
+    --bootloader target/riscv32imac-esp-espidf/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin \
+    --partition-table partitions.csv \
+    target/riscv32imac-esp-espidf/release/vent-controller
+```
+
+Expected: `App/part. size: 2,116,432/3,145,728 bytes, 67.28%`
+
+> **Why `--bootloader`?** `espflash` bundles a v5.5.x bootloader. Our firmware uses
+> ESP-IDF v5.2.3. Mismatched bootloader/app versions cause a "Segment 0 load address
+> doesn't match" error. See [flash-firmware.md](flash-firmware.md) for details.
+
+### Serial output
 
 On boot, the serial output displays the Matter pairing info:
 
 ```
-Vent Controller v0.2.0
+Vent Controller v0.1.0
 EUI-64: 58:e6:c5:ff:fe:01:0a:dc
+Initializing Matter...
+matter_bridge: Window Covering endpoint ID: 1
+matter_bridge: Discriminator derived from EUI-64: 173
+matter_bridge: Matter node initialized (VID=0xFFF1, PID=0x8001, disc=173)
+...
 Manual pairing code: 34970112332
 QR code payload: MT:Y3.13OTB00KA0648G00
 ```
@@ -367,7 +397,7 @@ If the OTBR is recreated with a new dataset:
 
 For each additional vent controller:
 
-1. Flash firmware (`cargo espflash flash --release ...`)
+1. Flash firmware (see [Phase 2](#phase-2-flash-the-controller))
 2. Note the pairing code from serial output
 3. Commission via Google Home (Phase 3)
 4. Optionally add to HA as second admin (Phase 4)
@@ -388,7 +418,9 @@ For batch setup, flash all devices first, then commission them one at a time —
 | Google Home "setup failed" | Power-cycle the vent and retry. Ensure your Nest device supports Thread. |
 | HA "commission failed" | Ensure HA can reach the Thread network. Check OTBR is running. Verify BLE on HA host. |
 | CoAP still works? | Yes — CoAP runs on port 5683 over the same Thread interface. Both protocols share state. |
-| `espflash` "image too big" | Ensure you're building with `--release`. Check `partitions.csv` has 1.9MB app partition. |
+| `espflash` "image too big" | Pass `--partition-table partitions.csv` to use the 3 MB app partition. |
+| `Segment 0 load address doesn't match` | Pass `--bootloader` with the project-built bootloader (see [Phase 2](#phase-2-flash-the-controller)). |
+| `controller_sleep_init` assert crash | Ensure `CONFIG_PM_ENABLE` is disabled in `sdkconfig.defaults`. |
 | Servo doesn't move | Check wiring — signal goes to D2/GPIO2. See [hardware/wiring.md](../hardware/wiring.md). |
 
 ---

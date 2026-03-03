@@ -13,7 +13,9 @@ Commissioning adds a new ESP32-C6 vent controller to the Thread network. The fir
 
 ### 1. Flash the Firmware
 
-See [flash-firmware.md](flash-firmware.md). After boot, the serial output displays the pairing info:
+See [flash-firmware.md](flash-firmware.md) for the full flash command (requires
+`--bootloader` and `--partition-table` flags). After boot, the serial output
+displays the pairing info:
 
 ```
 Manual pairing code: 34970112332
@@ -219,7 +221,11 @@ Self {
 Then rebuild and flash:
 
 ```bash
-cargo espflash flash --release --port /dev/cu.usbmodem101 --monitor
+cargo build --release
+espflash flash --port /dev/cu.usbmodem101 \
+    --bootloader target/riscv32imac-esp-espidf/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin \
+    --partition-table partitions.csv \
+    target/riscv32imac-esp-espidf/release/vent-controller
 ```
 
 ## 2. Flash the Firmware
@@ -228,7 +234,11 @@ See `flash-firmware.md` for detailed instructions.
 
 ```bash
 cd firmware/vent-controller
-cargo espflash flash --release --port /dev/cu.usbmodem101 --monitor
+cargo build --release
+espflash flash --port /dev/cu.usbmodem101 \
+    --bootloader target/riscv32imac-esp-espidf/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin \
+    --partition-table partitions.csv \
+    target/riscv32imac-esp-espidf/release/vent-controller
 ```
 
 ## 3. Verify Device Joined the Network

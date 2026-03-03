@@ -9,15 +9,15 @@ CONFIG_IEEE802154_ENABLED=y
 
 # VFS eventfd — required by OpenThread task queue and radio driver
 CONFIG_VFS_SUPPORT_SELECT=y
-CONFIG_ESP_EVENTFD=y
 
 # Stack sizes — OpenThread + Matter require larger stacks
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
 CONFIG_CHIP_TASK_STACK_SIZE=8192
 
-# Power management
-CONFIG_PM_ENABLE=y
-CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+# Power management — disabled for now; BLE controller_sleep_init asserts
+# with PM enabled on ESP32-C6 + ESP-IDF v5.2.3
+# CONFIG_PM_ENABLE=y
+# CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 
 # CoAP — enabled via components/ot_coap_config (OPENTHREAD_CONFIG_COAP_API_ENABLE)
 
@@ -35,15 +35,9 @@ CONFIG_MBEDTLS_CMAC_C=y
 CONFIG_MBEDTLS_HKDF_C=y
 CONFIG_MBEDTLS_ECJPAKE_C=y
 
-# Custom partition table — 1.9MB app partition for Matter + BLE + Thread
-CONFIG_PARTITION_TABLE_CUSTOM=y
-CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
-
-# NVS
-CONFIG_NVS_ENABLED=y
+# Partition table — built-in layout for build; flash with custom partitions.csv
+# (3MB app) via: espflash flash --partition-table partitions.csv
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
 
 # Logging
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
-
-# LEDC (PWM)
-CONFIG_LEDC_SPEED_MODE_MAX=1

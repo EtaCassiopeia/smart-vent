@@ -4,12 +4,11 @@
 #include <esp_matter.h>
 #include <esp_matter_endpoint.h>
 #include <esp_openthread.h>
+#include <platform/ESP32/OpenthreadLauncher.h>
 #include <nvs_flash.h>
 #include <esp_mac.h>
 #include <app/server/Server.h>
 #include <app/server/OnboardingCodesUtil.h>
-#include <setup_payload/ManualSetupPayloadGenerator.h>
-#include <setup_payload/QRCodeSetupPayloadGenerator.h>
 
 static const char *TAG = "matter_bridge";
 
@@ -100,13 +99,8 @@ int matter_bridge_init(matter_position_cb_t position_cb,
         return -1;
     }
 
-    // Create Window Covering endpoint
-    window_covering_device::config_t wc_config;
-    wc_config.window_covering.type = 0;  // Rollershade
-    wc_config.window_covering.config_status = 0x00;
-    wc_config.window_covering.operational_status = 0;
-    wc_config.window_covering.end_product_type = 0;  // Rollershade
-    wc_config.window_covering.mode = 0;
+    // Create Window Covering endpoint (end_product_type=0 → Rollershade via ctor)
+    window_covering_device::config_t wc_config(/* end_product_type */ 0);
 
     endpoint_t *ep = window_covering_device::create(s_node, &wc_config,
                                                      ENDPOINT_FLAG_NONE, nullptr);
@@ -157,7 +151,7 @@ int matter_bridge_start(void)
     ot_config.port_config.storage_partition_name = "nvs";
     ot_config.port_config.netif_queue_size = 10;
     ot_config.port_config.task_queue_size = 10;
-    esp_matter::set_openthread_platform_config(&ot_config);
+    set_openthread_platform_config(&ot_config);
 
     ESP_LOGI(TAG, "Starting Matter event loop...");
     esp_err_t err = esp_matter::start(nullptr);
@@ -197,28 +191,14 @@ int matter_bridge_get_pairing_code(char *buf, size_t len)
 {
     if (len == 0) return -1;
 
-    chip::SetupPayload payload;
-    auto &server = chip::Server::GetInstance();
-    auto &commData = server.GetCommissioningWindowManager().GetOpener();
-
-    CHIP_ERROR err = chip::GetManualPairingCode(payload, chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
+    chip::MutableCharSpan span(buf, len);
+    CHIP_ERROR err = GetManualPairingCode(span,
+        chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
     if (err != CHIP_NO_ERROR) {
         ESP_LOGW(TAG, "Failed to get manual pairing code");
         buf[0] = '\0';
         return -1;
     }
-
-    std::string code;
-    chip::ManualSetupPayloadGenerator generator(payload);
-    err = generator.payloadDecimalStringRepresentation(code);
-    if (err != CHIP_NO_ERROR) {
-        buf[0] = '\0';
-        return -1;
-    }
-
-    size_t copy_len = code.size() < len - 1 ? code.size() : len - 1;
-    memcpy(buf, code.c_str(), copy_len);
-    buf[copy_len] = '\0';
     return 0;
 }
 
@@ -226,25 +206,14 @@ int matter_bridge_get_qr_payload(char *buf, size_t len)
 {
     if (len == 0) return -1;
 
-    chip::SetupPayload payload;
-    CHIP_ERROR err = chip::GetQRCodePayload(payload, chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
+    chip::MutableCharSpan span(buf, len);
+    CHIP_ERROR err = GetQRCode(span,
+        chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
     if (err != CHIP_NO_ERROR) {
         ESP_LOGW(TAG, "Failed to get QR payload");
         buf[0] = '\0';
         return -1;
     }
-
-    std::string qr;
-    chip::QRCodeSetupPayloadGenerator generator(payload);
-    err = generator.payloadBase38Representation(qr);
-    if (err != CHIP_NO_ERROR) {
-        buf[0] = '\0';
-        return -1;
-    }
-
-    size_t copy_len = qr.size() < len - 1 ? qr.size() : len - 1;
-    memcpy(buf, qr.c_str(), copy_len);
-    buf[copy_len] = '\0';
     return 0;
 }
 
