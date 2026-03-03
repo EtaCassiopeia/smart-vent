@@ -79,6 +79,65 @@ ip -6 route show | grep wpan0   # Should show mesh-local routes
 
 > **With Matter, you do NOT need to manually configure Thread credentials on the OTBR or match them in the firmware.** The OTBR forms its own network automatically. During Matter commissioning, the controller (Google Home, HA) reads the Thread dataset from the OTBR and pushes it to the device via BLE.
 
+#### If `ot-ctl state` returns `disabled`
+
+The OTBR container is running but the Thread radio stack has not started. This
+typically means either the Thread network interface is down or no dataset has
+been committed yet.
+
+**Step 1 — Bring up the interface and start Thread:**
+
+```bash
+docker exec otbr ot-ctl ifconfig up
+docker exec otbr ot-ctl thread start
+```
+
+Wait a few seconds, then check again:
+
+```bash
+docker exec otbr ot-ctl state   # Should now show "leader"
+```
+
+If the state transitions to `leader` (or `router`/`child`), you're good — continue to the next section.
+
+**Step 2 — If it's still `disabled`, check the radio connection:**
+
+The OTBR cannot talk to the RCP dongle. Verify:
+
+```bash
+# Is the dongle plugged in?
+ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null
+
+# Check OTBR container logs for radio errors
+docker logs otbr 2>&1 | tail -20
+```
+
+Common causes:
+- **Dongle not plugged in or not detected** — reconnect USB, check `lsusb` output
+- **Wrong serial device** — the OTBR was started with a `RADIO_URL` pointing to a device that doesn't exist. Recreate the container with the correct path (see `setup_otbr.sh`)
+- **Dongle not flashed with RCP firmware** — the SLZB-07 ships with Zigbee firmware by default. See [setup-rpi.md](setup-rpi.md#3-flash-dongle-with-rcp-firmware) for flashing instructions
+- **Kernel modules missing** — if `ip6table_filter` isn't loaded, the OTBR firewall fails silently and the radio stack never starts. Run `sudo modprobe ip6table_filter` and restart: `docker restart otbr`
+
+**Step 3 — If the radio is fine but there's no dataset:**
+
+```bash
+# Check if a dataset exists
+docker exec otbr ot-ctl dataset active
+```
+
+If this returns empty or an error, the OTBR has no network to start. Form one:
+
+```bash
+docker exec otbr ot-ctl dataset init new
+docker exec otbr ot-ctl dataset commit active
+docker exec otbr ot-ctl ifconfig up
+docker exec otbr ot-ctl thread start
+```
+
+This generates a random Thread network. With Matter commissioning, the exact
+credentials don't matter — they're pushed to devices automatically during BLE
+commissioning.
+
 ### 1.3 Home Assistant
 
 ```bash
