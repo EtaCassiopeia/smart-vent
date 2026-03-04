@@ -47,8 +47,12 @@ espflash flash \
     --port /dev/cu.usbmodem101 \
     --bootloader target/riscv32imac-esp-espidf/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin \
     --partition-table partitions.csv \
+    -M \
     target/riscv32imac-esp-espidf/release/vent-controller
 ```
+
+The `-M` flag opens a serial monitor immediately after flashing so you can see
+the full boot output including pairing codes.
 
 Expected output:
 
@@ -124,8 +128,8 @@ Use the **manual pairing code** when commissioning via CLI tools (e.g. `chip-too
 
 ```bash
 cd tools/qr-generator
-pip install qrcode[pil]
-python generate_qr.py "MT:Y3.13OTB00KA0648G00" --output vent-qr.png
+pip3 install "qrcode[pil]"
+python3 generate_qr.py "MT:Y3.13OTB00KA0648G00" --output vent-qr.png
 ```
 
 Scan the QR code with the Google Home, Alexa, or Apple Home app to commission the device.

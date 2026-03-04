@@ -220,10 +220,14 @@ espflash flash \
     --port /dev/cu.usbmodem101 \
     --bootloader target/riscv32imac-esp-espidf/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin \
     --partition-table partitions.csv \
+    -M \
     target/riscv32imac-esp-espidf/release/vent-controller
 ```
 
-Expected: `App/part. size: 2,116,432/3,145,728 bytes, 67.28%`
+The `-M` flag opens a serial monitor immediately after flashing, so you can see
+the full boot output — including the pairing code and QR payload.
+
+Expected flash output: `App/part. size: 2,116,432/3,145,728 bytes, 67.28%`
 
 > **Why `--bootloader`?** `espflash` bundles a v5.5.x bootloader. Our firmware uses
 > ESP-IDF v5.2.3. Mismatched bootloader/app versions cause a "Segment 0 load address
@@ -231,7 +235,7 @@ Expected: `App/part. size: 2,116,432/3,145,728 bytes, 67.28%`
 
 ### Serial output
 
-On boot, the serial output displays the Matter pairing info:
+After flashing, the monitor shows the Matter pairing info:
 
 ```
 Vent Controller v0.1.0
@@ -250,8 +254,8 @@ QR code payload: MT:Y3.13OTB00KA0648G00
 Optionally, generate a printable QR code:
 ```bash
 cd tools/qr-generator
-pip install qrcode[pil]
-python generate_qr.py "MT:Y3.13OTB00KA0648G00" --output vent-qr.png
+pip3 install "qrcode[pil]"
+python3 generate_qr.py "MT:Y3.13OTB00KA0648G00" --output vent-qr.png
 ```
 
 At this point the device is **not on the Thread network** — it is advertising via BLE, waiting for a Matter commissioner.
