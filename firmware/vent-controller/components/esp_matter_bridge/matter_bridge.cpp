@@ -9,6 +9,9 @@
 #include <esp_mac.h>
 #include <app/server/Server.h>
 #include <app/server/OnboardingCodesUtil.h>
+#include <app/clusters/window-covering-server/window-covering-server.h>
+#include <app/clusters/window-covering-server/window-covering-delegate.h>
+#include <app-common/zap-generated/attributes/Accessors.h>
 
 static const char *TAG = "matter_bridge";
 
@@ -55,6 +58,45 @@ static esp_err_t app_attribute_update_cb(
 
     return ESP_OK;
 }
+
+// --- WindowCovering Delegate ---
+// CHIP requires a delegate for the WindowCovering cluster to handle
+// UpOrOpen / DownOrClose / GoToLiftPercentage / StopMotion. The cluster
+// updates the Target attribute first, then calls HandleMovement.
+
+class VentCoveringDelegate : public WindowCovering::Delegate {
+public:
+    CHIP_ERROR HandleMovement(WindowCovering::WindowCoveringType type) override {
+        if (type != WindowCovering::WindowCoveringType::Lift) {
+            return CHIP_NO_ERROR;
+        }
+        chip::app::DataModel::Nullable<chip::Percent100ths> target;
+        chip::EndpointId ep = mEndpoint ? mEndpoint : s_endpoint_id;
+        auto status = WindowCovering::Attributes::TargetPositionLiftPercent100ths::Get(ep, target);
+        if (status != chip::Protocols::InteractionModel::Status::Success || target.IsNull()) {
+            ESP_LOGW(TAG, "HandleMovement: failed to read target (status=%u)", (unsigned)chip::to_underlying(status));
+            return CHIP_NO_ERROR;
+        }
+        uint16_t pct = target.Value();
+        ESP_LOGI(TAG, "Delegate: move to %u/10000", pct);
+        if (s_position_cb) {
+            s_position_cb(pct, s_user_ctx);
+        }
+        // NOTE: do NOT update Current here. Current is updated by the Rust
+        // state machine via matter_bridge_update_position() as the servo
+        // physically moves. Setting Current=Target immediately causes a race
+        // with StopMotion (which sets Target=Current), pinning the state
+        // machine partway through a move.
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR HandleStopMotion() override {
+        ESP_LOGI(TAG, "Delegate: stop motion (no-op — servo moves are atomic)");
+        return CHIP_NO_ERROR;
+    }
+};
+
+static VentCoveringDelegate s_wc_delegate;
 
 // --- Matter identification callback ---
 
@@ -111,6 +153,21 @@ int matter_bridge_init(matter_position_cb_t position_cb,
     s_endpoint_id = endpoint::get_id(ep);
     ESP_LOGI(TAG, "Window Covering endpoint ID: %u", s_endpoint_id);
 
+    // Enable Lift + PositionAwareLift features so the cluster actually calls
+    // our Delegate's HandleMovement on UpOrOpen / DownOrClose / GoToLiftPct.
+    {
+        cluster_t *wc_cluster = cluster::get(ep, WindowCovering::Id);
+        if (wc_cluster) {
+            cluster::window_covering::feature::lift::config_t lift_cfg;
+            cluster::window_covering::feature::lift::add(wc_cluster, &lift_cfg);
+            cluster::window_covering::feature::position_aware_lift::config_t pal_cfg;
+            cluster::window_covering::feature::position_aware_lift::add(wc_cluster, &pal_cfg);
+            ESP_LOGI(TAG, "WindowCovering features enabled: Lift + PositionAwareLift");
+        } else {
+            ESP_LOGE(TAG, "Could not get WindowCovering cluster handle");
+        }
+    }
+
     // Set Basic Information cluster attributes
     endpoint_t *root_ep = endpoint::get_first(s_node);
     if (root_ep) {
@@ -160,6 +217,12 @@ int matter_bridge_start(void)
         return -1;
     }
     ESP_LOGI(TAG, "Matter started (Thread managed by Matter SDK)");
+
+    // Register WindowCovering delegate AFTER esp_matter::start() so the
+    // cluster server is initialized and the registration sticks.
+    s_wc_delegate.SetEndpoint(s_endpoint_id);
+    WindowCovering::SetDefaultDelegate(s_endpoint_id, &s_wc_delegate);
+    ESP_LOGI(TAG, "WindowCovering delegate registered on endpoint %u", s_endpoint_id);
     return 0;
 }
 

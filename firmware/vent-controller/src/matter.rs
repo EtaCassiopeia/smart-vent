@@ -33,16 +33,16 @@ extern "C" {
 /// In Matter, 0% = open, 100% = closed.
 pub fn angle_to_percent100ths(angle: u8) -> u16 {
     let clamped = angle.clamp(ANGLE_CLOSED, ANGLE_OPEN);
-    let range = (ANGLE_OPEN - ANGLE_CLOSED) as u16; // 90
-    let from_open = (ANGLE_OPEN - clamped) as u16;
-    (from_open * 10000) / range
+    let range = (ANGLE_OPEN - ANGLE_CLOSED) as u32; // 90
+    let from_open = (ANGLE_OPEN - clamped) as u32;
+    ((from_open * 10000) / range) as u16
 }
 
 /// Convert Matter percent100ths (0–10000) to servo angle (90–180).
 /// In Matter, 0% = open, 100% = closed.
 pub fn percent100ths_to_angle(pct: u16) -> u8 {
-    let clamped = pct.min(10000);
-    let range = (ANGLE_OPEN - ANGLE_CLOSED) as u16; // 90
+    let clamped = pct.min(10000) as u32;
+    let range = (ANGLE_OPEN - ANGLE_CLOSED) as u32; // 90
     let from_open = (clamped * range) / 10000;
     ANGLE_OPEN - from_open as u8
 }

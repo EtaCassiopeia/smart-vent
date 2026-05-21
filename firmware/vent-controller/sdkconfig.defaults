@@ -41,3 +41,14 @@ CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
 
 # Logging
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# Task watchdog — CHIP/Matter init can run long single-shot routines
+# (mDNS publish, SRP register) that exceed the default 5s. Bumped to 30s
+# to avoid IDLE-starvation panics during Matter startup.
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=30
+
+# Disable WiFi — this is a Thread-only Matter device. Skipping WiFi
+# init saves ~150 KB heap and removes a major source of long-running
+# startup work that triggered the task watchdog.
+CONFIG_CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION=n
+
