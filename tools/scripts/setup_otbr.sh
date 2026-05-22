@@ -113,6 +113,7 @@ docker run -d \
     --network host \
     --privileged \
     -v /dev:/dev \
+    -v otbr-data:/var/lib/thread \
     -e RADIO_URL="spinel+hdlc+uart://${DONGLE_DEV}?uart-baudrate=${BAUD_RATE}" \
     -e BACKBONE_INTERFACE="${BACKBONE}" \
     openthread/otbr:latest
@@ -122,9 +123,35 @@ echo "Waiting for OTBR to start..."
 sleep 5
 
 OT_STATE=$(docker exec otbr ot-ctl state 2>/dev/null | tr -d '[:space:]')
+BACKUP_DIR="$HOME/.thread"
+BACKUP_FILE="$BACKUP_DIR/dataset-backup.txt"
+
 if [ -n "$OT_STATE" ] && [ "$OT_STATE" != "disabled" ]; then
     echo ""
     echo "OTBR is running! Thread state: $OT_STATE"
+
+    # Back up the active dataset for disaster recovery
+    echo "Backing up active dataset..."
+    mkdir -p "$BACKUP_DIR"
+    docker exec otbr ot-ctl dataset active -x | tr -d '[:space:]' > "$BACKUP_FILE"
+    chmod 600 "$BACKUP_FILE"
+    echo "Dataset backed up to $BACKUP_FILE"
+elif [ "$OT_STATE" = "disabled" ] && [ -f "$BACKUP_FILE" ]; then
+    # Fresh container with no network — attempt to restore from backup
+    echo ""
+    echo "Thread state is 'disabled' and a dataset backup exists."
+    echo "Restoring dataset from $BACKUP_FILE..."
+    DATASET=$(cat "$BACKUP_FILE" | tr -d '[:space:]')
+    if [ -n "$DATASET" ]; then
+        docker exec otbr ot-ctl dataset set active "$DATASET"
+        docker exec otbr ot-ctl ifconfig up
+        docker exec otbr ot-ctl thread start
+        sleep 3
+        OT_STATE=$(docker exec otbr ot-ctl state 2>/dev/null | tr -d '[:space:]')
+        echo "Dataset restored. Thread state: $OT_STATE"
+    else
+        echo "WARNING: Backup file is empty. Skipping restore."
+    fi
 else
     echo ""
     echo "OTBR container started but Thread stack may still be initializing."
@@ -142,3 +169,8 @@ echo "Next steps:"
 echo "  1. Open the web GUI (http://localhost:80) and form a new Thread network"
 echo "  2. Note the network credentials for device commissioning"
 echo "  3. Run setup_ha.sh to install Home Assistant"
+if [ -f "$BACKUP_FILE" ]; then
+    echo ""
+    echo "Dataset backup: $BACKUP_FILE"
+    echo "  This file contains the Thread network key. Keep it secure (chmod 600)."
+fi

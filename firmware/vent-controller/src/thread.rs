@@ -44,6 +44,7 @@ impl Default for ThreadConfig {
 pub struct ThreadManager {
     config: ThreadConfig,
     connected: bool,
+    matter_managed: bool,
 }
 
 impl ThreadManager {
@@ -51,6 +52,21 @@ impl ThreadManager {
         Self {
             config,
             connected: false,
+            matter_managed: false,
+        }
+    }
+
+    /// Create a ThreadManager where Matter SDK owns the OpenThread stack.
+    ///
+    /// In this mode, `init()` is a no-op — Matter handles Thread platform
+    /// initialization, dataset provisioning, and the mainloop. Query methods
+    /// (`get_rssi`, `is_connected`, `role_str`) still work because they use
+    /// `esp_openthread_get_instance()` which returns the Matter-managed instance.
+    pub fn new_matter_managed() -> Self {
+        Self {
+            config: ThreadConfig::default(),
+            connected: false,
+            matter_managed: true,
         }
     }
 
@@ -60,6 +76,11 @@ impl ThreadManager {
     /// The dataset is configured and Thread is enabled so that the device
     /// joins the network once the mainloop starts processing.
     pub fn init(&mut self) -> Result<(), EspError> {
+        if self.matter_managed {
+            info!("Thread stack managed by Matter SDK — skipping manual init");
+            return Ok(());
+        }
+
         info!("Initializing OpenThread stack...");
 
         unsafe {

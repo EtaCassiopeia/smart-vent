@@ -9,25 +9,56 @@ CONFIG_IEEE802154_ENABLED=y
 
 # VFS eventfd — required by OpenThread task queue and radio driver
 CONFIG_VFS_SUPPORT_SELECT=y
-CONFIG_ESP_EVENTFD=y
 
-# Stack sizes — OpenThread requires larger stacks than defaults
-CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
+# Stack sizes — OpenThread + Matter require larger stacks
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_CHIP_TASK_STACK_SIZE=8192
 
-# Power management
-CONFIG_PM_ENABLE=y
-CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+# Power management — disabled for now; BLE controller_sleep_init asserts
+# with PM enabled on ESP32-C6 + ESP-IDF v5.2.3
+# CONFIG_PM_ENABLE=y
+# CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 
 # CoAP — enabled via components/ot_coap_config (OPENTHREAD_CONFIG_COAP_API_ENABLE)
 
-# Partition table — use large app partition (1.5MB) for OpenThread firmware
-CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+# Matter
+CONFIG_ESP_MATTER_ENABLE_MATTER_SERVER=y
+CONFIG_ENABLE_CHIP_SHELL=n
 
-# NVS
-CONFIG_NVS_ENABLED=y
+# BLE commissioning
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+
+# Crypto — required by Matter (CASE/PASE)
+CONFIG_MBEDTLS_CMAC_C=y
+CONFIG_MBEDTLS_HKDF_C=y
+CONFIG_MBEDTLS_ECJPAKE_C=y
+
+# Partition table — built-in layout for build; flash with custom partitions.csv
+# (3MB app) via: espflash flash --partition-table partitions.csv
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
 
 # Logging
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
 
-# LEDC (PWM)
-CONFIG_LEDC_SPEED_MODE_MAX=1
+# Task watchdog — CHIP/Matter init can run long single-shot routines
+# (mDNS publish, SRP register) that exceed the default 5s. Bumped to 30s
+# to avoid IDLE-starvation panics during Matter startup.
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=30
+
+# Disable WiFi — this is a Thread-only Matter device. Skipping WiFi
+# init saves ~150 KB heap and removes a major source of long-running
+# startup work that triggered the task watchdog.
+CONFIG_CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION=n
+
+# Disable the ESP WiFi driver entirely. On ESP32-C6 the WiFi PHY/coex
+# stack disables interrupts for long stretches during init and calibration;
+# with WiFi enabled, the interrupt WDT (default 300ms) panics during
+# Thread re-attach bursts. Symptom: rst:0x7 (TG0_WDT_HPSYS) crash loop.
+CONFIG_ESP_WIFI_ENABLED=n
+
+# Raise the interrupt watchdog so brief radio-driver ISRs don't panic.
+# CHIP/802.15.4 ISRs occasionally run >300ms during heavy mDNS or MLE.
+CONFIG_ESP_INT_WDT_TIMEOUT_MS=1000
+

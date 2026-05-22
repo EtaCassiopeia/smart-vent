@@ -3,6 +3,8 @@ mod coap;
 #[allow(dead_code)]
 mod identity;
 #[allow(dead_code)]
+mod matter;
+#[allow(dead_code)]
 mod power;
 #[allow(dead_code)]
 mod servo;
@@ -11,12 +13,12 @@ mod state;
 #[allow(dead_code)]
 mod thread;
 
-use coap::{register_coap_resources, AppState};
+use coap::register_coap_resources;
 use identity::DeviceIdentity;
 use power::{PowerManager, PowerMode};
 use servo::ServoDriver;
-use state::VentStateMachine;
-use thread::{ThreadConfig, ThreadManager};
+use state::{AppState, VentStateMachine};
+use thread::ThreadManager;
 use vent_protocol::{PowerSource, ANGLE_CLOSED};
 
 use esp_idf_hal::ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver, Resolution};
@@ -129,18 +131,22 @@ fn main() {
     };
     let power_mgr = PowerManager::new(power_mode);
 
-    // Initialize Thread networking
-    let mut thread_mgr = ThreadManager::new(ThreadConfig::default());
-    if let Err(e) = thread_mgr.init() {
-        error!("Failed to init Thread: {:?}", e);
-    }
+    // Thread networking is managed by Matter SDK — only create a query handle
+    let thread_mgr = ThreadManager::new_matter_managed();
 
     // Configure SED if battery-powered
     if let Err(e) = power_mgr.configure_sed() {
         error!("Failed to configure SED mode: {:?}", e);
     }
 
-    // Build app state and register CoAP resources (must happen before mainloop starts)
+    // Initialize Matter (creates node + Window Covering endpoint).
+    // Matter manages the OpenThread stack and its mainloop internally.
+    matter::init();
+    matter::start();
+    matter::log_pairing_info();
+
+    // Build app state and register CoAP resources.
+    // CoAP must be registered after Matter starts, since Matter owns the OT instance.
     let app_state = AppState {
         vent: vent_state,
         identity: device_id,
@@ -151,47 +157,49 @@ fn main() {
             PowerMode::Sed { .. } => PowerSource::Battery,
         },
         poll_period_ms: power_mode.poll_period_ms(),
+        identify_mode: false,
+        identify_restore_angle: None,
     };
 
     if let Err(e) = register_coap_resources(app_state) {
         error!("Failed to register CoAP resources: {:?}", e);
     }
 
-    // Start the OpenThread event loop in a dedicated thread.
-    // esp_openthread_launch_mainloop() is blocking — it processes radio
-    // frames, Thread protocol events, and CoAP requests.
-    std::thread::Builder::new()
-        .name("openthread".into())
-        .stack_size(8192)
-        .spawn(|| {
-            info!("OpenThread mainloop started");
-            unsafe {
-                esp_idf_sys::esp_openthread_launch_mainloop();
-            }
-            warn!("OpenThread mainloop exited");
-        })
-        .expect("Failed to spawn OpenThread task");
-
-    info!("Vent controller running. Waiting for CoAP commands...");
+    info!("Vent controller running. Waiting for CoAP/Matter commands...");
 
     // Main loop: process servo steps and Thread events
     loop {
-        let is_moving = coap::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
+        let is_moving = state::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
 
         if is_moving {
-            coap::with_app_state(|s| s.vent.step());
+            state::with_app_state(|s| s.vent.step());
 
-            let current_angle = coap::with_app_state(|s| s.vent.current_angle()).unwrap_or(ANGLE_CLOSED);
+            let current_angle = state::with_app_state(|s| s.vent.current_angle()).unwrap_or(ANGLE_CLOSED);
             if let Err(e) = servo.set_angle(current_angle) {
                 error!("Servo step failed: {:?}", e);
             }
             sleep(Duration::from_millis(servo::STEP_DELAY_MS as u64));
 
             // Commit when movement completes: checkpoint angle + set WAL flag
-            let still_moving = coap::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
+            let still_moving = state::with_app_state(|s| s.vent.is_moving()).unwrap_or(false);
             if !still_moving {
-                coap::with_app_state(|s| {
+                state::with_app_state(|s| {
                     let final_angle = s.vent.current_angle();
+
+                    // During identify, wiggle back and forth instead of committing
+                    if s.identify_mode {
+                        if let Some(restore) = s.identify_restore_angle {
+                            // Toggle between restore angle and wiggle offset
+                            let next = if final_angle == restore {
+                                restore.saturating_add(10).min(vent_protocol::ANGLE_OPEN)
+                            } else {
+                                restore
+                            };
+                            s.vent.set_target(next);
+                        }
+                        return;
+                    }
+
                     if let Err(e) = s.identity.commit(final_angle) {
                         error!("WAL commit failed: {:?}", e);
                     }
@@ -200,6 +208,10 @@ fn main() {
                         final_angle,
                         s.vent.state().as_str()
                     );
+
+                    // Report final position to Matter fabric
+                    matter::report_position(final_angle);
+                    matter::report_operational_status(false);
                 });
             }
         } else {
