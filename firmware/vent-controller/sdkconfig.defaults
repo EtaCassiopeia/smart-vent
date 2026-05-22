@@ -52,3 +52,13 @@ CONFIG_ESP_TASK_WDT_TIMEOUT_S=30
 # startup work that triggered the task watchdog.
 CONFIG_CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION=n
 
+# Disable the ESP WiFi driver entirely. On ESP32-C6 the WiFi PHY/coex
+# stack disables interrupts for long stretches during init and calibration;
+# with WiFi enabled, the interrupt WDT (default 300ms) panics during
+# Thread re-attach bursts. Symptom: rst:0x7 (TG0_WDT_HPSYS) crash loop.
+CONFIG_ESP_WIFI_ENABLED=n
+
+# Raise the interrupt watchdog so brief radio-driver ISRs don't panic.
+# CHIP/802.15.4 ISRs occasionally run >300ms during heavy mDNS or MLE.
+CONFIG_ESP_INT_WDT_TIMEOUT_MS=1000
+
