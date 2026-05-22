@@ -1,107 +1,83 @@
-# Smart Vent Control System
+# smart-vent
 
-Per-room HVAC vent control using ESP32-C6 + SG90 servos over Thread. Supports **Matter** for Google Home, Alexa, and Apple Home, plus a CoAP protocol for the custom Python hub and Home Assistant integration.
+Per-room HVAC vent control. Each vent has a small XIAO ESP32-C6 board driving an SG90
+hobby servo that opens or closes a louver. The board joins a Thread mesh hosted by a
+Raspberry Pi and exposes itself as a Matter **Window Covering** device. Home Assistant
+runs on the same Pi and is the user-facing controller — you toggle the vent in the HA UI
+or in a HA automation, and the command travels over Matter-over-Thread to the device,
+which moves the servo.
 
-## Architecture
+The project is **Matter-over-Thread only**. There is no Wi-Fi path on the device, and no
+cloud dependency. The Pi is the entire backend.
 
-![Architecture Overview](docs/diagrams/architecture-simple.svg)
+## Hardware
 
-See [docs/architecture.md](docs/architecture.md) for the full architecture reference, including data flow diagrams, device lifecycle, power management, security model, and a glossary of all technologies used.
+| Role | Part | Notes |
+|------|------|-------|
+| Hub | Raspberry Pi (any model with USB) | Runs three Docker containers: OTBR, matter-server, Home Assistant |
+| Thread radio | SMLIGHT SLZB-07 USB dongle | CP210x USB-UART (`10c4:ea60`), enumerates as `/dev/ttyUSB0`. Used by OTBR as the Thread Radio Co-Processor |
+| Vent MCU | Seeed XIAO ESP32-C6 | RISC-V chip with built-in 802.15.4 and BLE radios. Enumerates as `/dev/ttyACM0` (`303a:1001`) when plugged **directly** into the Pi — not through a USB hub |
+| Actuator | SG90 servo | Signal on GPIO2 (XIAO D2 pin). 90° = vent closed, 180° = vent open |
 
-## Quick Start
-
-> **Want Matter over Thread?** The [Quick Start: Matter over Thread](docs/guides/quick-start-matter.md) guide covers hub setup, flashing, Google Home commissioning, HA multi-admin, and Thread network resilience — all in one page.
->
-> **First time?** Start with the [development environment setup guide](docs/guides/setup-dev-env.md) to install Python, Rust, and IDE configuration.
-
-### Development (no hardware)
-
-The simulator creates virtual vent devices on localhost that respond to CoAP requests, replacing real ESP32 hardware for testing.
-
-```bash
-# Run all tests (hub unit tests + integration tests against the simulator)
-pytest hub/tests/
-pytest tests/integration/
-```
-
-The integration tests automatically start and stop the simulator. You can also run it manually to explore the CLI:
-
-```bash
-# Terminal 1: start 3 virtual vents (runs in foreground, Ctrl+C to stop)
-vent-sim start --count 3
-
-# Terminal 2: explore hub commands
-vent-hub --help
-```
-
-> **Note:** `vent-hub discover` requires a Thread Border Router and won't find simulator vents. The simulator is for integration tests and direct CoAP interaction.
-
-### Hardware Setup (Matter)
-
-1. [Set up Raspberry Pi + OTBR](docs/guides/setup-rpi.md)
-2. [Set up development environment](docs/guides/setup-dev-env.md)
-3. [Wire ESP32-C6 + SG90](docs/hardware/wiring.md)
-4. [Flash firmware](docs/guides/flash-firmware.md)
-5. [Commission via Matter](docs/guides/quick-start-matter.md#phase-3-commission-via-google-home) (Google Home, Alexa, or HA)
-
-### Hardware Setup (Legacy CoAP)
-
-1. [Set up Raspberry Pi + OTBR](docs/guides/setup-rpi.md)
-2. [Set up development environment](docs/guides/setup-dev-env.md)
-3. [Wire ESP32-C6 + SG90](docs/hardware/wiring.md)
-4. [Flash firmware](docs/guides/flash-firmware.md)
-5. [Commission via CoAP](docs/guides/commissioning.md#legacy-coap-commissioning)
-
-## Project Structure
+## Architecture at a glance
 
 ```
-firmware/           Rust ESP32-C6 firmware
-  vent-controller/  Main firmware application
-  shared-protocol/  CBOR message types (shared crate)
-hub/                Python hub service
-  src/vent_hub/     CoAP client, device registry, group manager
-  tests/            Unit tests
-homeassistant/      Home Assistant custom component
+   ┌─────────────────────── Raspberry Pi ──────────────────────────┐
+   │                                                                │
+   │  Home Assistant ── (WebSocket) ──► matter-server               │
+   │       (:8123)                       (:5580)                    │
+   │                                        │ BLE pairing           │
+   │                                        ▼                       │
+   │                                     BlueZ ─── (host BT)        │
+   │                                        │                       │
+   │                                        │ Matter ops over IPv6  │
+   │                                        ▼                       │
+   │                                     OTBR (OpenThread Border    │
+   │                                           Router container)    │
+   │                                        │                       │
+   │                                        │ Thread (802.15.4)     │
+   └────────────────────────────────────────┼───────────────────────┘
+                                            │  ▲
+                                  via SLZB-07 USB dongle
+                                            │  │
+                              ┌─────────────▼──┴────────────┐
+                              │   XIAO ESP32-C6 (vent N)    │
+                              │   Rust firmware + esp-matter│
+                              │   GPIO2 ─► SG90 servo       │
+                              └─────────────────────────────┘
+```
+
+## Where to look
+
+- **[docs/handbook.md](docs/handbook.md)** — what the system is, how it works, why
+  it's built the way it is. Read this top-to-bottom once. Covers Matter, Thread,
+  the Pi services, the firmware internals, what happens during commissioning and
+  on every replug.
+- **[docs/runbook.md](docs/runbook.md)** — step-by-step procedures. How to set up
+  the Pi from scratch, build the firmware, flash a new vent, commission it via HA,
+  assign it to a room, and add the next one. Plus a symptom-driven troubleshooting
+  matrix.
+
+## Repo layout
+
+```
+firmware/
+  vent-controller/                 ESP32-C6 firmware (Rust + ESP-IDF v5.2.3)
+    src/                           Rust modules: main, matter, servo, state, identity, ...
+    components/esp_matter_bridge/  C++ shim over esp-matter SDK
+    sdkconfig.defaults             Non-default ESP-IDF kconfig
+    partitions.csv                 nvs / phy_init / 3 MB factory app layout
+  shared-protocol/                 vent-protocol crate (CBOR types, angle constants)
+docs/
+  handbook.md                      Conceptual reference
+  runbook.md                       Step-by-step procedures
 tools/
-  simulator/        Virtual vent devices for testing
-  scripts/          Setup automation scripts
-docs/               Architecture, protocol, and guides
-tests/integration/  End-to-end tests (hub + simulator)
+  scripts/                         setup_otbr.sh, setup_ha.sh — reference Pi bring-up
 ```
 
-## Key Features
+## Status
 
-- **Matter support**: Works with Google Home, Alexa, Apple Home, and HA Matter integration
-- **Per-vent control**: 90° (closed) to 180° (open)
-- **Room/floor grouping**: Batch operations on groups of vents
-- **Permanent device ID**: EUI-64 from ESP32-C6 eFuse
-- **BLE commissioning**: Scan a QR code to add devices to any ecosystem
-- **Multi-admin**: Control from multiple ecosystems simultaneously
-- **Auto-discovery**: New devices found via OTBR (legacy CoAP) or Matter commissioning
-- **Battery support**: Optional deep sleep (Thread SED mode)
-- **Local only**: No cloud — all traffic stays on Thread mesh
-- **Home Assistant**: Vents appear as cover entities (via Matter or custom component)
-
-## Protocol
-
-The firmware runs two protocols simultaneously over Thread:
-
-**Matter** (Window Covering cluster) — Industry standard, used by Google Home/Alexa/Apple Home/HA:
-
-| Cluster | Commands | Purpose |
-|---------|----------|---------|
-| Window Covering | UpOrOpen, DownOrClose, GoToLiftPercentage | Position control |
-| Window Covering | CurrentPositionLiftPercent100ths | Position reporting |
-| Identify | Identify | Servo wiggle for identification |
-
-**CoAP + CBOR** — Custom protocol for the Python hub:
-
-| Resource | Methods | Purpose |
-|----------|---------|---------|
-| `/vent/position` | GET | Current position |
-| `/vent/target` | PUT | Set position |
-| `/device/identity` | GET | Device info |
-| `/device/config` | GET, PUT | Room/floor config |
-| `/device/health` | GET | Health telemetry |
-
-See [communication-protocol.md](docs/communication-protocol.md) for full details.
+All firmware code lives on the `feature/matter-over-thread` branch. One vent has been
+fully commissioned and verified end-to-end (HA → Close button → servo turns to 90°,
+HA → Open → servo turns to 180°). The same firmware image can be flashed onto any
+number of XIAO ESP32-C6 boards to add more vents — see the runbook.
