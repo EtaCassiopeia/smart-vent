@@ -1,0 +1,126 @@
+# Lovelace dashboard for browsing and controlling vents by floor → room.
+#
+# Register from configuration.yaml:
+#
+#     lovelace:
+#       mode: storage
+#       dashboards:
+#         vents:
+#           mode: yaml
+#           title: Vents
+#           icon: mdi:air-filter
+#           show_in_sidebar: true
+#           filename: dashboards/vents.yaml
+#
+# Replace area_id / entity_id placeholders with your own.
+
+title: Vents
+views:
+  - title: Overview
+    icon: mdi:home
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: |
+              ## Whole-house control
+              Buttons below act on every vent.
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Open all
+                icon: mdi:arrow-expand-vertical
+                tap_action:
+                  action: call-service
+                  service: cover.open_cover
+                  target:
+                    entity_id: all
+                  data: {}
+              - type: button
+                name: Close all
+                icon: mdi:arrow-collapse-vertical
+                tap_action:
+                  action: call-service
+                  service: cover.close_cover
+                  target:
+                    entity_id: all
+
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: "## By floor"
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Open main floor
+                tap_action:
+                  action: call-service
+                  service: cover.open_cover
+                  target:
+                    floor_id: main_floor
+              - type: button
+                name: Close main floor
+                tap_action:
+                  action: call-service
+                  service: cover.close_cover
+                  target:
+                    floor_id: main_floor
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Open basement
+                tap_action:
+                  action: call-service
+                  service: cover.open_cover
+                  target:
+                    floor_id: basement
+              - type: button
+                name: Close basement
+                tap_action:
+                  action: call-service
+                  service: cover.close_cover
+                  target:
+                    floor_id: basement
+
+  - title: Living Room
+    icon: mdi:sofa
+    cards:
+      - type: entities
+        title: Living Room vents
+        entities:
+          - entity: cover.living_room_vent_1
+          - entity: cover.living_room_vent_2
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Open all
+            tap_action:
+              action: call-service
+              service: cover.open_cover
+              target:
+                area_id: living_room
+          - type: button
+            name: Close all
+            tap_action:
+              action: call-service
+              service: cover.close_cover
+              target:
+                area_id: living_room
+
+  - title: Study
+    icon: mdi:bookshelf
+    cards:
+      - type: entities
+        title: Study vents
+        entities:
+          - entity: cover.study_vent_1
+          - entity: cover.study_vent_2
+          - entity: cover.study_vent_3
+      - type: markdown
+        content: |
+          Granular example: close vents 1 + 2, leave vent 3 open.
+      - type: button
+        name: Close 1 + 2 (keep 3 open)
+        tap_action:
+          action: call-service
+          service: script.close_study_vents_1_and_2

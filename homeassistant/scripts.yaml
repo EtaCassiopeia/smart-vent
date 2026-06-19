@@ -1,0 +1,96 @@
+# Group-control scripts for smart vents.
+#
+# Copy into ~/homeassistant/scripts.yaml (or append). Replace placeholder
+# area_id / floor_id / entity_id values with your own — see ../README.md.
+#
+# Call from the UI, an automation, voice (later), or Developer Tools → Actions.
+
+close_all_vents_on_floor:
+  alias: Close all vents on a floor
+  description: Closes every cover entity in the given floor.
+  fields:
+    floor_id:
+      description: Floor slug (e.g. main_floor, basement, upper_floor)
+      required: true
+      example: main_floor
+      selector:
+        text:
+  sequence:
+    - service: cover.close_cover
+      target:
+        floor_id: "{{ floor_id }}"
+
+open_all_vents_on_floor:
+  alias: Open all vents on a floor
+  fields:
+    floor_id:
+      description: Floor slug
+      required: true
+      selector:
+        text:
+  sequence:
+    - service: cover.open_cover
+      target:
+        floor_id: "{{ floor_id }}"
+
+close_room_vents:
+  alias: Close all vents in a room
+  fields:
+    area_id:
+      description: Area slug (e.g. living_room, study, bedroom_1)
+      required: true
+      selector:
+        text:
+  sequence:
+    - service: cover.close_cover
+      target:
+        area_id: "{{ area_id }}"
+
+open_room_vents:
+  alias: Open all vents in a room
+  fields:
+    area_id:
+      description: Area slug
+      required: true
+      selector:
+        text:
+  sequence:
+    - service: cover.open_cover
+      target:
+        area_id: "{{ area_id }}"
+
+set_vent_position:
+  alias: Set a single vent to a specific position
+  description: 0 = fully closed, 100 = fully open.
+  fields:
+    entity_id:
+      description: Cover entity (e.g. cover.living_room_vent_1)
+      required: true
+      selector:
+        entity:
+          domain: cover
+    position:
+      description: Target position (0-100)
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+  sequence:
+    - service: cover.set_cover_position
+      target:
+        entity_id: "{{ entity_id }}"
+      data:
+        position: "{{ position }}"
+
+# Per-vent granularity example: close vents 1 and 2 in the study, leave
+# vent 3 alone. Edit the entity_id list to match your vents.
+close_study_vents_1_and_2:
+  alias: Close study vents 1 and 2 (leave 3 open)
+  sequence:
+    - service: cover.close_cover
+      target:
+        entity_id:
+          - cover.study_vent_1
+          - cover.study_vent_2

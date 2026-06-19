@@ -71,8 +71,13 @@ firmware/
 docs/
   handbook.md                      Conceptual reference
   runbook.md                       Step-by-step procedures
+homeassistant/                     Example HA configs (scripts, automations,
+                                   schedule helpers, Lovelace dashboard) for
+                                   room/floor grouping and scheduling. Copy
+                                   into ~/homeassistant/. See runbook §7.5.
 tools/
   scripts/                         setup_otbr.sh, setup_ha.sh — reference Pi bring-up
+  qr-generator/                    Renders printable QR PNGs from the boot-logged Matter payload
 ```
 
 ## Status
