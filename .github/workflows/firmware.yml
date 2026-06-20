@@ -73,7 +73,18 @@ jobs:
       - name: Install ESP-IDF + RISC-V toolchain via espup
         if: steps.cache-espressif.outputs.cache-hit != 'true'
         # espup's --targets takes chip names (esp32c6), not Rust target triples.
-        run: espup install --targets ${{ env.CHIP }}
+        # Retry on transient GitHub API 5xx/504 errors (the same call hits
+        # api.github.com to discover the latest toolchain release).
+        run: |
+          for attempt in 1 2 3; do
+            if espup install --targets ${{ env.CHIP }}; then
+              exit 0
+            fi
+            echo "espup install attempt $attempt failed; sleeping 30s before retry"
+            sleep 30
+          done
+          echo "espup install failed after 3 attempts" >&2
+          exit 1
 
       - name: Install ldproxy + espflash
         run: |
