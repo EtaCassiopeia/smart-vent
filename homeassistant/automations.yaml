@@ -1,0 +1,84 @@
+# Time-based vent automations.
+#
+# Two styles included:
+#
+#  Style A — simple time-of-day triggers. Edit the times directly here
+#            (or via UI: Settings → Automations).
+#  Style B — state-change triggers off Schedule helpers. The helper is
+#            edited as a weekly calendar grid in the HA UI
+#            (Settings → Devices & Services → Helpers), which is nicer
+#            for complex windows. Helper definitions live in
+#            helpers/schedule_helpers.yaml.
+#
+# Copy into ~/homeassistant/automations.yaml. Replace placeholder area_id /
+# floor_id values — see ../README.md.
+
+# ---------------------------------------------------------------------------
+# Style A — direct time-of-day triggers
+# ---------------------------------------------------------------------------
+
+- id: close_basement_vents_overnight
+  alias: Close basement vents overnight
+  description: Closes every vent on the basement floor at 22:00.
+  trigger:
+    - platform: time
+      at: "22:00:00"
+  action:
+    - service: cover.close_cover
+      target:
+        floor_id: basement
+
+- id: open_main_floor_vents_weekday_morning
+  alias: Open main floor vents on weekday mornings
+  trigger:
+    - platform: time
+      at: "06:30:00"
+  condition:
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+  action:
+    - service: cover.open_cover
+      target:
+        floor_id: main_floor
+
+- id: close_living_room_after_midnight
+  alias: Close living-room vents at 00:30
+  trigger:
+    - platform: time
+      at: "00:30:00"
+  action:
+    - service: cover.close_cover
+      target:
+        area_id: living_room
+
+# ---------------------------------------------------------------------------
+# Style B — Schedule helper triggers
+# ---------------------------------------------------------------------------
+# The helper schedule.living_room_vent_active_hours is defined in
+# helpers/schedule_helpers.yaml. When its window opens (state turns "on"),
+# we open the living-room vents; when it closes ("off"), we close them.
+
+- id: living_room_vents_follow_schedule
+  alias: Living room vents follow schedule helper
+  trigger:
+    - platform: state
+      entity_id: schedule.living_room_vent_active_hours
+  action:
+    - service: "cover.{{ 'open_cover' if trigger.to_state.state == 'on' else 'close_cover' }}"
+      target:
+        area_id: living_room
+
+- id: upper_floor_vents_follow_schedule
+  alias: Upper floor vents follow schedule helper
+  trigger:
+    - platform: state
+      entity_id: schedule.upper_floor_active_hours
+  action:
+    - service: "cover.{{ 'open_cover' if trigger.to_state.state == 'on' else 'close_cover' }}"
+      target:
+        floor_id: upper_floor

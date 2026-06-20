@@ -632,35 +632,153 @@ post-PASE; only the discovery is bypassed.
 
 ---
 
-## 7. Assign to a room (HA Area)
+## 7. Assign to a room, floor, and entity name (HA Area + Floor)
 
-Once the device shows up in HA as a cover entity:
+Grouping vents by room or floor relies entirely on Home Assistant's
+**Areas** (rooms) and **Floors** (since HA 2024.3). Set these up once,
+then every vent you commission slots into the hierarchy.
 
-1. HA UI → Settings → Devices & services → Matter → click the new device.
-2. **Rename** it. HA assigns a default name like "Window Covering" or
-   "Smart HVAC Vent" (from our firmware's Basic Information). Change to
-   e.g. "Living Room Vent".
-3. **Set the Area**. Click the device's pencil icon → Area → pick or
-   create the room (Living Room, Bedroom 1, etc.).
-4. The cover entity inherits the Area automatically. Optionally rename
-   the entity_id (the slug-like name) via the entity's settings dialog.
+### 7.1 Create Floors and Areas (once)
 
-You can now reference the entity in automations, scripts, and the
-dashboard. Example automation:
+1. HA UI → Settings → **Areas, zones & labels**.
+2. **Floors** tab → add one Floor per physical floor: "Basement",
+   "Main Floor", "Upper Floor", ...
+3. **Areas** tab → add one Area per room ("Living Room", "Study",
+   "Bedroom 1", ...). For each Area, set its Floor.
 
-```yaml
-alias: Close vents at night
-trigger:
-  platform: time
-  at: "23:00:00"
-action:
-  service: cover.close_cover
-  target:
-    area_id: bedroom_1
+You only need to do this once for the whole house.
+
+### 7.2 Assign each commissioned vent to a room
+
+For every vent after commissioning (§6):
+
+1. Settings → Devices & services → Matter → click the new device.
+2. **Rename the device**. HA assigns a default like "Window Covering"
+   or "Smart HVAC Vent" (from the firmware's Basic Information).
+   Change to e.g. "Living Room Vent 1".
+3. **Set the Area**. Click the device's pencil icon → Area → pick the
+   room. The cover entity inherits both the Area and (transitively)
+   the Floor.
+4. **Rename the entity_id** to a consistent pattern. Click the cover
+   entity → settings (cog) → "Entity ID" → set to
+   `cover.<room>_vent_<n>` (e.g. `cover.living_room_vent_1`,
+   `cover.study_vent_2`). This is what the dashboards and per-entity
+   scripts in `homeassistant/` target.
+
+> The HA Area + Floor model is the only "grouping" you need. Nothing
+> on the device knows about rooms — see handbook §9.3 / §9.4.
+
+### 7.3 Quick check
+
+Settings → Areas, zones & labels → Areas → click the vent's Area.
+The cover entity should be listed under "Entities" with the new
+name. Devices & services → Matter shows the device under its room.
+
+---
+
+## 7.5 Group control and scheduling
+
+Once Areas and Floors exist, HA's standard `cover.*` services do all
+the grouping work. The repo has ready-made templates in
+`homeassistant/`:
+
+| Template | What it gives you |
+|---|---|
+| `scripts.yaml` | `close_all_vents_on_floor`, `open_room_vents`, `set_vent_position`, and a per-entity granular example |
+| `automations.yaml` | Daily time-of-day automations **and** Schedule-helper-driven automations |
+| `helpers/schedule_helpers.yaml` | Weekly recurring windows editable as a calendar in the HA UI |
+| `dashboards/vents.yaml` | A floor → room → entity Lovelace dashboard with whole-house, per-floor, and per-room buttons |
+
+### 7.5.1 Install templates
+
+```bash
+# On the Pi, with HA already running (runbook §3.3):
+cp -r ~/code/smart-vent/homeassistant/scripts.yaml         ~/homeassistant/
+cp -r ~/code/smart-vent/homeassistant/automations.yaml     ~/homeassistant/
+mkdir -p ~/homeassistant/helpers ~/homeassistant/dashboards
+cp ~/code/smart-vent/homeassistant/helpers/schedule_helpers.yaml \
+   ~/homeassistant/helpers/
+cp ~/code/smart-vent/homeassistant/dashboards/vents.yaml \
+   ~/homeassistant/dashboards/
 ```
 
-> The HA Area model is the only "grouping" you need. There's nothing on
-> the device that knows about rooms. Handbook §9.3 explains why.
+Then edit `~/homeassistant/configuration.yaml` so HA loads them:
+
+```yaml
+script:    !include scripts.yaml
+automation: !include automations.yaml
+schedule:  !include helpers/schedule_helpers.yaml
+
+lovelace:
+  mode: storage
+  dashboards:
+    vents:
+      mode: yaml
+      title: Vents
+      icon: mdi:air-filter
+      show_in_sidebar: true
+      filename: dashboards/vents.yaml
+```
+
+Replace placeholder `area_id`, `floor_id`, and `entity_id` values in
+the copied files with the slugs HA assigned to your own Areas/Floors
+and the entity_ids you picked in §7.2.
+
+Reload via HA UI → Developer Tools → YAML → reload each section, or
+`docker restart homeassistant` for a clean reload. Watch
+`docker logs -f homeassistant` for YAML errors.
+
+> **Note:** if you ran an earlier hub-based setup, the HA container
+> may still carry a `-v .../devices.db:/config/devices.db` bind
+> mount pointing at the now-removed legacy sqlite file. Inspect with
+> `docker inspect homeassistant --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}'`.
+> If present, re-create the container with the canonical command from
+> §3.3 (no extra mounts) at a convenient time — the running container
+> is healthy until it restarts.
+
+### 7.5.2 Group call from the UI (sanity check)
+
+Developer Tools → **Actions** → choose `cover.close_cover` →
+Targets → Area → pick the room with your vent. Run. The vent moves.
+Same with Floors. Same `cover.open_cover` / `cover.set_cover_position`.
+
+### 7.5.3 Per-vent (granular) calls
+
+When the entity_ids follow `cover.<room>_vent_<n>`, "close vents 1+2
+in study, keep vent 3 open" is one service call:
+
+```yaml
+service: cover.close_cover
+target:
+  entity_id:
+    - cover.study_vent_1
+    - cover.study_vent_2
+```
+
+`scripts.yaml` ships `close_study_vents_1_and_2` as a one-tap version
+of exactly this.
+
+### 7.5.4 Schedule helpers (calendar style)
+
+Settings → Devices & services → **Helpers** → click any
+`schedule.*` helper → drag/draw windows on the weekly grid. The
+matching automation in `automations.yaml` fires on the state edges.
+
+### 7.5.5 Query vents and status
+
+Three ways, depending on what you need:
+
+- **Dashboard**: open the "Vents" sidebar entry — every vent appears
+  under its floor → room with current position.
+- **Developer Tools → States** → filter `entity_id` for `vent` → see
+  every cover with `current_position`, `state`, `friendly_name`.
+- **REST API** (good for scripts, future voice integrations):
+  ```bash
+  HA_TOKEN=...   # Profile → Long-Lived Access Tokens
+  curl -s -H "Authorization: Bearer $HA_TOKEN" \
+    http://localhost:8123/api/states \
+    | jq '[.[] | select(.entity_id | startswith("cover.")) | {entity_id, state, position: .attributes.current_position, friendly_name: .attributes.friendly_name}]'
+  ```
 
 ---
 
@@ -675,7 +793,9 @@ The whole loop:
 4. Power-cycle (§5.5), capture the new pairing code from serial (§6.1).
 5. Commission via HA Android app or web UI (§6.2).
 6. Verify on Thread + SRP + HA (§6.3).
-7. Assign to its room (§7).
+7. Assign to its room **and** rename the entity to
+   `cover.<room>_vent_<n>` (§7.2). Doing this immediately keeps the
+   `homeassistant/` templates and dashboard cards working as N grows.
 
 Per device: ~2 minutes operator time + ~1–2 minutes waiting for boot
 and BLE pairing.

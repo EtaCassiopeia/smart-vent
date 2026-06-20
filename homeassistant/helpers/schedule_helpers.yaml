@@ -1,0 +1,55 @@
+# Schedule helpers — weekly recurring on/off windows.
+#
+# Each entry becomes a schedule.* entity. State is "on" inside any
+# defined window, "off" elsewhere. State-change triggers off these
+# entities drive the corresponding automations in ../automations.yaml.
+#
+# Include from configuration.yaml:
+#
+#     schedule: !include helpers/schedule_helpers.yaml
+#
+# Edit windows graphically in HA UI: Settings → Devices & Services →
+# Helpers → click the schedule. The YAML below is the seed; the UI
+# round-trips it.
+
+living_room_vent_active_hours:
+  name: Living room vent active
+  icon: mdi:air-filter
+  monday: &weekday
+    - from: "06:30:00"
+      to: "22:00:00"
+  tuesday: *weekday
+  wednesday: *weekday
+  thursday: *weekday
+  friday: *weekday
+  saturday:
+    - from: "08:00:00"
+      to: "23:00:00"
+  sunday:
+    - from: "08:00:00"
+      to: "22:00:00"
+
+upper_floor_active_hours:
+  name: Upper floor vents active
+  icon: mdi:air-filter
+  monday:
+    - from: "20:00:00"
+      to: "23:59:00"
+  tuesday:
+    - from: "20:00:00"
+      to: "23:59:00"
+  wednesday:
+    - from: "20:00:00"
+      to: "23:59:00"
+  thursday:
+    - from: "20:00:00"
+      to: "23:59:00"
+  friday:
+    - from: "20:00:00"
+      to: "23:59:00"
+  saturday:
+    - from: "09:00:00"
+      to: "23:59:00"
+  sunday:
+    - from: "09:00:00"
+      to: "22:00:00"

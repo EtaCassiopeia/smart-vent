@@ -35,10 +35,9 @@ controller other than HA.
   Thread border router. Google Nest fabric (and similar) only routes Matter
   traffic through their own first-party border routers. HA, however, talks
   directly to our OTBR; that's why the controller stack is HA-only.
-- **No legacy CoAP/Python hub.** The repo still contains older Python/CoAP code
-  paths (`hub/`, `homeassistant/custom_components/vent_control/`, etc.). They are
-  not part of the supported flow. The supported control plane is **only**
-  Matter-over-Thread.
+- **No legacy CoAP/Python hub.** Earlier iterations of this project had a
+  Python hub and a custom HA integration talking to vents over CoAP. Those
+  were removed; the supported control plane is **only** Matter-over-Thread.
 
 > See runbook §1 for the "I already have this set up, just give me the next
 > flashing command" quick path.
@@ -1276,25 +1275,46 @@ For HA users, the most useful identifier is the device's **name**,
 which is set inside HA after commissioning. The runbook §7 walks
 through naming + room assignment.
 
-### 9.3 HA Areas and group control
+### 9.3 HA Areas, Floors, and group control
 
-HA's organizational model is **Areas** (rooms). Every device can be
-assigned to one Area. The mapping is HA-side metadata; the firmware
-doesn't know or care about rooms.
+HA's organizational model is **Floors → Areas → Devices**:
 
-For multi-vent control, HA's standard primitives work well:
+- **Areas** are rooms ("Living Room", "Study"). Every device can be
+  assigned to one Area.
+- **Floors** (HA 2024.3+) group Areas. Each Area can belong to one
+  Floor ("Main Floor", "Basement").
+- **Devices** roll up through both — a vent's `cover.*` entity
+  inherits its Area, and the Floor of that Area.
 
-- **Scripts/Scenes** — set N covers to specific positions in one go.
-  Example: "All Bedrooms Open" sets every bedroom vent to 100% open.
-- **Automations** — trigger on time, temperature, HA event, etc.
-  Example: "Close all upstairs vents at 11 PM."
-- **Blueprints** — reusable templates. We have a directory
-  `homeassistant/blueprints/` (currently empty for the Matter path,
-  populated by legacy code). Group control blueprints are
-  user-configurable from the HA UI.
+All of this is HA-side metadata; the firmware doesn't know or care
+about rooms. Each device is an independent Matter endpoint; HA
+orchestrates.
 
-There is no need for explicit grouping on the device side. Each
-device is an independent Matter endpoint; HA orchestrates.
+For multi-vent control, HA's standard `cover.*` services accept a
+`target.area_id`, `target.floor_id`, or `target.entity_id`. That is
+enough to express every grouping the user wants:
+
+- Whole house: `target.entity_id: all` on the cover domain.
+- One floor: `target.floor_id: main_floor`.
+- One room: `target.area_id: study`.
+- Specific vents: `target.entity_id: [cover.study_vent_1, cover.study_vent_2]`.
+
+Scheduling is **Automations** (time triggers) plus **Schedule
+helpers** (weekly calendar windows whose state changes trigger
+automations).
+
+Templates for scripts, automations, schedule helpers, and a Lovelace
+dashboard ship in the repo at `homeassistant/`; the runbook §7.5
+walks through installing them in the live HA config.
+
+> Why no device-side grouping? The Matter spec actually has a
+> Groups cluster (cluster ID 0x0004) for binding endpoints into
+> group-cast targets. We don't use it. It's intended for direct
+> device-to-device control without a controller in the loop (e.g. a
+> wall switch talking to a group of lights). With HA always in the
+> loop and orchestrating, controller-side grouping is strictly
+> simpler — one source of truth, editable in the UI, no firmware
+> rebuilds when the layout changes.
 
 ### 9.4 Mesh capacity and topology
 
