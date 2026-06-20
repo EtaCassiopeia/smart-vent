@@ -11,6 +11,7 @@ deployment plan (workstream B), replacing the three hand-typed
 pi/
   docker-compose.yaml          OTBR + matter-server + Home Assistant
   .env.example                 Backbone interface + future config knobs
+  install.sh                   Idempotent installer for a fresh Pi
   systemd/
     smart-vent.service         Bring the compose up at boot (after first-boot)
     smart-vent-firstboot.service  AP-mode wizard, runs until .configured exists
@@ -19,11 +20,26 @@ pi/
 
 Next steps (separate commits, each one its own reviewable artifact):
 
-- `install.sh` — idempotent installer for a fresh Raspberry Pi OS
 - `firstboot/` — Flask-based AP-mode WiFi capture wizard (or a
   `comitup` adapter if the spike pans out)
 - `config/homeassistant/` — seed HA config copied from the existing
   `homeassistant/` templates
+
+## Install (the script does it all)
+
+```bash
+# Curl-piped, latest hub-v* tag:
+curl -sSL https://raw.githubusercontent.com/EtaCassiopeia/smart-vent/main/pi/install.sh | sudo bash
+
+# Developer flow (run from inside this repo):
+sudo SMART_VENT_SRC=$(pwd) bash pi/install.sh
+
+# Wired-Ethernet install or pre-configured WiFi (skips the wizard):
+sudo bash pi/install.sh --skip-wizard
+```
+
+The script is idempotent — re-running it upgrades in place without
+breaking the existing state.
 
 ## Service relationship
 
