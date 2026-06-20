@@ -1,0 +1,72 @@
+name: Provision CLI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/provision/**'
+      - '.github/workflows/provision.yml'
+    tags: ['provision-v*']
+  pull_request:
+    paths:
+      - 'tools/provision/**'
+      - '.github/workflows/provision.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: provision-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: write   # softprops/action-gh-release needs this on tag builds
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: tools/provision
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tools/provision/pyproject.toml
+
+      - name: Install build + test deps
+        run: |
+          python -m pip install --upgrade pip build
+          pip install -e ".[dev]"
+
+      - name: Tests
+        run: pytest -q
+
+      - name: Build wheel + sdist
+        run: python -m build --outdir dist
+
+      - name: Inventory build output
+        run: ls -la dist
+
+      - name: Upload build artifacts (PR + branch builds)
+        uses: actions/upload-artifact@v4
+        with:
+          name: provision-${{ github.sha }}
+          path: tools/provision/dist/
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/provision-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            tools/provision/dist/*.whl
+            tools/provision/dist/*.tar.gz
