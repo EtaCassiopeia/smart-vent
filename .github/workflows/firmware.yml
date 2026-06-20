@@ -20,6 +20,9 @@ env:
   CHIP: esp32c6
   RUST_TARGET: riscv32imac-esp-espidf
 
+permissions:
+  contents: write   # softprops/action-gh-release needs this to create/update releases
+
 jobs:
   build:
     runs-on: ubuntu-latest
