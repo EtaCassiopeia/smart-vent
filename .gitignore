@@ -29,5 +29,9 @@ Thumbs.db
 *.db
 *.sqlite
 
+# Provider tools
+tools/provision/kits/
+.pytest_cache/
+
 # Home Assistant
 homeassistant/custom_components/vent_control/__pycache__/
