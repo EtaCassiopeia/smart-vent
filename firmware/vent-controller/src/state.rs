@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use std::time::Instant;
 use vent_protocol::{clamp_angle, PowerSource, VentState};
 
-/// Shared application state accessible by CoAP and Matter handlers.
+/// Shared application state accessible by the main loop and Matter handlers.
 pub struct AppState {
     pub vent: VentStateMachine,
     pub identity: DeviceIdentity,
