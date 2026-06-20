@@ -15,13 +15,15 @@ pi/
   systemd/
     smart-vent.service         Bring the compose up at boot (after first-boot)
     smart-vent-firstboot.service  AP-mode wizard, runs until .configured exists
+  firstboot/
+    wizard.py                  Flask + hostapd + dnsmasq + nmcli onboarding
+    templates/, static/        Captive page + styling
+    README.md                  Behaviour + debugging notes
   README.md                    this file
 ```
 
-Next steps (separate commits, each one its own reviewable artifact):
+Next step:
 
-- `firstboot/` — Flask-based AP-mode WiFi capture wizard (or a
-  `comitup` adapter if the spike pans out)
 - `config/homeassistant/` — seed HA config copied from the existing
   `homeassistant/` templates
 
