@@ -35,15 +35,15 @@ jobs:
             build-essential pkg-config libssl-dev \
             python3 python3-pip python3-venv git curl jq
 
-      # Nightly Rust + rust-src component for build-std (esp-idf-sys needs it).
-      # The repo's rust-toolchain.toml says channel="esp" — espup installs that,
-      # but we override at build time with RUSTUP_TOOLCHAIN=nightly because
-      # the RISC-V target is upstream-compatible (matches runbook §2.3).
+      # Nightly Rust + rust-src for `-Zbuild-std` (esp-idf-sys builds std
+      # for the custom riscv32imac-esp-espidf target). We don't add it via
+      # `targets:` — that's for prebuilt std; this target builds from source.
+      # The repo's rust-toolchain.toml says channel="esp"; we override with
+      # RUSTUP_TOOLCHAIN=nightly at build time (matches runbook §2.3).
       - name: Install Rust nightly
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src
-          targets: riscv32imac-unknown-none-elf
 
       - name: Cargo + target cache
         uses: Swatinem/rust-cache@v2
@@ -71,7 +71,8 @@ jobs:
 
       - name: Install ESP-IDF + RISC-V toolchain via espup
         if: steps.cache-espressif.outputs.cache-hit != 'true'
-        run: espup install --targets ${{ env.RUST_TARGET }}
+        # espup's --targets takes chip names (esp32c6), not Rust target triples.
+        run: espup install --targets ${{ env.CHIP }}
 
       - name: Install ldproxy + espflash
         run: |
