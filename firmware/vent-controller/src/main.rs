@@ -1,6 +1,4 @@
 #[allow(dead_code)]
-mod coap;
-#[allow(dead_code)]
 mod identity;
 #[allow(dead_code)]
 mod matter;
@@ -13,7 +11,6 @@ mod state;
 #[allow(dead_code)]
 mod thread;
 
-use coap::register_coap_resources;
 use identity::DeviceIdentity;
 use power::{PowerManager, PowerMode};
 use servo::ServoDriver;
@@ -145,8 +142,8 @@ fn main() {
     matter::start();
     matter::log_pairing_info();
 
-    // Build app state and register CoAP resources.
-    // CoAP must be registered after Matter starts, since Matter owns the OT instance.
+    // Build and publish the shared AppState. The main loop and Matter
+    // handlers both reach into it via state::with_app_state.
     let app_state = AppState {
         vent: vent_state,
         identity: device_id,
@@ -160,12 +157,9 @@ fn main() {
         identify_mode: false,
         identify_restore_angle: None,
     };
+    state::init_app_state(app_state);
 
-    if let Err(e) = register_coap_resources(app_state) {
-        error!("Failed to register CoAP resources: {:?}", e);
-    }
-
-    info!("Vent controller running. Waiting for CoAP/Matter commands...");
+    info!("Vent controller running. Waiting for Matter commands...");
 
     // Main loop: process servo steps and Thread events
     loop {
