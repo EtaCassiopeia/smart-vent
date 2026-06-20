@@ -25,6 +25,10 @@ x-image-tags-known-good: &image-tags
   matter-server: "ghcr.io/home-assistant-libs/python-matter-server:stable"
   homeassistant: "ghcr.io/home-assistant/home-assistant:stable"
 
+# Data dirs are bind-mounted under /opt/smart-vent/data/ rather than
+# docker-managed named volumes. Lets the operator back them up with
+# normal tar, edit HA config files directly, and lets install.sh seed
+# the homeassistant/ tree on first install.
 services:
   otbr:
     image: openthread/otbr:latest
@@ -37,7 +41,7 @@ services:
       # device bindings, so a different USB enumeration order doesn't
       # break startup.
       - /dev:/dev
-      - otbr-data:/var/lib/thread
+      - /opt/smart-vent/data/otbr:/var/lib/thread
     environment:
       # 460800 baud matches the SLZB-07 spinel default. If you swap
       # the dongle, this changes — see runbook §3.1.
@@ -59,7 +63,7 @@ services:
     depends_on:
       - otbr
     volumes:
-      - matter-server-data:/data
+      - /opt/smart-vent/data/matter-server:/data
       # /run/dbus is needed for BlueZ pairing during commissioning.
       - /run/dbus:/run/dbus:ro
     command:
@@ -79,11 +83,9 @@ services:
     network_mode: host
     # No devices.db bind mount this time — see runbook §7.5.1 note
     # about the legacy hub leftover. HA's own registry is authoritative.
+    # install.sh seeds /opt/smart-vent/data/homeassistant/ with a
+    # configuration.yaml that !includes the scripts/automations/
+    # dashboards from the repo's homeassistant/ templates.
     volumes:
-      - homeassistant-config:/config
+      - /opt/smart-vent/data/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
-
-volumes:
-  otbr-data:
-  matter-server-data:
-  homeassistant-config:

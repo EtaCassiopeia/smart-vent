@@ -9,23 +9,39 @@ deployment plan (workstream B), replacing the three hand-typed
 
 ```
 pi/
-  docker-compose.yaml          OTBR + matter-server + Home Assistant
-  .env.example                 Backbone interface + future config knobs
-  install.sh                   Idempotent installer for a fresh Pi
+  docker-compose.yaml             OTBR + matter-server + Home Assistant
+  .env.example                    Backbone interface + future config knobs
+  install.sh                      Idempotent installer for a fresh Pi
   systemd/
-    smart-vent.service         Bring the compose up at boot (after first-boot)
+    smart-vent.service            Bring the compose up at boot (after first-boot)
     smart-vent-firstboot.service  AP-mode wizard, runs until .configured exists
   firstboot/
-    wizard.py                  Flask + hostapd + dnsmasq + nmcli onboarding
-    templates/, static/        Captive page + styling
-    README.md                  Behaviour + debugging notes
-  README.md                    this file
+    wizard.py                     Flask + hostapd + dnsmasq + nmcli onboarding
+    templates/, static/           Captive page + styling
+    README.md                     Behaviour + debugging notes
+  config/
+    homeassistant/
+      configuration.yaml          HA bootstrap, seeded into data/homeassistant/
+  README.md                       this file
 ```
 
-Next step:
+## Data layout on the Pi
 
-- `config/homeassistant/` — seed HA config copied from the existing
-  `homeassistant/` templates
+```
+/opt/smart-vent/
+  pi/                    # everything from this directory, rsync'd here
+  data/                  # container state, bind-mounted into the services
+    otbr/                # Thread dataset, Thread network state
+    matter-server/       # Fabric credentials + matter-server storage (chmod 700)
+    homeassistant/       # HA /config — operator can edit in place
+```
+
+`install.sh` seeds `data/homeassistant/` with the
+`configuration.yaml` from `pi/config/homeassistant/` plus the
+`scripts.yaml` / `automations.yaml` / schedule helpers / Vents
+dashboard from the repo's top-level `homeassistant/` directory.
+Operator edits are preserved on re-install (the seed step only
+runs when `configuration.yaml` is absent).
 
 ## Install (the script does it all)
 

@@ -24,6 +24,7 @@ set -euo pipefail
 # --------------------------------------------------------------- defaults
 REPO_URL="https://github.com/EtaCassiopeia/smart-vent"
 INSTALL_DIR="/opt/smart-vent"
+DATA_DIR="/opt/smart-vent/data"
 STATE_DIR="/var/lib/smart-vent"
 SYSTEMD_DIR="/etc/systemd/system"
 
@@ -120,15 +121,52 @@ fetch_source() {
 deploy_files() {
   say "Deploying to $INSTALL_DIR ..."
   mkdir -p "$INSTALL_DIR" "$STATE_DIR"
+
+  # Container data dirs live under $DATA_DIR so the operator can back
+  # them up with tar and edit HA's config in place. Created with
+  # restrictive permissions; HA / matter-server / OTBR run as root
+  # inside their containers, so the host-side ownership doesn't
+  # block them.
+  mkdir -p "$DATA_DIR/otbr" "$DATA_DIR/matter-server" "$DATA_DIR/homeassistant"
+  chmod 700 "$DATA_DIR/matter-server"   # has Matter fabric credentials
+
   # Copy the pi/ tree (and only the pi/ tree) under /opt/smart-vent/pi/.
-  # We use rsync so an upgrade-in-place doesn't drop file modes the
-  # systemd units depend on.
-  rsync -a --delete "$SRC_DIR/pi/" "$INSTALL_DIR/pi/"
+  # rsync so an upgrade-in-place doesn't drop file modes the systemd
+  # units depend on, and so we don't blow away $DATA_DIR (--exclude).
+  rsync -a --delete --exclude '/data' "$SRC_DIR/pi/" "$INSTALL_DIR/pi/"
 
   # Seed .env from .env.example if no operator-edited .env yet.
   if [[ ! -f "$INSTALL_DIR/pi/.env" ]]; then
     cp "$INSTALL_DIR/pi/.env.example" "$INSTALL_DIR/pi/.env"
   fi
+}
+
+# --------------------------------------------- seed Home Assistant config
+# Seeds /opt/smart-vent/data/homeassistant/ with:
+#   - configuration.yaml from pi/config/homeassistant/
+#   - scripts.yaml, automations.yaml, helpers/, dashboards/ from the
+#     repo's top-level homeassistant/ templates (same content used by
+#     people who manually copy them into a stock HA install)
+# Never overwrites an existing configuration.yaml — operator edits win.
+seed_homeassistant_config() {
+  local target="$DATA_DIR/homeassistant"
+  if [[ -f "$target/configuration.yaml" ]]; then
+    say "HA config exists at $target/configuration.yaml; leaving it alone."
+    return
+  fi
+
+  say "Seeding HA bootstrap config into $target ..."
+  install -m 0644 "$SRC_DIR/pi/config/homeassistant/configuration.yaml" \
+    "$target/configuration.yaml"
+
+  # Copy the template files in (scripts.yaml, automations.yaml, etc.).
+  mkdir -p "$target/helpers" "$target/dashboards"
+  install -m 0644 "$SRC_DIR/homeassistant/scripts.yaml"     "$target/scripts.yaml"
+  install -m 0644 "$SRC_DIR/homeassistant/automations.yaml" "$target/automations.yaml"
+  install -m 0644 "$SRC_DIR/homeassistant/helpers/schedule_helpers.yaml" \
+    "$target/helpers/schedule_helpers.yaml"
+  install -m 0644 "$SRC_DIR/homeassistant/dashboards/vents.yaml" \
+    "$target/dashboards/vents.yaml"
 }
 
 # ----------------------------------------------------- systemd units
@@ -182,6 +220,7 @@ preflight
 install_packages
 fetch_source
 deploy_files
+seed_homeassistant_config
 install_units
 prepull_images
 print_summary
