@@ -9,21 +9,36 @@ deployment plan (workstream B), replacing the three hand-typed
 
 ```
 pi/
-  docker-compose.yaml   OTBR + matter-server + Home Assistant
-  .env.example          Backbone interface + future config knobs
-  README.md             this file
+  docker-compose.yaml          OTBR + matter-server + Home Assistant
+  .env.example                 Backbone interface + future config knobs
+  systemd/
+    smart-vent.service         Bring the compose up at boot (after first-boot)
+    smart-vent-firstboot.service  AP-mode wizard, runs until .configured exists
+  README.md                    this file
 ```
 
 Next steps (separate commits, each one its own reviewable artifact):
 
-- `systemd/smart-vent.service` — bring the compose up at boot
-- `systemd/smart-vent-firstboot.service` — run the AP-mode wizard
-  until WiFi is configured
 - `install.sh` — idempotent installer for a fresh Raspberry Pi OS
 - `firstboot/` — Flask-based AP-mode WiFi capture wizard (or a
   `comitup` adapter if the spike pans out)
 - `config/homeassistant/` — seed HA config copied from the existing
   `homeassistant/` templates
+
+## Service relationship
+
+On a fresh Pi:
+
+1. Boot → `smart-vent-firstboot.service` runs (no `.configured` flag yet).
+   It brings up the AP, captures WiFi creds, joins the network, writes
+   `/var/lib/smart-vent/.configured`, and reboots.
+2. After reboot → `smart-vent-firstboot.service` is skipped (flag
+   present), `smart-vent.service` runs `docker compose up -d`.
+
+`smart-vent.service` is also gated on the flag, so even if the
+first-boot service was uninstalled, the main service would refuse to
+start without it (avoids the "Pi booted but isn't on the LAN" failure
+mode).
 
 ## Bring-up (today, manual)
 
