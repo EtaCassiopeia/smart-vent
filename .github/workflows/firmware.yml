@@ -1,0 +1,190 @@
+name: Firmware
+
+on:
+  push:
+    branches: [main]
+    tags: ['firmware-v*']
+  pull_request:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/firmware.yml'
+  workflow_dispatch:
+
+# Avoid clobbering an in-flight release tag build.
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IDF_VERSION: v5.2.3
+  CHIP: esp32c6
+  RUST_TARGET: riscv32imac-esp-espidf
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libssl-dev \
+            python3 python3-pip python3-venv git curl jq
+
+      # Nightly Rust + rust-src component for build-std (esp-idf-sys needs it).
+      # The repo's rust-toolchain.toml says channel="esp" — espup installs that,
+      # but we override at build time with RUSTUP_TOOLCHAIN=nightly because
+      # the RISC-V target is upstream-compatible (matches runbook §2.3).
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+          targets: riscv32imac-unknown-none-elf
+
+      - name: Cargo + target cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            firmware/vent-controller -> target
+            firmware/shared-protocol -> target
+          shared-key: firmware-${{ env.CHIP }}
+
+      # ESP-IDF + Espressif tools. Heavy (~2 GB) but caches well.
+      - name: Cache Espressif toolchain
+        id: cache-espressif
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.espressif
+            ~/.rustup/toolchains/esp
+          key: espressif-${{ env.IDF_VERSION }}-${{ env.RUST_TARGET }}-${{ hashFiles('firmware/vent-controller/rust-toolchain.toml', 'firmware/vent-controller/sdkconfig.defaults') }}
+          restore-keys: |
+            espressif-${{ env.IDF_VERSION }}-${{ env.RUST_TARGET }}-
+
+      - name: Install espup
+        if: steps.cache-espressif.outputs.cache-hit != 'true'
+        run: cargo install espup --locked
+
+      - name: Install ESP-IDF + RISC-V toolchain via espup
+        if: steps.cache-espressif.outputs.cache-hit != 'true'
+        run: espup install --targets ${{ env.RUST_TARGET }}
+
+      - name: Install ldproxy + espflash
+        run: |
+          which ldproxy 2>/dev/null || cargo install ldproxy --locked
+          which espflash 2>/dev/null || cargo install espflash --version '^3' --locked
+
+      # ---------------------------------------------------------------- tests
+      - name: Host tests — shared-protocol
+        run: cargo test --manifest-path firmware/shared-protocol/Cargo.toml
+
+      # --------------------------------------------------------------- build
+      - name: Build firmware (release)
+        env:
+          RUSTUP_TOOLCHAIN: nightly
+        run: |
+          source $HOME/export-esp.sh 2>/dev/null || true
+          cargo build --manifest-path firmware/vent-controller/Cargo.toml --release
+
+      # ELF -> single merged flash image (bootloader + partition table + app).
+      # Operator can then `esptool.py write_flash 0 vent-controller.bin` with
+      # no other arguments; or use espflash with --bootloader + partitions.csv
+      # for piecemeal flashing per runbook §5.3.
+      - name: Locate build outputs
+        id: locate
+        run: |
+          set -e
+          cd firmware/vent-controller
+          ELF="target/${{ env.RUST_TARGET }}/release/vent-controller"
+          BOOTLOADER=$(ls target/${{ env.RUST_TARGET }}/release/build/esp-idf-sys-*/out/build/bootloader/bootloader.bin | head -1)
+          PARTITION_TABLE=$(ls target/${{ env.RUST_TARGET }}/release/build/esp-idf-sys-*/out/build/partition_table/partition-table.bin | head -1)
+          test -f "$ELF" && test -f "$BOOTLOADER" && test -f "$PARTITION_TABLE"
+          echo "elf=$ELF" >>"$GITHUB_OUTPUT"
+          echo "bootloader=$BOOTLOADER" >>"$GITHUB_OUTPUT"
+          echo "partition_table=$PARTITION_TABLE" >>"$GITHUB_OUTPUT"
+
+      - name: Stage release artifacts
+        id: stage
+        run: |
+          set -euo pipefail
+          STAGE=staging/firmware
+          mkdir -p "$STAGE"
+          cd firmware/vent-controller
+
+          # Per-component .bins (operator/runbook §5.3 flow):
+          cp "${{ steps.locate.outputs.bootloader }}" "../../$STAGE/bootloader.bin"
+          cp "${{ steps.locate.outputs.partition_table }}" "../../$STAGE/partition-table.bin"
+          cp partitions.csv "../../$STAGE/partitions.csv"
+
+          # App-only .bin (factory partition contents):
+          espflash save-image \
+            --chip ${{ env.CHIP }} \
+            --partition-table partitions.csv \
+            "${{ steps.locate.outputs.elf }}" \
+            "../../$STAGE/vent-controller.bin"
+
+          # Single merged image (whole-flash dump, easiest one-shot flash):
+          espflash save-image \
+            --chip ${{ env.CHIP }} \
+            --merge \
+            --bootloader "${{ steps.locate.outputs.bootloader }}" \
+            --partition-table partitions.csv \
+            "${{ steps.locate.outputs.elf }}" \
+            "../../$STAGE/vent-controller-merged.bin"
+
+          cd ../..
+
+          # Manifest with sha256s + offsets so smart-vent-provision flash
+          # can pick artifacts deterministically.
+          REF_NAME="${GITHUB_REF_NAME:-$GITHUB_SHA}"
+          jq -n \
+            --arg version "$REF_NAME" \
+            --arg commit "$GITHUB_SHA" \
+            --arg chip "${{ env.CHIP }}" \
+            --arg idf "${{ env.IDF_VERSION }}" \
+            --arg bootloader_sha "$(sha256sum $STAGE/bootloader.bin | cut -d' ' -f1)" \
+            --arg parttable_sha "$(sha256sum $STAGE/partition-table.bin | cut -d' ' -f1)" \
+            --arg app_sha "$(sha256sum $STAGE/vent-controller.bin | cut -d' ' -f1)" \
+            --arg merged_sha "$(sha256sum $STAGE/vent-controller-merged.bin | cut -d' ' -f1)" \
+            '{
+              version: $version,
+              commit: $commit,
+              chip: $chip,
+              idf_version: $idf,
+              flash: [
+                { name: "bootloader",       path: "bootloader.bin",            offset: "0x0",     sha256: $bootloader_sha },
+                { name: "partition_table",  path: "partition-table.bin",       offset: "0x8000",  sha256: $parttable_sha  },
+                { name: "app",              path: "vent-controller.bin",       offset: "0x10000", sha256: $app_sha        }
+              ],
+              merged: { path: "vent-controller-merged.bin", offset: "0x0", sha256: $merged_sha }
+            }' >"$STAGE/firmware-manifest.json"
+
+          ls -la "$STAGE"
+          echo "stage=$STAGE" >>"$GITHUB_OUTPUT"
+
+      - name: Upload build artifacts (PR + branch builds)
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ github.sha }}
+          path: ${{ steps.stage.outputs.stage }}/
+          retention-days: 14
+          if-no-files-found: error
+
+      # Release on tag.
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/firmware-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.stage.outputs.stage }}/bootloader.bin
+            ${{ steps.stage.outputs.stage }}/partition-table.bin
+            ${{ steps.stage.outputs.stage }}/partitions.csv
+            ${{ steps.stage.outputs.stage }}/vent-controller.bin
+            ${{ steps.stage.outputs.stage }}/vent-controller-merged.bin
+            ${{ steps.stage.outputs.stage }}/firmware-manifest.json
