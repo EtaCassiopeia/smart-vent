@@ -1,0 +1,3 @@
+# Marker telling pi-gen to export an .img from this stage.
+# Contents are sourced (POSIX shell); IMG_SUFFIX names the artefact.
+IMG_SUFFIX="-lite-smart-vent"
