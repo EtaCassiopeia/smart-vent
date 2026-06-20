@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-vent-provision"
+version = "0.1.0"
+description = "Provider-side CLI for prepping smart-vent kits: bulk flash, label, image, kit-card."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Mohsen Zainalpour", email = "zainalpour@yahoo.com" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Hardware",
+]
+
+dependencies = [
+  "click>=8.1",
+  "requests>=2.31",
+  "pyserial>=3.5",
+  "qrcode[pil]>=7.4",
+  "reportlab>=4.0",
+  "platformdirs>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-mock>=3.12",
+  "responses>=0.25",
+]
+
+[project.scripts]
+smart-vent-provision = "smart_vent_provision.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/EtaCassiopeia/smart-vent"
+Issues = "https://github.com/EtaCassiopeia/smart-vent/issues"
+
+[tool.setuptools.packages.find]
+include = ["smart_vent_provision*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
