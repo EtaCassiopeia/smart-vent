@@ -85,12 +85,15 @@ jobs:
         run: cargo test --manifest-path firmware/shared-protocol/Cargo.toml
 
       # --------------------------------------------------------------- build
+      # Must cd into the crate dir so cargo picks up .cargo/config.toml
+      # (sets the target to riscv32imac-esp-espidf + ldproxy linker).
       - name: Build firmware (release)
         env:
           RUSTUP_TOOLCHAIN: nightly
+        working-directory: firmware/vent-controller
         run: |
           source $HOME/export-esp.sh 2>/dev/null || true
-          cargo build --manifest-path firmware/vent-controller/Cargo.toml --release
+          cargo build --release
 
       # ELF -> single merged flash image (bootloader + partition table + app).
       # Operator can then `esptool.py write_flash 0 vent-controller.bin` with
