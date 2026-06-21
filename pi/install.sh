@@ -178,6 +178,14 @@ deploy_files() {
   if [[ ! -f "$INSTALL_DIR/pi/.env" ]]; then
     run cp "$INSTALL_DIR/pi/.env.example" "$INSTALL_DIR/pi/.env"
   fi
+
+  # OTBR needs ip6_tables + ip6table_filter loaded to route IPv6
+  # Thread <-> backbone. Persist via modules-load.d so the modules
+  # come up on every boot. Also modprobe them now so the first
+  # docker compose up after install works without a reboot.
+  run install -m 0644 "$INSTALL_DIR/pi/config/modules-load.d/otbr.conf" /etc/modules-load.d/otbr.conf
+  run modprobe ip6_tables
+  run modprobe ip6table_filter
 }
 
 # --------------------------------------------- seed Home Assistant config
