@@ -53,10 +53,13 @@ cloud dependency. The Pi is the entire backend.
   it's built the way it is. Read this top-to-bottom once. Covers Matter, Thread,
   the Pi services, the firmware internals, what happens during commissioning and
   on every replug.
-- **[docs/runbook.md](docs/runbook.md)** — step-by-step procedures. How to set up
-  the Pi from scratch, build the firmware, flash a new vent, commission it via HA,
-  assign it to a room, and add the next one. Plus a symptom-driven troubleshooting
-  matrix.
+- **[docs/runbook.md](docs/runbook.md)** — step-by-step procedures for **developers**.
+  How to set up the Pi from scratch, build the firmware, flash a new vent, commission
+  it via HA, assign it to a room. Plus a symptom-driven troubleshooting matrix.
+- **[docs/provider-runbook.md](docs/provider-runbook.md)** — step-by-step for
+  **providers** assembling kits to ship to clients. Uses the
+  `smart-vent-provision` CLI end-to-end: bake the SD card, flash + capture N
+  vents, print stickers + quick-start, pack and ship. No source builds.
 - **[docs/mobile-api.md](docs/mobile-api.md)** — API contract the smart-vent mobile
   app builds against (matter-server WS, HA REST, mDNS).
 - **[docs/mobile-app-spec.md](docs/mobile-app-spec.md)** — screen-by-screen spec
