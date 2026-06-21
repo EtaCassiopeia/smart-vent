@@ -1,7 +1,7 @@
 #!/bin/bash -e
-# Inside-chroot step: enable systemd units + light pre-pull.
+# Inside-chroot step: enable systemd units.
 # (Docker compose pull deliberately skipped — there's no daemon in the
-# chroot. install.sh on an actual Pi handles that at first boot.)
+# chroot. install.sh on the actual Pi handles that at first boot.)
 
 systemctl daemon-reload || true
 systemctl enable docker.service
