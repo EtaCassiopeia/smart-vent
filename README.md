@@ -57,6 +57,10 @@ cloud dependency. The Pi is the entire backend.
   the Pi from scratch, build the firmware, flash a new vent, commission it via HA,
   assign it to a room, and add the next one. Plus a symptom-driven troubleshooting
   matrix.
+- **[docs/mobile-api.md](docs/mobile-api.md)** — API contract the smart-vent mobile
+  app builds against (matter-server WS, HA REST, mDNS).
+- **[docs/mobile-app-spec.md](docs/mobile-app-spec.md)** — screen-by-screen spec
+  the Flutter team works from.
 
 ## Repo layout
 
