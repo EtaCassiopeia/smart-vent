@@ -1,0 +1,155 @@
+name: SD Image
+
+on:
+  push:
+    tags: ['hub-v*']
+  pull_request:
+    # The bake is expensive (~30-60 min on QEMU), so we only run it on
+    # PRs that actually touch the sd-image bits. Matches the pattern in
+    # firmware.yml and provision.yml.
+    paths:
+      - 'sd-image/**'
+      - 'pi/**'
+      - '.github/workflows/sd-image.yml'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag, branch, or SHA to bake (default: current ref)'
+        required: false
+        default: ''
+
+concurrency:
+  group: sd-image-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write  # softprops/action-gh-release needs this on tag builds
+
+env:
+  PI_GEN_REPO: https://github.com/RPi-Distro/pi-gen
+  # Track a known-good pi-gen tag rather than main. Bumping is a
+  # deliberate act — verify the bake still works on the new tag before
+  # changing this.
+  PI_GEN_REF: 2026-06-18-raspios-bookworm-arm64
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout smart-vent
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          path: smart-vent
+
+      - name: Determine version stamp
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" =~ refs/tags/hub-v ]]; then
+            v="${GITHUB_REF_NAME}"
+          else
+            v="dev-${GITHUB_SHA:0:7}"
+          fi
+          echo "version=$v" >>"$GITHUB_OUTPUT"
+
+      - name: Install QEMU binfmt for ARM emulation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            qemu-user-static binfmt-support
+          # pi-gen's Docker build will also handle this, but priming
+          # binfmt here avoids a chicken-and-egg on the first stage.
+          sudo systemctl restart systemd-binfmt || true
+
+      - name: Clone pi-gen
+        run: |
+          git clone --depth 1 --branch "${PI_GEN_REF}" "${PI_GEN_REPO}" pi-gen
+
+      - name: Drop in smart-vent config + stage + source
+        run: |
+          cp smart-vent/sd-image/config pi-gen/config
+          cp -r smart-vent/sd-image/stage-smart-vent pi-gen/
+
+          # Stage the smart-vent source inside the pi-gen tree so it is
+          # visible to prerun.sh inside the build container (build-docker.sh
+          # only mounts the pi-gen workdir; arbitrary host paths are not
+          # accessible). Exclude heavy/unrelated dirs to keep the copy small.
+          rsync -a \
+            --exclude '.git/' \
+            --exclude 'firmware/vent-controller/target/' \
+            --exclude '**/__pycache__/' \
+            --exclude '**/.venv/' \
+            --exclude '**/node_modules/' \
+            --exclude '**/dist/' \
+            --exclude '**/build/' \
+            smart-vent/ pi-gen/stage-smart-vent/src/
+
+          ls -la pi-gen/stage-smart-vent
+          du -sh pi-gen/stage-smart-vent/src
+
+      - name: Build the image
+        env:
+          SMART_VENT_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          cd pi-gen
+          # SMART_VENT_VERSION gets stamped into /etc/smart-vent/version
+          # inside the chroot; export it via pi-gen's config so the value
+          # crosses the docker boundary.
+          echo "export SMART_VENT_VERSION=${SMART_VENT_VERSION}" >> config
+
+          # CONTINUE=1 lets the build resume if a step fails partway;
+          # PRESERVE_CONTAINER=0 keeps the runner clean between
+          # workflow invocations.
+          sudo \
+            CONTINUE=1 \
+            PRESERVE_CONTAINER=0 \
+            ./build-docker.sh
+
+      - name: Inventory + checksum the output
+        id: deploy
+        run: |
+          cd pi-gen/deploy
+          # pi-gen runs inside Docker as root, so the deploy dir is
+          # root-owned. Hand it back to the runner before we touch
+          # anything.
+          sudo chown -R "$(id -u):$(id -g)" .
+          ls -la
+
+          # The bake produces two .img.xz files: stage2's plain Pi OS
+          # Lite (used to verify the base build is OK) and our
+          # smart-vent-augmented one. Pick ours specifically — match
+          # the IMG_SUFFIX from sd-image/stage-smart-vent/EXPORT_IMAGE.
+          IMG=$(ls *-lite-smart-vent.img.xz 2>/dev/null | head -1)
+          if [[ -z "$IMG" ]]; then
+            echo "::error::no *-lite-smart-vent.img.xz in deploy/" >&2
+            exit 1
+          fi
+          echo "Selected: $IMG"
+
+          # Stable artifact name based on our version stamp.
+          NEW="smart-vent-hub-${{ steps.ver.outputs.version }}.img.xz"
+          mv "$IMG" "$NEW"
+          sha256sum "$NEW" | tee "${NEW}.sha256"
+          echo "image=$NEW" >>"$GITHUB_OUTPUT"
+
+      - name: Upload build artifact (manual dispatch + branch builds)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sd-image-${{ steps.ver.outputs.version }}
+          path: |
+            pi-gen/deploy/${{ steps.deploy.outputs.image }}
+            pi-gen/deploy/${{ steps.deploy.outputs.image }}.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/hub-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            pi-gen/deploy/${{ steps.deploy.outputs.image }}
+            pi-gen/deploy/${{ steps.deploy.outputs.image }}.sha256

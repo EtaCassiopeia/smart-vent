@@ -1,0 +1,35 @@
+# pi-gen build config for smart-vent-hub.
+#
+# Sourced by pi-gen's build.sh. Anything not set here falls back to
+# pi-gen's defaults. The CI workflow may override these at invocation
+# time (e.g. injecting IMG_NAME with a version suffix from the tag).
+
+IMG_NAME=smart-vent-hub
+RELEASE=bookworm
+TARGET_HOSTNAME=smart-vent
+DEPLOY_COMPRESSION=xz
+COMPRESSION_LEVEL=6
+
+LOCALE_DEFAULT=en_US.UTF-8
+TIMEZONE_DEFAULT=UTC
+KEYBOARD_KEYMAP=us
+KEYBOARD_LAYOUT="English (US)"
+
+# Default credentials. The provider CLI's `image` subcommand or the
+# operator can override these per kit (e.g. via systemd-firstboot at
+# bake time, or by writing a userconf.txt on the boot partition).
+FIRST_USER_NAME=smartvent
+FIRST_USER_PASS=changeMe!2026
+DISABLE_FIRST_BOOT_USER_RENAME=1
+
+ENABLE_SSH=1
+
+# stage0..2 = the bootstrap → minimal → Lite path. We skip stage3
+# (desktop) and stage4 (full image) — this is a headless hub.
+STAGE_LIST="stage0 stage1 stage2 stage-smart-vent"
+
+# Leave WORK_DIR + DEPLOY_DIR at their defaults. build-docker.sh's
+# final cleanup hardcodes `rsync work/*/build.log deploy/` (the IMG_NAME
+# subdirectory), so an override of WORK_DIR=/pi-gen/work without the
+# IMG_NAME suffix would make the cleanup rsync hunt for a path that
+# isn't there.
