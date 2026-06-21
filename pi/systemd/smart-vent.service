@@ -1,0 +1,32 @@
+[Unit]
+Description=Smart Vent hub (OTBR + matter-server + Home Assistant)
+Documentation=https://github.com/EtaCassiopeia/smart-vent
+# We need docker, and we need WiFi to be up — the latter is what
+# smart-vent-firstboot.service guarantees on a fresh Pi, so this unit
+# also waits for the first-boot wizard if it's installed.
+Requires=docker.service
+After=docker.service network-online.target smart-vent-firstboot.service
+# Don't even try if WiFi/Ethernet failed to come up.
+Wants=network-online.target
+# Skip if the first-boot wizard hasn't completed (no .configured flag
+# yet) — this prevents the compose from starting on a Pi that isn't
+# on the LAN, which would just churn restarts.
+ConditionPathExists=/var/lib/smart-vent/.configured
+# A failing compose up is almost always a missing dongle or a pulled
+# image regression. Don't loop forever; surface the journal.
+StartLimitIntervalSec=300
+StartLimitBurst=4
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/smart-vent/pi
+# Source the operator-edited .env (BACKBONE_INTERFACE, future knobs).
+EnvironmentFile=-/opt/smart-vent/pi/.env
+ExecStart=/usr/bin/docker compose --file /opt/smart-vent/pi/docker-compose.yaml up --detach --remove-orphans
+ExecStop=/usr/bin/docker compose --file /opt/smart-vent/pi/docker-compose.yaml down
+Restart=on-failure
+RestartSec=15s
+
+[Install]
+WantedBy=multi-user.target

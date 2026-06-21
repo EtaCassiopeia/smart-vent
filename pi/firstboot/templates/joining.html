@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>smart-vent — joining {{ ssid }}…</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>smart-vent</h1>
+      <p>Joining <strong>{{ ssid }}</strong>…</p>
+    </header>
+
+    <ol>
+      <li>The hub is leaving its setup network.</li>
+      <li>You'll lose this page in a few seconds — that's expected.</li>
+      <li>Reconnect your phone to <strong>{{ ssid }}</strong>, then open the smart-vent app to add your vents.</li>
+    </ol>
+
+    <p class="muted">
+      If the hub doesn't show up after a couple of minutes, power-cycle it. The setup network will come back automatically.
+    </p>
+  </main>
+</body>
+</html>
