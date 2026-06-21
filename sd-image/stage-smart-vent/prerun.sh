@@ -2,26 +2,47 @@
 # Stage prerun: clone previous stage's rootfs forward + drop the smart-vent
 # source into the chroot at /usr/src/smart-vent so the 00-install step can
 # call install.sh from there.
+#
+# We don't just call pi-gen's copy_previous because on this pi-gen tag
+# (2026-06-18-raspios-bookworm-arm64) PREV_ROOTFS_DIR points at an empty
+# work/stage2/rootfs by the time stage-smart-vent runs (the standard
+# stages must do something we don't see; copying rsync's only the empty
+# dir). Find the most-populated previous stage's rootfs instead and
+# rsync from it directly.
 
+echo "stage-smart-vent: ROOTFS_DIR=${ROOTFS_DIR}"
 echo "stage-smart-vent: PREV_ROOTFS_DIR=${PREV_ROOTFS_DIR:-<unset>}"
-echo "stage-smart-vent: ROOTFS_DIR=${ROOTFS_DIR:-<unset>}"
-if [ -d "${PREV_ROOTFS_DIR:-/nonexistent}" ]; then
-    echo "stage-smart-vent: PREV_ROOTFS_DIR contents (first 10):"
-    ls "${PREV_ROOTFS_DIR}" | head -10
-else
-    echo "stage-smart-vent: PREV_ROOTFS_DIR does NOT exist."
+echo "stage-smart-vent: contents of /pi-gen/work:"
+find /pi-gen/work -maxdepth 2 -type d | sort
+echo "stage-smart-vent: sizes of candidate rootfs dirs:"
+du -sh /pi-gen/work/*/rootfs 2>/dev/null || true
+
+SOURCE_ROOTFS=""
+for candidate in \
+    "${PREV_ROOTFS_DIR:-}" \
+    /pi-gen/work/stage2/rootfs \
+    /pi-gen/work/stage1/rootfs \
+    /pi-gen/work/stage0/rootfs ; do
+    [ -z "${candidate}" ] && continue
+    if [ -d "${candidate}/etc" ] && [ -d "${candidate}/usr" ]; then
+        SOURCE_ROOTFS="${candidate}"
+        break
+    fi
+done
+
+if [ -z "${SOURCE_ROOTFS}" ]; then
+    echo "stage-smart-vent: could not find a populated prev-stage rootfs." >&2
+    exit 1
 fi
 
-if [ ! -d "${ROOTFS_DIR}" ]; then
-    echo "stage-smart-vent: calling copy_previous"
-    copy_previous
-    echo "stage-smart-vent: copy_previous returned $?"
-fi
+echo "stage-smart-vent: using ${SOURCE_ROOTFS} as base rootfs"
 
+mkdir -p "${ROOTFS_DIR}"
+rsync -aHAXx --exclude var/cache/apt/archives "${SOURCE_ROOTFS}/" "${ROOTFS_DIR}/"
+
+# Sanity: rootfs is now usable for chroot.
 if [ ! -d "${ROOTFS_DIR}/etc" ]; then
-    echo "stage-smart-vent: ROOTFS_DIR/etc does not exist after copy_previous; copy_previous must have failed." >&2
-    echo "stage-smart-vent: ROOTFS_DIR contents:" >&2
-    ls -la "${ROOTFS_DIR}" >&2 || true
+    echo "stage-smart-vent: rsync did not populate ${ROOTFS_DIR}/etc; aborting." >&2
     exit 1
 fi
 
