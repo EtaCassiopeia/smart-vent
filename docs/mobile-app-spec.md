@@ -1,10 +1,22 @@
 # smart-vent mobile app — spec
 
-The smart-vent mobile app is the **client-facing** half of the
-deployment plan (workstream 6). It lives in a separate Flutter repo
-(`smart-vent-app`, not in this repo); this document defines what it
-needs to do. The API contract it builds against is in
-[`mobile-api.md`](mobile-api.md).
+> **Status: deferred / reference only.** As of v1, smart-vent vents
+> commission via the Home Assistant Companion app out of the box —
+> client scans the QR sticker on each vent, picks a room, done. A
+> custom branded app duplicates the HA app's commissioning flow
+> without adding engineering value; the only reasons to build one
+> are branding or a streamlined onboarding UX for non-technical
+> clients. This document remains as the contract a future
+> branded-app effort would target. The companion contract document
+> [`mobile-api.md`](mobile-api.md) is useful regardless — it
+> describes what any integration (custom app, automation script,
+> third-party tool) would talk to.
+
+The smart-vent mobile app, **if built**, would be the
+**client-facing** half of the deployment plan (workstream 6). It
+would live in a separate Flutter repo (`smart-vent-app`, not in this
+repo); this document defines what it needs to do. The API contract
+it would build against is in [`mobile-api.md`](mobile-api.md).
 
 ## Audience + scope
 
