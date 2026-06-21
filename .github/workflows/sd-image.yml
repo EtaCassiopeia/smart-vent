@@ -67,25 +67,42 @@ jobs:
         run: |
           git clone --depth 1 --branch "${PI_GEN_REF}" "${PI_GEN_REPO}" pi-gen
 
-      - name: Drop in smart-vent config + stage
+      - name: Drop in smart-vent config + stage + source
         run: |
           cp smart-vent/sd-image/config pi-gen/config
           cp -r smart-vent/sd-image/stage-smart-vent pi-gen/
-          # Make sure the stage isn't accidentally skipped.
+
+          # Stage the smart-vent source inside the pi-gen tree so it is
+          # visible to prerun.sh inside the build container (build-docker.sh
+          # only mounts the pi-gen workdir; arbitrary host paths are not
+          # accessible). Exclude heavy/unrelated dirs to keep the copy small.
+          rsync -a \
+            --exclude '.git/' \
+            --exclude 'firmware/vent-controller/target/' \
+            --exclude '**/__pycache__/' \
+            --exclude '**/.venv/' \
+            --exclude '**/node_modules/' \
+            --exclude '**/dist/' \
+            --exclude '**/build/' \
+            smart-vent/ pi-gen/stage-smart-vent/src/
+
           ls -la pi-gen/stage-smart-vent
+          du -sh pi-gen/stage-smart-vent/src
 
       - name: Build the image
         env:
-          SMART_VENT_SRC_HOST: ${{ github.workspace }}/smart-vent
           SMART_VENT_VERSION: ${{ steps.ver.outputs.version }}
         run: |
           cd pi-gen
+          # SMART_VENT_VERSION gets stamped into /etc/smart-vent/version
+          # inside the chroot; export it via pi-gen's config so the value
+          # crosses the docker boundary.
+          echo "export SMART_VENT_VERSION=${SMART_VENT_VERSION}" >> config
+
           # CONTINUE=1 lets the build resume if a step fails partway;
           # PRESERVE_CONTAINER=0 keeps the runner clean between
           # workflow invocations.
           sudo \
-            SMART_VENT_SRC_HOST="${SMART_VENT_SRC_HOST}" \
-            SMART_VENT_VERSION="${SMART_VENT_VERSION}" \
             CONTINUE=1 \
             PRESERVE_CONTAINER=0 \
             ./build-docker.sh

@@ -7,16 +7,17 @@ if [ ! -d "${ROOTFS_DIR}" ]; then
     copy_previous
 fi
 
-# SMART_VENT_SRC_HOST is set by the CI workflow to the path of the
-# repo checkout on the build runner. We copy the source into the
-# chroot rather than bind-mounting so the image is self-contained
-# during the chroot install.
-if [ -z "${SMART_VENT_SRC_HOST:-}" ]; then
-    echo "stage-smart-vent: SMART_VENT_SRC_HOST is not set; aborting" >&2
-    exit 1
-fi
-if [ ! -d "${SMART_VENT_SRC_HOST}/pi" ]; then
-    echo "stage-smart-vent: SMART_VENT_SRC_HOST=${SMART_VENT_SRC_HOST} does not look like a smart-vent checkout" >&2
+# The CI workflow rsyncs the smart-vent checkout into this stage's src/
+# directory before pi-gen runs (build-docker.sh wraps the build in a
+# container, so arbitrary host paths aren't reachable — but the pi-gen
+# tree is). For a local bake, run the same `cp -r ../smart-vent ./src`
+# step from the README before kicking off build-docker.sh.
+STAGE_DIR="$(cd "$(dirname "$0")" && pwd)"
+SRC="${STAGE_DIR}/src"
+
+if [ ! -d "${SRC}/pi" ]; then
+    echo "stage-smart-vent: ${SRC} is not a smart-vent checkout; aborting." >&2
+    echo "stage-smart-vent: copy the repo into ${SRC} before running pi-gen." >&2
     exit 1
 fi
 
@@ -26,4 +27,4 @@ rsync -a \
     --exclude 'firmware/vent-controller/target' \
     --exclude '**/__pycache__' \
     --exclude '**/.venv' \
-    "${SMART_VENT_SRC_HOST}/" "${ROOTFS_DIR}/usr/src/smart-vent/"
+    "${SRC}/" "${ROOTFS_DIR}/usr/src/smart-vent/"

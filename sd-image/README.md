@@ -37,12 +37,20 @@ Expected runtime on `ubuntu-latest`: ~30–60 min cold.
 ## How to bake locally (if you have ~30 min and Docker)
 
 ```bash
-git clone https://github.com/RPi-Distro/pi-gen
+git clone --branch 2026-06-18-raspios-bookworm-arm64 \
+  https://github.com/RPi-Distro/pi-gen
 cd pi-gen
-cp -r ../smart-vent/sd-image/stage-smart-vent ./
 cp ../smart-vent/sd-image/config ./config
-export SMART_VENT_SRC_HOST=$(realpath ../smart-vent)
-sudo SMART_VENT_VERSION="dev" CONTINUE=1 ./build-docker.sh
+cp -r ../smart-vent/sd-image/stage-smart-vent ./
+# Stage the smart-vent source where prerun.sh can find it. build-docker.sh
+# only mounts the pi-gen tree into the build container, so we co-locate.
+rsync -a \
+  --exclude '.git/' \
+  --exclude 'firmware/vent-controller/target/' \
+  --exclude '**/__pycache__/' --exclude '**/.venv/' \
+  ../smart-vent/ stage-smart-vent/src/
+echo 'export SMART_VENT_VERSION=dev' >> config
+sudo CONTINUE=1 ./build-docker.sh
 ls deploy/
 ```
 
