@@ -1,0 +1,11 @@
+ca-certificates
+curl
+git
+rsync
+docker.io
+docker-compose-plugin
+hostapd
+dnsmasq
+python3
+python3-flask
+network-manager
