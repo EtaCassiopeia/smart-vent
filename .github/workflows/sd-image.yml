@@ -3,6 +3,14 @@ name: SD Image
 on:
   push:
     tags: ['hub-v*']
+  pull_request:
+    # The bake is expensive (~30-60 min on QEMU), so we only run it on
+    # PRs that actually touch the sd-image bits. Matches the pattern in
+    # firmware.yml and provision.yml.
+    paths:
+      - 'sd-image/**'
+      - 'pi/**'
+      - '.github/workflows/sd-image.yml'
   workflow_dispatch:
     inputs:
       ref:
