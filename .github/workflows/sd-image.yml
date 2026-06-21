@@ -111,17 +111,26 @@ jobs:
         id: deploy
         run: |
           cd pi-gen/deploy
+          # pi-gen runs inside Docker as root, so the deploy dir is
+          # root-owned. Hand it back to the runner before we touch
+          # anything.
+          sudo chown -R "$(id -u):$(id -g)" .
           ls -la
-          IMG=$(ls *.img.xz | head -1)
+
+          # The bake produces two .img.xz files: stage2's plain Pi OS
+          # Lite (used to verify the base build is OK) and our
+          # smart-vent-augmented one. Pick ours specifically.
+          IMG=$(ls *smart-vent*.img.xz 2>/dev/null | tail -1)
           if [[ -z "$IMG" ]]; then
-            echo "::error::no .img.xz produced by pi-gen" >&2
+            echo "::error::no smart-vent *.img.xz produced by pi-gen" >&2
             exit 1
           fi
-          sha256sum "$IMG" | tee "${IMG}.sha256"
+          echo "Selected: $IMG"
+
           # Stable artifact name based on our version stamp.
           NEW="smart-vent-hub-${{ steps.ver.outputs.version }}.img.xz"
           mv "$IMG" "$NEW"
-          mv "${IMG}.sha256" "${NEW}.sha256"
+          sha256sum "$NEW" | tee "${NEW}.sha256"
           echo "image=$NEW" >>"$GITHUB_OUTPUT"
 
       - name: Upload build artifact (manual dispatch + branch builds)
