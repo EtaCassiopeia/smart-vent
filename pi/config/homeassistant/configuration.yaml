@@ -1,0 +1,38 @@
+# smart-vent hub bootstrap configuration.yaml
+#
+# Seeded by pi/install.sh into /opt/smart-vent/data/homeassistant/ on
+# fresh installs. Operator edits to this file are preserved on
+# upgrade — install.sh refuses to overwrite an existing
+# configuration.yaml.
+
+# Bring in HA's standard component bundle (frontend, history,
+# logbook, recorder, energy, etc).
+default_config:
+
+homeassistant:
+  name: "smart-vent"
+  unit_system: metric
+  external_url: ""    # set by the operator post-install
+
+# Templates synced from the repo's homeassistant/ directory by
+# install.sh; same content used by people who manually copy the
+# files into an existing HA instance (see homeassistant/README.md).
+script:    !include scripts.yaml
+automation: !include automations.yaml
+schedule:  !include helpers/schedule_helpers.yaml
+
+# Lovelace: keep storage-mode UI dashboards (so users can drag-and-
+# drop), plus a yaml-mode "Vents" dashboard that ships with the kit.
+lovelace:
+  mode: storage
+  dashboards:
+    vents:
+      mode: yaml
+      title: Vents
+      icon: mdi:air-filter
+      show_in_sidebar: true
+      filename: dashboards/vents.yaml
+
+# Matter integration is added by the user from the UI on first run
+# (Settings → Devices & Services → Add Integration → Matter,
+# pointing at ws://localhost:5580/ws).

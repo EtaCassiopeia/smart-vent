@@ -1,0 +1,91 @@
+# Pi hub runtime: OTBR + matter-server + Home Assistant.
+#
+# Replaces the three hand-typed `docker run` commands in
+# docs/runbook.md §3. Brought up at boot by smart-vent.service
+# (see ../systemd/smart-vent.service, landing in a follow-up step).
+#
+# All three containers share the host network because:
+#   - OTBR needs L2 access to wlan0/eth0 to act as a Thread border
+#     router (mDNS, IPv6 ICMP, NDP).
+#   - matter-server needs the same host network so multicast Matter
+#     traffic (mDNS) reaches it without an extra bridge hop.
+#   - Home Assistant talks to matter-server over ws://localhost:5580
+#     and serves its UI on :8123 directly on the LAN.
+#
+# Image tags are PINNED on purpose. Bumping a tag is a deliberate act:
+# we've previously been bitten by matter-server major upgrades that
+# silently reshape the WebSocket schema, and OTBR patch releases that
+# changed dataset defaults. Bump intentionally and re-verify the
+# four-check ladder in docs/runbook.md §6.3.
+
+x-image-tags-known-good: &image-tags
+  # Last verified on 2026-06-19 with a commissioned XIAO ESP32-C6 vent
+  # exchanging WindowCovering attributes through this hub.
+  otbr: "openthread/otbr:latest"
+  matter-server: "ghcr.io/home-assistant-libs/python-matter-server:stable"
+  homeassistant: "ghcr.io/home-assistant/home-assistant:stable"
+
+# Data dirs are bind-mounted under /opt/smart-vent/data/ rather than
+# docker-managed named volumes. Lets the operator back them up with
+# normal tar, edit HA config files directly, and lets install.sh seed
+# the homeassistant/ tree on first install.
+services:
+  otbr:
+    image: openthread/otbr:latest
+    container_name: otbr
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    volumes:
+      # /dev exposes /dev/ttyUSB0 (SLZB-07 Thread RCP) without static
+      # device bindings, so a different USB enumeration order doesn't
+      # break startup.
+      - /dev:/dev
+      - /opt/smart-vent/data/otbr:/var/lib/thread
+    environment:
+      # 460800 baud matches the SLZB-07 spinel default. If you swap
+      # the dongle, this changes — see runbook §3.1.
+      RADIO_URL: "spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800"
+      # BACKBONE_INTERFACE is read from the .env that ships with the
+      # SD image / install.sh. Defaults to wlan0; set to eth0 for
+      # wired-Pi installs.
+      BACKBONE_INTERFACE: "${BACKBONE_INTERFACE:-wlan0}"
+
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: matter-server
+    restart: unless-stopped
+    network_mode: host
+    # apparmor=unconfined is what python-matter-server's upstream
+    # docs recommend; without it BlueZ access is blocked on Bookworm.
+    security_opt:
+      - apparmor=unconfined
+    depends_on:
+      - otbr
+    volumes:
+      - /opt/smart-vent/data/matter-server:/data
+      # /run/dbus is needed for BlueZ pairing during commissioning.
+      - /run/dbus:/run/dbus:ro
+    command:
+      - "--storage-path"
+      - "/data"
+      - "--paa-root-cert-dir"
+      - "/data/credentials"
+      - "--primary-interface"
+      - "${BACKBONE_INTERFACE:-wlan0}"
+      - "--bluetooth-adapter"
+      - "0"
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    # No devices.db bind mount this time — see runbook §7.5.1 note
+    # about the legacy hub leftover. HA's own registry is authoritative.
+    # install.sh seeds /opt/smart-vent/data/homeassistant/ with a
+    # configuration.yaml that !includes the scripts/automations/
+    # dashboards from the repo's homeassistant/ templates.
+    volumes:
+      - /opt/smart-vent/data/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro

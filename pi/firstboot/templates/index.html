@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>smart-vent — connect to WiFi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>smart-vent</h1>
+      <p>Let's get your hub on WiFi.</p>
+    </header>
+
+    {% if error %}
+    <div class="error" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form action="{{ url_for('join') }}" method="post" autocomplete="off">
+      <label for="ssid">
+        Network
+        {% if ssids %}
+        <select name="ssid" id="ssid" required>
+          <option value="" disabled selected>Pick your home WiFi</option>
+          {% for s in ssids %}
+          <option value="{{ s }}">{{ s }}</option>
+          {% endfor %}
+          <option value="__manual__">Other (type below)</option>
+        </select>
+        {% else %}
+        <input type="text" name="ssid" id="ssid" required
+               placeholder="WiFi network name" autocomplete="off">
+        {% endif %}
+      </label>
+
+      {% if ssids %}
+      <label for="ssid_manual" class="hidden" id="ssid-manual-label">
+        Network name
+        <input type="text" name="ssid_manual" id="ssid_manual"
+               placeholder="WiFi network name" autocomplete="off">
+      </label>
+      {% endif %}
+
+      <label for="password">
+        Password
+        <input type="password" name="password" id="password" required
+               minlength="8" placeholder="WiFi password" autocomplete="off">
+      </label>
+
+      <button type="submit">Join</button>
+    </form>
+
+    <footer>
+      <small>Connected to AP <code>{{ ssid }}</code></small>
+    </footer>
+  </main>
+
+  {% if ssids %}
+  <script>
+    const select = document.getElementById('ssid');
+    const manualLabel = document.getElementById('ssid-manual-label');
+    const manualInput = document.getElementById('ssid_manual');
+    select.addEventListener('change', () => {
+      const showManual = select.value === '__manual__';
+      manualLabel.classList.toggle('hidden', !showManual);
+      manualInput.required = showManual;
+    });
+    document.querySelector('form').addEventListener('submit', e => {
+      if (select.value === '__manual__') {
+        select.value = manualInput.value;
+      }
+    });
+  </script>
+  {% endif %}
+</body>
+</html>

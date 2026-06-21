@@ -1,0 +1,28 @@
+[Unit]
+Description=Smart Vent first-boot WiFi onboarding (AP-mode wizard)
+Documentation=https://github.com/EtaCassiopeia/smart-vent
+# Only run when the wizard hasn't already succeeded. The wizard writes
+# /var/lib/smart-vent/.configured on a successful WiFi join and reboots.
+ConditionPathExists=!/var/lib/smart-vent/.configured
+# We bring up the AP ourselves; don't wait for network-online (it would
+# never fire on a brand-new Pi).
+After=network-pre.target NetworkManager.service
+Wants=NetworkManager.service
+# Block the main service so we don't bring docker up on an offline Pi.
+Before=smart-vent.service
+# On a wizard crash, retry a handful of times before giving up so the
+# Pi doesn't get stuck rebooting. The wizard itself is idempotent.
+StartLimitIntervalSec=600
+StartLimitBurst=6
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/smart-vent/pi/firstboot
+# The wizard owns hostapd, dnsmasq, and nmcli for the duration of
+# onboarding. Needs root for those, so no User= or DynamicUser=.
+ExecStart=/usr/bin/env python3 /opt/smart-vent/pi/firstboot/wizard.py
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
