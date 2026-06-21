@@ -27,9 +27,10 @@ permissions:
 
 env:
   PI_GEN_REPO: https://github.com/RPi-Distro/pi-gen
-  # Track a known-good pi-gen tag rather than main. Bookworm support
-  # was stable here; bumping is a deliberate act.
-  PI_GEN_REF: 2024-11-19-raspios-bookworm
+  # Track a known-good pi-gen tag rather than main. Bumping is a
+  # deliberate act — verify the bake still works on the new tag before
+  # changing this.
+  PI_GEN_REF: 2026-06-18-raspios-bookworm-arm64
 
 jobs:
   bake:
