@@ -46,6 +46,15 @@ if [ ! -d "${ROOTFS_DIR}/etc" ]; then
     exit 1
 fi
 
+# pi-gen's on_chroot helper bind-mounts /proc /dev /dev/pts /sys /run
+# /tmp into the rootfs at chroot-enter time. Those mountpoint dirs
+# need to exist as empty dirs; previous-stage rootfs may have unmounted
+# them and left them missing, or our -x rsync may have skipped them.
+# Make sure they're there.
+for mp in proc dev dev/pts sys run tmp; do
+    mkdir -p "${ROOTFS_DIR}/${mp}"
+done
+
 # The CI workflow rsyncs the smart-vent checkout into this stage's src/
 # directory before pi-gen runs (build-docker.sh wraps the build in a
 # container, so arbitrary host paths aren't reachable — but the pi-gen
