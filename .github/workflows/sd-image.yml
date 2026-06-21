@@ -119,10 +119,11 @@ jobs:
 
           # The bake produces two .img.xz files: stage2's plain Pi OS
           # Lite (used to verify the base build is OK) and our
-          # smart-vent-augmented one. Pick ours specifically.
-          IMG=$(ls *smart-vent*.img.xz 2>/dev/null | tail -1)
+          # smart-vent-augmented one. Pick ours specifically — match
+          # the IMG_SUFFIX from sd-image/stage-smart-vent/EXPORT_IMAGE.
+          IMG=$(ls *-lite-smart-vent.img.xz 2>/dev/null | head -1)
           if [[ -z "$IMG" ]]; then
-            echo "::error::no smart-vent *.img.xz produced by pi-gen" >&2
+            echo "::error::no *-lite-smart-vent.img.xz in deploy/" >&2
             exit 1
           fi
           echo "Selected: $IMG"
