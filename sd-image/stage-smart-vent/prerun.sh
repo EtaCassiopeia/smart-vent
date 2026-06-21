@@ -55,6 +55,14 @@ for mp in proc dev dev/pts sys run tmp; do
     mkdir -p "${ROOTFS_DIR}/${mp}"
 done
 
+echo "stage-smart-vent: ROOTFS_DIR after mkdir:"
+ls -la "${ROOTFS_DIR}" | head -25
+echo "stage-smart-vent: chroot mount-points specifically:"
+ls -ld "${ROOTFS_DIR}"/proc "${ROOTFS_DIR}"/dev "${ROOTFS_DIR}"/dev/pts \
+       "${ROOTFS_DIR}"/sys "${ROOTFS_DIR}"/run "${ROOTFS_DIR}"/tmp 2>&1 || true
+echo "stage-smart-vent: /etc/mtab (mounts visible to this process):"
+grep -E "stage-smart-vent|stage2|/pi-gen" /etc/mtab || echo "  (no pi-gen mounts in mtab)"
+
 # The CI workflow rsyncs the smart-vent checkout into this stage's src/
 # directory before pi-gen runs (build-docker.sh wraps the build in a
 # container, so arbitrary host paths aren't reachable — but the pi-gen
