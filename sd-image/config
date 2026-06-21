@@ -28,6 +28,8 @@ ENABLE_SSH=1
 # (desktop) and stage4 (full image) — this is a headless hub.
 STAGE_LIST="stage0 stage1 stage2 stage-smart-vent"
 
-# Quiet pi-gen's interactive prompts so it runs unattended in CI.
-WORK_DIR=/pi-gen/work
-DEPLOY_DIR=/pi-gen/deploy
+# Leave WORK_DIR + DEPLOY_DIR at their defaults. build-docker.sh's
+# final cleanup hardcodes `rsync work/*/build.log deploy/` (the IMG_NAME
+# subdirectory), so an override of WORK_DIR=/pi-gen/work without the
+# IMG_NAME suffix would make the cleanup rsync hunt for a path that
+# isn't there.
