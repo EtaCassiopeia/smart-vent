@@ -64,19 +64,21 @@ def render_pdf(
     cursor -= 0.50 * inch
 
     pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(0.75 * inch, cursor, "3.  Install the smart-vent app")
+    pdf.drawString(0.75 * inch, cursor, "3.  Install Home Assistant")
     cursor -= 0.30 * inch
     pdf.setFont("Helvetica", 11)
-    pdf.drawString(0.95 * inch, cursor, "Search 'smart-vent' on the App Store or Google Play.")
+    pdf.drawString(0.95 * inch, cursor, "Search 'Home Assistant' on the App Store or Google Play.")
+    cursor -= 0.20 * inch
+    pdf.drawString(0.95 * inch, cursor, "Sign in to your hub when prompted (it auto-discovers on your network).")
     cursor -= 0.50 * inch
 
     pdf.setFont("Helvetica-Bold", 16)
     pdf.drawString(0.75 * inch, cursor, "4.  Add each vent")
     cursor -= 0.30 * inch
     pdf.setFont("Helvetica", 11)
-    pdf.drawString(0.95 * inch, cursor, "In the app, tap 'Add vent' and scan the QR sticker on the vent.")
+    pdf.drawString(0.95 * inch, cursor, "Settings → Devices & services → Add Integration → Matter.")
     cursor -= 0.20 * inch
-    pdf.drawString(0.95 * inch, cursor, "Pick the room when prompted. Repeat for each vent.")
+    pdf.drawString(0.95 * inch, cursor, "Scan the QR sticker on the vent, pick its room. Repeat for each vent.")
     cursor -= 0.80 * inch
 
     pdf.setFont("Helvetica-Oblique", 10)
