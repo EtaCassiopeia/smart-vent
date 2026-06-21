@@ -14,6 +14,8 @@ same thing):
              back to back.
   labels   — render an Avery 5160 sheet of stickers from the inventory.
   kit-card — render the one-page client quick-start PDF.
+  image    — write the hub SD-card image (pulled from a hub-v* GH
+             release) to a removable block device.
 
 Run `smart-vent-provision <command> --help` for details.
 """
@@ -26,7 +28,17 @@ from pathlib import Path
 
 import click
 
-from . import __version__, devices, flasher, kit_card, labels, release, serial_capture
+from . import (
+    __version__,
+    devices,
+    flasher,
+    hub_release,
+    imager,
+    kit_card,
+    labels,
+    release,
+    serial_capture,
+)
 from .inventory import Inventory, Vent
 
 DEFAULT_KIT_ROOT = Path.cwd() / "kits"
@@ -307,6 +319,65 @@ def kit_card_cmd(
         support_contact=support_contact,
     )
     click.echo(f"Wrote {out}")
+
+
+# ----------------------------------------------------------------- image
+@main.command()
+@click.option(
+    "--device", required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Whole-disk block device to write to, e.g. /dev/sdb. "
+    "WIPES ALL DATA on the device.",
+)
+@click.option(
+    "--hub-tag", type=str, default=None,
+    help="Pin to a specific hub release tag (default: latest hub-v*).",
+)
+@click.option(
+    "--yes", is_flag=True, default=False,
+    help="Skip the confirmation prompt. Use in scripts; otherwise the CLI "
+    "prints the device summary and waits for explicit yes.",
+)
+def image(device: Path, hub_tag: str | None, yes: bool) -> None:
+    """Write the hub SD-card image to a removable block device.
+
+    Pulls the .img.xz from the hub-v* GitHub release into the local
+    cache (~/.cache/smart-vent/hub/<tag>/), sha256-verifies it, then
+    streams xz | dd onto the device.
+
+    Run as root (sudo) — dd to a block device needs it.
+    """
+    try:
+        imager.assert_block_device(device)
+    except imager.ImageWriteError as e:
+        raise click.ClickException(str(e)) from None
+
+    click.echo(f"Fetching hub release{' ' + hub_tag if hub_tag else ' (latest)'}...")
+    try:
+        bundle = hub_release.fetch(hub_tag)
+    except hub_release.HubReleaseError as e:
+        raise click.ClickException(str(e)) from None
+
+    size_mb = bundle.size_bytes // (1024 * 1024)
+    click.echo(f"  version: {bundle.version}")
+    click.echo(f"  image:   {bundle.image_path.name} ({size_mb} MB)")
+    click.echo(f"  sha256:  {bundle.sha256}")
+    click.echo("")
+
+    if not yes:
+        click.echo(click.style(
+            f"About to OVERWRITE {device}. Everything on it will be lost.",
+            fg="red", bold=True,
+        ))
+        click.confirm("Proceed?", abort=True)
+
+    click.echo(f"Writing to {device} (xz | dd, ~5-15 min)...")
+    try:
+        imager.write_image(bundle.image_path, device)
+    except imager.ImageWriteError as e:
+        raise click.ClickException(str(e)) from None
+
+    click.echo(click.style("Done. You can now eject the SD card and boot it.", fg="green"))
 
 
 # --------------------------------------------------------------- helpers

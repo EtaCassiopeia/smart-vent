@@ -16,6 +16,7 @@ done from the smart-vent mobile app at install time.
 | Capture | Provider | `smart-vent-provision capture` | Reads the post-boot serial log, records each board's EUI-64 / Matter QR / pairing code into a per-kit `inventory.json`. |
 | Label | Provider | `smart-vent-provision labels` | Renders an Avery 5160 sticker sheet from the inventory. Sticker goes on the physical vent. |
 | Quick-start | Provider | `smart-vent-provision kit-card` | Renders the one-page card that ships in the box. |
+| SD image | Provider | `smart-vent-provision image` | Pulls the hub `.img.xz` from the latest `hub-v*` GitHub release, sha256-verifies it, and `xz \| dd`s it onto the SD card. |
 | **Commission** | **Client** | **smart-vent mobile app** | **Scans the sticker QR, pairs the vent into the client's HA fabric, picks the room/floor.** |
 
 The mobile app is a separate project (Flutter, single codebase for
@@ -90,6 +91,22 @@ smart-vent-provision labels   --kit kit-acme-2026-06-001  # -> labels.pdf
 smart-vent-provision kit-card --kit kit-acme-2026-06-001 \
   --ap-password 'changeMe' --support-contact 'help@smart-vent.example'
 ```
+
+### Write the SD card
+
+```bash
+# Pulls the latest hub-v* GH release, sha256-verifies, dd's onto /dev/sdb.
+sudo smart-vent-provision image --device /dev/sdb
+
+# Pin to a specific tag instead of latest:
+sudo smart-vent-provision image --device /dev/sdb --hub-tag hub-v0.1.0
+```
+
+Refuses to write to anything that isn't a whole-disk block device
+(catches the common `/dev/sdb1` partition mistake) and prompts for
+confirmation before clobbering the device. `--yes` skips the prompt
+for automation. Needs `xz` and `dd` on `PATH` — both ship in any
+Debian/Ubuntu base install.
 
 ## Inventory schema
 
