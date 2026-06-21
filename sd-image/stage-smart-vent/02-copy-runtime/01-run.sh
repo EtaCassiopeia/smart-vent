@@ -35,6 +35,13 @@ fi
 install -m 0644 "${SRC}/pi/systemd/smart-vent.service"           "${SYSTEMD_DIR}/smart-vent.service"
 install -m 0644 "${SRC}/pi/systemd/smart-vent-firstboot.service" "${SYSTEMD_DIR}/smart-vent-firstboot.service"
 
+# OTBR needs ip6_tables + ip6table_filter loaded to route IPv6
+# Thread <-> backbone. Persist via modules-load.d so kernel loads
+# them on every boot of the baked image.
+mkdir -p "${ROOTFS_DIR}/etc/modules-load.d"
+install -m 0644 "${SRC}/pi/config/modules-load.d/otbr.conf" \
+    "${ROOTFS_DIR}/etc/modules-load.d/otbr.conf"
+
 # Seed Home Assistant config (unless one already exists — preserves
 # operator edits on a future re-bake).
 HA="${DATA_DIR}/homeassistant"
