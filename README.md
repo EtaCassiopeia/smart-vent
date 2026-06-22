@@ -53,6 +53,10 @@ cloud dependency. The Pi is the entire backend.
   it's built the way it is. Read this top-to-bottom once. Covers Matter, Thread,
   the Pi services, the firmware internals, what happens during commissioning and
   on every replug.
+- **[docs/dev-setup.md](docs/dev-setup.md)** — what to install on your own dev
+  machine (Linux x86_64 recommended, Pi for deployment/validation, macOS as
+  a secondary option) before touching firmware, the SD image, the Pi hub
+  stack, the provisioning CLI, or the PCB tooling.
 - **[docs/runbook.md](docs/runbook.md)** — step-by-step procedures for **developers**.
   How to set up the Pi from scratch, build the firmware, flash a new vent, commission
   it via HA, assign it to a room. Plus a symptom-driven troubleshooting matrix.
