@@ -5,7 +5,9 @@ component does, how Matter and Thread fit together, what's happening inside the
 ESP32-C6 firmware, what a single "close the vent" command actually traverses, and
 why specific design choices were made. When you want a step-by-step recipe instead,
 go to **[runbook.md](runbook.md)** — sections in this handbook cross-reference to
-runbook procedures using "see runbook §N".
+runbook procedures using "see runbook §N". If you haven't set up a dev machine
+yet, start at **[dev-setup.md](dev-setup.md)** instead — it covers what to
+install before any of the runbook's build/flash steps will work.
 
 Read top-to-bottom on the first pass. After that, use the section headings as
 landing pads.
