@@ -16,9 +16,27 @@ extern "C" {
     fn matter_bridge_start() -> i32;
     fn matter_bridge_update_position(percent100ths: u16);
     fn matter_bridge_update_operational_status(status: u8);
+    fn matter_bridge_update_battery(bat_charge_level: u8, bat_percent: u8);
     fn matter_bridge_is_commissioned() -> bool;
     fn matter_bridge_get_pairing_code(buf: *mut u8, len: usize) -> i32;
     fn matter_bridge_get_qr_payload(buf: *mut u8, len: usize) -> i32;
+}
+
+/// Matter's `BatChargeLevelEnum` (Power Source cluster, Battery feature).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BatteryChargeLevel {
+    Ok = 0,
+    Warning = 1,
+    Critical = 2,
+}
+
+/// Report battery state via the Power Source cluster (issue #50), so HA's
+/// Matter integration surfaces a battery sensor entity. `percent` is
+/// 0-100; no-op call needed on USB-powered builds.
+pub fn update_battery(level: BatteryChargeLevel, percent: u8) {
+    unsafe {
+        matter_bridge_update_battery(level as u8, percent.min(100));
+    }
 }
 
 // --- Angle <-> Matter percent100ths conversion ---

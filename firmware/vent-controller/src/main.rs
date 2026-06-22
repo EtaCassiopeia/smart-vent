@@ -142,6 +142,20 @@ fn main() {
     matter::start();
     matter::log_pairing_info();
 
+    let power_source = match power_mode {
+        PowerMode::AlwaysOn => PowerSource::Usb,
+        PowerMode::Sed { .. } => PowerSource::Battery,
+    };
+
+    // Report initial battery state via the Power Source cluster (#50) so
+    // HA's Matter integration has a battery sensor entity to show. This is
+    // a placeholder reading until #47 wires in the carrier board's real
+    // PackSense ADC sensing — without that hardware there's nothing real
+    // to report yet, but the Matter attribute path itself is exercised.
+    if power_source == PowerSource::Battery {
+        matter::update_battery(matter::BatteryChargeLevel::Ok, 100);
+    }
+
     // Build and publish the shared AppState. The main loop and Matter
     // handlers both reach into it via state::with_app_state.
     let app_state = AppState {
@@ -149,10 +163,7 @@ fn main() {
         identity: device_id,
         thread: thread_mgr,
         start_time: Instant::now(),
-        power_source: match power_mode {
-            PowerMode::AlwaysOn => PowerSource::Usb,
-            PowerMode::Sed { .. } => PowerSource::Battery,
-        },
+        power_source,
         poll_period_ms: power_mode.poll_period_ms(),
         identify_mode: false,
         identify_restore_angle: None,

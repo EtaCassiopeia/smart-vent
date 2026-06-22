@@ -55,6 +55,18 @@ void matter_bridge_update_position(uint16_t percent100ths);
 void matter_bridge_update_operational_status(uint8_t status);
 
 /**
+ * Report battery state via the Power Source cluster's Battery feature, so
+ * Home Assistant's Matter integration can surface a battery sensor entity
+ * (see docs/battery-carrier-board.md and issue #50). No-op on USB-powered
+ * builds — just don't call this if there's no battery.
+ *
+ * @param bat_charge_level Matter BatChargeLevelEnum: 0=Ok, 1=Warning, 2=Critical
+ * @param bat_percent Battery percentage remaining, 0-100 (converted to the
+ *                     cluster's native half-percent units internally)
+ */
+void matter_bridge_update_battery(uint8_t bat_charge_level, uint8_t bat_percent);
+
+/**
  * Check if the device has been commissioned into a Matter fabric.
  * @return true if commissioned
  */
