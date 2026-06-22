@@ -2,9 +2,13 @@
 """
 smart-vent carrier board — circuit described as code (SKiDL).
 
-Generates a KiCad netlist you can import into Pcbnew to start layout:
-    python3 smart_vent_board.py
-    -> smart_vent.net
+The status LED (D1/R7/C5, GPIO22) is OPTIONAL. It's the locate/status
+indicator described in docs/battery-carrier-board.md; skipping it removes
+one idle SK6812 load from the 3V3 rail for builds that don't need it.
+Generates two netlists, one per variant:
+
+    python3 smart_vent_board.py            -> smart_vent.net          (with LED)
+    SMART_VENT_LED=0 python3 smart_vent_board.py  -> smart_vent_no_led.net (without)
 
 Parts are defined inline (tool=SKIDL) so this runs with NO KiCad symbol
 libraries installed. Footprints are assigned as strings; swap any of them
@@ -14,7 +18,10 @@ common community 14-pin XIAO footprint (1..7 = D0..D6, 8..11 = D7..D10,
 drop in (the official Seeed XIAO footprint) before routing. <<<
 """
 
+import os
 from skidl import Part, Pin, Net, TEMPLATE, SKIDL, generate_netlist
+
+INCLUDE_LED = os.environ.get("SMART_VENT_LED", "1") != "0"
 
 P = Pin.types.PASSIVE  # treat everything as passive -> keeps ERC quiet
 
@@ -38,13 +45,14 @@ MOSFET = Part(
           Pin(num="3", name="D", func=P)],
 )
 
-LED = Part(
-    tool=SKIDL, name="SK6812", ref_prefix="D", dest=TEMPLATE,
-    pins=[Pin(num="1", name="VDD", func=P),
-          Pin(num="2", name="DOUT", func=P),
-          Pin(num="3", name="GND", func=P),
-          Pin(num="4", name="DIN", func=P)],
-)
+if INCLUDE_LED:
+    LED = Part(
+        tool=SKIDL, name="SK6812", ref_prefix="D", dest=TEMPLATE,
+        pins=[Pin(num="1", name="VDD", func=P),
+              Pin(num="2", name="DOUT", func=P),
+              Pin(num="3", name="GND", func=P),
+              Pin(num="4", name="DIN", func=P)],
+    )
 
 # XIAO ESP32-C6 module, 14 pads (see header note for numbering)
 XIAO = Part(
@@ -54,7 +62,7 @@ XIAO = Part(
         Pin(num="2", name="D1_GPIO1", func=P),   # battery sense (A1)
         Pin(num="3", name="D2_GPIO2", func=P),   # servo signal
         Pin(num="4", name="D3_GPIO21", func=P),  # servo_en
-        Pin(num="5", name="D4_GPIO22", func=P),  # LED data
+        Pin(num="5", name="D4_GPIO22", func=P),  # LED data (only wired if INCLUDE_LED)
         Pin(num="6", name="D5_GPIO23", func=P),  # NC
         Pin(num="7", name="D6_GPIO16", func=P),  # NC
         Pin(num="8", name="D7_GPIO17", func=P),  # NC
@@ -92,22 +100,24 @@ R3 = fp(R(value="100k"), "Resistor_SMD:R_0603_1608Metric")   # N-FET gate pulldo
 R4 = fp(R(value="2M"),   "Resistor_SMD:R_0603_1608Metric")   # divider top  (VBAT -> SENSE)
 R5 = fp(R(value="1M"),   "Resistor_SMD:R_0603_1608Metric")   # divider bottom (SENSE -> GND)
 R6 = fp(R(value="330R"), "Resistor_SMD:R_0603_1608Metric")   # servo signal series
-R7 = fp(R(value="470R"), "Resistor_SMD:R_0603_1608Metric")   # LED data series
 
 C1 = fp(C(value="100nF"), "Capacitor_SMD:C_0603_1608Metric")          # sense tap
 C2 = fp(C(value="470uF"), "Capacitor_SMD:CP_Elec_6.3x5.4")            # servo bulk (polarized)
 C3 = fp(C(value="100nF"), "Capacitor_SMD:C_0603_1608Metric")          # servo decouple
 C4 = fp(C(value="10uF"),  "Capacitor_SMD:C_0805_2012Metric")         # VBAT bulk
-C5 = fp(C(value="100nF"), "Capacitor_SMD:C_0603_1608Metric")          # LED decouple
 
-D1 = fp(LED(value="SK6812"), "LED_SMD:LED_SK6812_PLCC4_5.0x5.0mm")
+# --- optional status LED (locate / battery / install indicator) ---
+if INCLUDE_LED:
+    R7 = fp(R(value="470R"), "Resistor_SMD:R_0603_1608Metric")   # LED data series
+    C5 = fp(C(value="100nF"), "Capacitor_SMD:C_0603_1608Metric")  # LED decouple
+    D1 = fp(LED(value="SK6812"), "LED_SMD:LED_SK6812_PLCC4_5.0x5.0mm")
 
 
 # ---------------------------------------------------------------- nets
 gnd        = Net("GND")
 vbat_raw   = Net("VBAT_RAW")   # battery + before the master switch
 vbat       = Net("VBAT")       # switched battery rail (system)
-v3v3       = Net("V3V3")       # XIAO 3V3 out -> LED Vdd
+v3v3       = Net("V3V3")       # XIAO 3V3 out -> LED Vdd (if fitted)
 servo_vcc  = Net("SERVO_VCC")  # P-FET drain -> servo power (gated)
 servo_sig  = Net("SERVO_SIG")  # at the servo connector
 sig_mcu    = Net("SERVO_SIG_MCU")
@@ -115,8 +125,9 @@ servo_en   = Net("SERVO_EN")   # GPIO21
 nfet_gate  = Net("NFET_GATE")
 pfet_gate  = Net("PFET_GATE")
 sense      = Net("VBAT_SENSE")
-led_din    = Net("LED_DIN")
-led_mcu    = Net("LED_DATA_MCU")
+if INCLUDE_LED:
+    led_din = Net("LED_DIN")
+    led_mcu = Net("LED_DATA_MCU")
 
 # --- battery input + master switch
 vbat_raw += JBAT[1]
@@ -167,14 +178,18 @@ gnd   += R5[2], C1[2]
 vbat += C4[1]
 gnd  += C4[2]
 
-# --- status / identify LED
-led_mcu += U1["5"]          # GPIO22
-R7[1] += led_mcu
-R7[2] += led_din            # 470R data series
-v3v3    += D1["VDD"], C5[1]
-gnd     += D1["GND"], C5[2]
-led_din += D1["DIN"]
-# D1 DOUT left unconnected (single LED)
+# --- status / identify LED (optional — see docs/battery-carrier-board.md
+#     "LED indicator (optional)" for the battery-life tradeoff). GPIO22
+#     is left unconnected on the no-LED variant.
+if INCLUDE_LED:
+    led_mcu += U1["5"]          # GPIO22
+    R7[1] += led_mcu
+    R7[2] += led_din            # 470R data series
+    v3v3    += D1["VDD"], C5[1]
+    gnd     += D1["GND"], C5[2]
+    led_din += D1["DIN"]
+    # D1 DOUT left unconnected (single LED)
 
-generate_netlist(file_="smart_vent.net")
-print("OK: wrote smart_vent.net")
+OUT_FILE = "smart_vent.net" if INCLUDE_LED else "smart_vent_no_led.net"
+generate_netlist(file_=OUT_FILE)
+print(f"OK: wrote {OUT_FILE} (LED {'included' if INCLUDE_LED else 'omitted'})")

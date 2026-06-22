@@ -1,0 +1,4 @@
+# SKiDL build artifacts from running smart_vent_board.py — regenerate, don't commit.
+*.erc
+*.log
+*_sklib.py

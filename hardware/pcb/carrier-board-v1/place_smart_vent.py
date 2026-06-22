@@ -13,6 +13,11 @@ HOW TO RUN (KiCad 7 / 8 / 9):
 It positions parts by reference, draws a 45 x 34 mm Edge.Cuts outline, and adds
 two M2.5 mounting holes as board cutouts. Nudge overlaps, then route to the plan.
 
+The status LED (D1/R7/C5) is optional (see smart_vent_board.py /
+docs/battery-carrier-board.md). If you imported smart_vent_no_led.net, those
+three refs won't exist on the board — this script warns and skips them, which
+is expected, not an error.
+
 Coordinates are board-relative mm (origin = top-left of the outline), offset onto
 the page by (ORIGIN_X, ORIGIN_Y). Y increases downward, matching the floorplan.
 """

@@ -5,10 +5,16 @@ don't (XIAO module, SM-2P battery connector), place everything per the
 floorplan, wire nets per smart_vent_board.py's connectivity, draw the
 board outline + mounting holes. Routing is intentionally NOT attempted —
 verifying placement/footprints/export is the goal here.
+
+Set SMART_VENT_LED=0 to build the no-LED variant (omits D1/R7/C5), matching
+smart_vent_no_led.net.
 """
+import os
 import wx
 _app = wx.App()
 import pcbnew
+
+INCLUDE_LED = os.environ.get("SMART_VENT_LED", "1") != "0"
 
 FPLIB = "/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints"
 
@@ -40,14 +46,15 @@ PARTS = {
     "R4":  ("Resistor_SMD", "R_0603_1608Metric", False),
     "R5":  ("Resistor_SMD", "R_0603_1608Metric", False),
     "R6":  ("Resistor_SMD", "R_0603_1608Metric", False),
-    "R7":  ("Resistor_SMD", "R_0603_1608Metric", False),
     "C1":  ("Capacitor_SMD", "C_0603_1608Metric", False),
     "C2":  ("Capacitor_THT", "CP_Radial_D8.0mm_P3.50mm", True),  # placeholder: exact CP_Elec_6.3x5.4 SMD not present, using closest stock part
     "C3":  ("Capacitor_SMD", "C_0603_1608Metric", False),
     "C4":  ("Capacitor_SMD", "C_0805_2012Metric", False),
-    "C5":  ("Capacitor_SMD", "C_0603_1608Metric", False),
-    "D1":  ("LED_SMD", "LED_SK6812_PLCC4_5.0x5.0mm_P3.2mm", False),
 }
+if INCLUDE_LED:
+    PARTS["R7"] = ("Resistor_SMD", "R_0603_1608Metric", False)
+    PARTS["C5"] = ("Capacitor_SMD", "C_0603_1608Metric", False)
+    PARTS["D1"] = ("LED_SMD", "LED_SK6812_PLCC4_5.0x5.0mm_P3.2mm", False)
 
 PLACE = {
     "U1":  (22.5, 11.5,   0),
@@ -85,12 +92,9 @@ for ref, (lib, name, is_placeholder) in PARTS.items():
         placeholders.append((ref, lib, name))
 
 # --- nets, mirroring smart_vent_board.py's connectivity ---
-NETS = {
-    "GND":        [("J1", 2), ("U1", 13 if False else 7), ("Q2", 2), ("J2", 3), ("C2", 2), ("C3", 2), ("R5", 2), ("C1", 2), ("C4", 2), ("D1", 3), ("C5", 2)],
-}
 # U1 is a 7-pin placeholder header (not the real 14-pad XIAO), so pin-exact
 # net wiring against it is not meaningful yet -- skip net assignment on U1
-# pending the real footprint. Wire everything else.
+# pending the real footprint (issue #45). Wire everything else.
 NETS = {
     "VBAT_RAW":  [("J1", 1), ("SW1", 1)],
     "VBAT":      [("SW1", 2), ("Q1", 2), ("R1", 1), ("R4", 1), ("C4", 1)],
@@ -101,12 +105,14 @@ NETS = {
     "SERVO_SIG_MCU": [("R6", 1)],
     "SERVO_SIG": [("R6", 2), ("J2", 1)],
     "VBAT_SENSE": [("R4", 2), ("R5", 1), ("C1", 1)],
-    "LED_DATA_MCU": [("R7", 1)],
-    "LED_DIN":   [("R7", 2), ("D1", 4)],
-    "V3V3":      [("D1", 1), ("C5", 1)],
     "GND":       [("J1", 2), ("Q2", 2), ("J2", 3), ("C2", 2), ("C3", 2), ("R5", 2),
-                  ("C1", 2), ("C4", 2), ("D1", 3), ("C5", 2)],
+                  ("C1", 2), ("C4", 2)],
 }
+if INCLUDE_LED:
+    NETS["LED_DATA_MCU"] = [("R7", 1)]
+    NETS["LED_DIN"] = [("R7", 2), ("D1", 4)]
+    NETS["V3V3"] = [("D1", 1), ("C5", 1)]
+    NETS["GND"] += [("D1", 3), ("C5", 2)]
 
 netinfo = board.GetNetInfo()
 for net_name, pads in NETS.items():
@@ -143,10 +149,11 @@ for cx, cy in [(3.0, 3.0), (42.0, 31.0)]:
     c.SetWidth(pcbnew.FromMM(0.15))
     board.Add(c)
 
-OUT = "/tmp/kicad-build/smart_vent_v1.kicad_pcb"
+OUT = "/tmp/kicad-build/smart_vent_v1.kicad_pcb" if INCLUDE_LED \
+    else "/tmp/kicad-build/smart_vent_v1_no_led.kicad_pcb"
 pcbnew.SaveBoard(OUT, board)
 print(f"Saved {OUT}")
-print(f"Placed {len(footprints)} footprints, {len(NETS)} nets wired.")
+print(f"Placed {len(footprints)} footprints, {len(NETS)} nets wired. LED {'included' if INCLUDE_LED else 'omitted'}.")
 if placeholders:
     print("PLACEHOLDER footprints (no exact stock-library match, need sourcing before fab):")
     for ref, lib, name in placeholders:

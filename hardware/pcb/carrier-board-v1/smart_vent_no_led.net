@@ -55,7 +55,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "CYgDp7wMSQ")
+          (name "SKiDL Tag") "a2NV4icoMK")
         (field
           (name "SKiDL Line") "smart_vent_board.py:104"))
       (libsource
@@ -65,7 +65,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "92ef0d5d-a58f-5bf7-86ff-bc85fdf730c8"))
+      (tstamps "81ca5a67-7750-5322-9661-87ba125146ad"))
     (comp
       (ref "C2")
       (value "470uF")
@@ -79,7 +79,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "ctwac_qtJD")
+          (name "SKiDL Tag") "hLvT7LCcOT")
         (field
           (name "SKiDL Line") "smart_vent_board.py:105"))
       (libsource
@@ -89,7 +89,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "f7899dae-d694-5996-b07e-73a9aa82642e"))
+      (tstamps "51106e79-afe1-5e8a-acdb-7411350fd28d"))
     (comp
       (ref "C3")
       (value "100nF")
@@ -103,7 +103,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "ng0x98L1C7")
+          (name "SKiDL Tag") "oqR4xkYVjL")
         (field
           (name "SKiDL Line") "smart_vent_board.py:106"))
       (libsource
@@ -113,7 +113,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "20ea4cc3-2c66-5003-ba22-2566e5e665bd"))
+      (tstamps "e39d03f7-a225-54ed-8527-808cda40330d"))
     (comp
       (ref "C4")
       (value "10uF")
@@ -127,7 +127,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "SBLJxsuilf")
+          (name "SKiDL Tag") "F9hCKCNvq0")
         (field
           (name "SKiDL Line") "smart_vent_board.py:107"))
       (libsource
@@ -137,55 +137,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "f561e0d8-e1fd-5399-ad02-96de4090d79d"))
-    (comp
-      (ref "C5")
-      (value "100nF")
-      (description "")
-      (footprint "Capacitor_SMD:C_0603_1608Metric")
-      (fields
-        (field
-          (name "Description"))
-        (field
-          (name "Footprint") "Capacitor_SMD:C_0603_1608Metric")
-        (field
-          (name "Datasheet"))
-        (field
-          (name "SKiDL Tag") "FN1ETQnbaz")
-        (field
-          (name "SKiDL Line") "smart_vent_board.py:112"))
-      (libsource
-        (lib "NO_LIB")
-        (part "C"))
-      (sheetpath
-        (names "/")
-        (tstamps "/"))
-      (component_classes)
-      (tstamps "ca6daf6c-3bc9-55f3-89f1-1816298fe536"))
-    (comp
-      (ref "D1")
-      (value "SK6812")
-      (description "")
-      (footprint "LED_SMD:LED_SK6812_PLCC4_5.0x5.0mm")
-      (fields
-        (field
-          (name "Description"))
-        (field
-          (name "Footprint") "LED_SMD:LED_SK6812_PLCC4_5.0x5.0mm")
-        (field
-          (name "Datasheet"))
-        (field
-          (name "SKiDL Tag") "8c4XGJce4U")
-        (field
-          (name "SKiDL Line") "smart_vent_board.py:113"))
-      (libsource
-        (lib "NO_LIB")
-        (part "SK6812"))
-      (sheetpath
-        (names "/")
-        (tstamps "/"))
-      (component_classes)
-      (tstamps "7999ea36-4cc8-588b-b671-ab7c7d07b0a0"))
+      (tstamps "37119c9d-c4ac-5463-a08f-1352d47d7e06"))
     (comp
       (ref "J1")
       (value "SM-2P battery")
@@ -199,7 +151,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "wqMGzQYr6S")
+          (name "SKiDL Tag") "FhDRNDXos1")
         (field
           (name "SKiDL Line") "smart_vent_board.py:87"))
       (libsource
@@ -209,7 +161,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "57cbc9c1-ae80-51ca-a542-e7145c108e41"))
+      (tstamps "5c906d53-05d8-5bdd-b972-7fba502462bd"))
     (comp
       (ref "J2")
       (value "SG90 servo")
@@ -223,7 +175,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "dYjJMkTThF")
+          (name "SKiDL Tag") "VKkQBzi_Y8")
         (field
           (name "SKiDL Line") "smart_vent_board.py:91"))
       (libsource
@@ -233,7 +185,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "79849cb9-4b9f-5eaa-b0b8-170898a8de6f"))
+      (tstamps "7d1b838f-4f45-576f-84d1-703f42beda9e"))
     (comp
       (ref "Q1")
       (value "AO3401A (P)")
@@ -247,7 +199,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "K4fItCwHBW")
+          (name "SKiDL Tag") "SgEQY354D0")
         (field
           (name "SKiDL Line") "smart_vent_board.py:94"))
       (libsource
@@ -257,7 +209,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "e8f97957-93f7-58c0-a528-fc0d8ee21f41"))
+      (tstamps "a22b0973-ef66-50c6-aa8b-18248b276dc9"))
     (comp
       (ref "Q2")
       (value "2N7002 (N)")
@@ -271,7 +223,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "tDy8vtxJwV")
+          (name "SKiDL Tag") "f6WO9mNve0")
         (field
           (name "SKiDL Line") "smart_vent_board.py:95"))
       (libsource
@@ -281,7 +233,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "93be067b-c150-5b28-91e5-a415fa9ea17a"))
+      (tstamps "898cc680-2789-5355-9ca6-16d32beba912"))
     (comp
       (ref "R1")
       (value "100k")
@@ -295,7 +247,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "BcKbRTcuDN")
+          (name "SKiDL Tag") "Vzmhel1WNx")
         (field
           (name "SKiDL Line") "smart_vent_board.py:97"))
       (libsource
@@ -305,7 +257,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "c3c5244b-229f-5d97-afae-e4aff748000e"))
+      (tstamps "8325d250-99d9-55a1-be83-f7543beb77e1"))
     (comp
       (ref "R2")
       (value "1k")
@@ -319,7 +271,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "voJ1flS3Sw")
+          (name "SKiDL Tag") "pEfjd63I8t")
         (field
           (name "SKiDL Line") "smart_vent_board.py:98"))
       (libsource
@@ -329,7 +281,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "624bde3d-bb3c-5cca-8401-dafe9ae56890"))
+      (tstamps "1191c4f2-2182-5451-9531-1f4ffcb77767"))
     (comp
       (ref "R3")
       (value "100k")
@@ -343,7 +295,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "7oZJXZ4_hp")
+          (name "SKiDL Tag") "1Qx9gixr91")
         (field
           (name "SKiDL Line") "smart_vent_board.py:99"))
       (libsource
@@ -353,7 +305,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "b712812a-b3ab-56db-a6ae-9d90027e7f6e"))
+      (tstamps "8ad13e48-b02b-5115-942d-0078481fc869"))
     (comp
       (ref "R4")
       (value "2M")
@@ -367,7 +319,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "uUb_14xaJq")
+          (name "SKiDL Tag") "vuZ0mG6VNH")
         (field
           (name "SKiDL Line") "smart_vent_board.py:100"))
       (libsource
@@ -377,7 +329,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "6fe1abf9-533d-5fb5-a136-e22b0592eb96"))
+      (tstamps "f271a4a1-00d2-53fd-85ec-0faec846734f"))
     (comp
       (ref "R5")
       (value "1M")
@@ -391,7 +343,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "F5QEkqFDds")
+          (name "SKiDL Tag") "n5xpKWY7LB")
         (field
           (name "SKiDL Line") "smart_vent_board.py:101"))
       (libsource
@@ -401,7 +353,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "a6044acd-7b91-56c7-8bc4-7eb3ef449a78"))
+      (tstamps "4d226068-021c-5a4c-a39e-343da4bf0ba3"))
     (comp
       (ref "R6")
       (value "330R")
@@ -415,7 +367,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "SnsR3fSABl")
+          (name "SKiDL Tag") "zk1A6zlVxh")
         (field
           (name "SKiDL Line") "smart_vent_board.py:102"))
       (libsource
@@ -425,31 +377,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "3b5dfc46-48ba-595b-ab8e-2563c29bc349"))
-    (comp
-      (ref "R7")
-      (value "470R")
-      (description "")
-      (footprint "Resistor_SMD:R_0603_1608Metric")
-      (fields
-        (field
-          (name "Description"))
-        (field
-          (name "Footprint") "Resistor_SMD:R_0603_1608Metric")
-        (field
-          (name "Datasheet"))
-        (field
-          (name "SKiDL Tag") "i9kdSPp1wk")
-        (field
-          (name "SKiDL Line") "smart_vent_board.py:111"))
-      (libsource
-        (lib "NO_LIB")
-        (part "R"))
-      (sheetpath
-        (names "/")
-        (tstamps "/"))
-      (component_classes)
-      (tstamps "e2139d4b-8112-56d4-b1c2-afee47d30660"))
+      (tstamps "71f94193-862d-5c67-ac1b-3c5a52c615f4"))
     (comp
       (ref "SW1")
       (value "SPST master")
@@ -463,7 +391,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "Di6fU9_5U2")
+          (name "SKiDL Tag") "JLA6ivF1tg")
         (field
           (name "SKiDL Line") "smart_vent_board.py:89"))
       (libsource
@@ -473,7 +401,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "fb85bd47-8023-59b4-a0bb-3c36680e3d8f"))
+      (tstamps "243bb54f-6ab7-5827-82b1-861a8320832b"))
     (comp
       (ref "U1")
       (value "XIAO ESP32-C6")
@@ -487,7 +415,7 @@
         (field
           (name "Datasheet"))
         (field
-          (name "SKiDL Tag") "ZsmUB3VaoQ")
+          (name "SKiDL Tag") "9qRiIBq_I6")
         (field
           (name "SKiDL Line") "smart_vent_board.py:84"))
       (libsource
@@ -497,7 +425,7 @@
         (names "/")
         (tstamps "/"))
       (component_classes)
-      (tstamps "e25d7a60-38fb-5824-a061-51c6d83a0252")))
+      (tstamps "6a14062c-cbad-5578-8df7-1510a361130c")))
   (nets
     (net
       (code 1)
@@ -518,14 +446,6 @@
       (node
         (ref "C4")
         (pin "2")
-        (pintype "PASSIVE"))
-      (node
-        (ref "C5")
-        (pin "2")
-        (pintype "PASSIVE"))
-      (node
-        (ref "D1")
-        (pin "3")
         (pintype "PASSIVE"))
       (node
         (ref "J1")
@@ -553,30 +473,6 @@
         (pintype "PASSIVE")))
     (net
       (code 2)
-      (name "LED_DATA_MCU")
-      (class "Default")
-      (node
-        (ref "R7")
-        (pin "1")
-        (pintype "PASSIVE"))
-      (node
-        (ref "U1")
-        (pin "5")
-        (pintype "PASSIVE")))
-    (net
-      (code 3)
-      (name "LED_DIN")
-      (class "Default")
-      (node
-        (ref "D1")
-        (pin "4")
-        (pintype "PASSIVE"))
-      (node
-        (ref "R7")
-        (pin "2")
-        (pintype "PASSIVE")))
-    (net
-      (code 4)
       (name "NFET_GATE")
       (class "Default")
       (node
@@ -592,7 +488,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 5)
+      (code 3)
       (name "PFET_GATE")
       (class "Default")
       (node
@@ -608,7 +504,7 @@
         (pin "2")
         (pintype "PASSIVE")))
     (net
-      (code 6)
+      (code 4)
       (name "SERVO_EN")
       (class "Default")
       (node
@@ -620,7 +516,7 @@
         (pin "4")
         (pintype "PASSIVE")))
     (net
-      (code 7)
+      (code 5)
       (name "SERVO_SIG")
       (class "Default")
       (node
@@ -632,7 +528,7 @@
         (pin "2")
         (pintype "PASSIVE")))
     (net
-      (code 8)
+      (code 6)
       (name "SERVO_SIG_MCU")
       (class "Default")
       (node
@@ -644,7 +540,7 @@
         (pin "3")
         (pintype "PASSIVE")))
     (net
-      (code 9)
+      (code 7)
       (name "SERVO_VCC")
       (class "Default")
       (node
@@ -664,23 +560,15 @@
         (pin "3")
         (pintype "PASSIVE")))
     (net
-      (code 10)
+      (code 8)
       (name "V3V3")
       (class "Default")
-      (node
-        (ref "C5")
-        (pin "1")
-        (pintype "PASSIVE"))
-      (node
-        (ref "D1")
-        (pin "1")
-        (pintype "PASSIVE"))
       (node
         (ref "U1")
         (pin "12")
         (pintype "PASSIVE")))
     (net
-      (code 11)
+      (code 9)
       (name "VBAT")
       (class "Default")
       (node
@@ -708,7 +596,7 @@
         (pin "14")
         (pintype "PASSIVE")))
     (net
-      (code 12)
+      (code 10)
       (name "VBAT_RAW")
       (class "Default")
       (node
@@ -720,7 +608,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 13)
+      (code 11)
       (name "VBAT_SENSE")
       (class "Default")
       (node

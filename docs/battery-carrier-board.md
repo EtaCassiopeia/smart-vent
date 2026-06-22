@@ -5,6 +5,11 @@
 > instead of USB, via a small carrier PCB. The circuit (parts, values, nets) is
 > done and machine-verified; physical layout/routing/Gerbers are not. See
 > [Current state](#current-state) for exactly what exists and what's left.
+>
+> **Two variants, pick one**: the status LED (§2a) is optional. Both a
+> with-LED and a no-LED build are generated from the same source and
+> tracked side by side — the no-LED variant trades away locate/status
+> feedback for a lower idle power draw and fewer placement conflicts.
 
 This is a variant of the wiring in [handbook.md §3](handbook.md) (XIAO +
 SG90 over USB power). Use this doc instead of the handbook's wiring table when
@@ -40,8 +45,8 @@ converter needed.
 ## 2. Power architecture
 
 ```
-        SM-2P                 ┌───── SK6812 LED  (status + identify)
-VBAT ──┤ in ├── master sw ──┬┴── XIAO 5V pin ── onboard LDO ── 3V3 ─→ C6 + LED Vdd
+        SM-2P                 ┌───── SK6812 LED  (status + identify) [OPTIONAL, see §2a]
+VBAT ──┤ in ├── master sw ──┬┴── XIAO 5V pin ── onboard LDO ── 3V3 ─→ C6 [+ LED Vdd if fitted]
        └─────┘              │
                              ├── 2M/1M divider ──→ A1 (GPIO1)   [pack voltage sense]
                              │
@@ -79,23 +84,70 @@ If your louver back-drives under its own weight (i.e. it doesn't hold
 position by friction alone once power is cut), leave `servo_en` asserted
 instead — one line of firmware, at the cost of ~10 mA continuous draw.
 
+## 2a. LED indicator (optional)
+
+The status LED (D1, plus R7/C5) is **optional** — omit it for the
+lowest-drain, lowest-part-count build. The tradeoff:
+
+- **Cost while fitted**: the SK6812's `VDD` is wired directly to the 3V3
+  rail (not power-gated like the servo), so the LED IC's own idle/listening
+  current draws continuously whenever the board is powered — small per the
+  datasheet (sub-mA), but nonzero, on top of whatever it draws during the
+  brief on-demand blinks described in §8. Over weeks on a 1000 mAh pack,
+  "small but always-on" is exactly the kind of draw the rest of this design
+  goes out of its way to avoid (see the servo power-gating discussion above).
+- **What you lose without it**: physically locating a specific vent among
+  several installed ones (the LED's primary job, see §8), and the
+  install/pairing/command-result/battery-state feedback that rides on the
+  same LED. None of this is safety-critical — the vent still opens/closes,
+  reports state to Matter/HA, and (per #50) can still drive a low-battery
+  *notification* in Home Assistant without any physical LED at all, since
+  that path goes through the Matter Power Source cluster, not the indicator.
+- **What it's worth keeping for**: if you're deploying more than a couple of
+  vents, "which physical vent is this" stops being obvious without it.
+  Single-vent builds have the least to gain from fitting it.
+
+Both variants are generated from the same source and tracked side by side:
+
+| | With LED | Without LED |
+|---|---|---|
+| Netlist | `smart_vent.net` | `smart_vent_no_led.net` |
+| Generate | `python3 smart_vent_board.py` | `SMART_VENT_LED=0 python3 smart_vent_board.py` |
+| Placement-checked board | `kicad-project/smart_vent_v1.kicad_pcb` | `kicad-project/smart_vent_v1_no_led.kicad_pcb` |
+| Parts omitted | — | D1 (SK6812), R7 (470Ω data series), C5 (100nF decouple) |
+| GPIO22 | wired to LED_DIN | unconnected, free for future use |
+| DRC findings (placement-only, unrouted) | 3 shorts, 8 courtyard overlaps | 1 short, 5 courtyard overlaps |
+
+Dropping the LED also happens to resolve most of the worst placement
+cluster DRC found in issue #46 (D1/C2/C3/C5/R7 were the tightest corner of
+the floorplan) — one less reason to fit it if you don't need it, on top of
+the battery argument.
+
+A future middle ground — power-gating the LED's `VDD` through its own
+small load switch, the same way the servo is gated — would close the
+"always-on idle draw" gap without removing the feature, at the cost of one
+more GPIO + transistor. Worth revisiting if the with-LED variant turns out
+to be popular; not done here since the ask was a clean on/off choice.
+
 ## 3. Connection map
 
 | XIAO pin | GPIO | Net | Purpose |
 |---|---|---|---|
 | 5V | VBUS | VBAT (via master switch) | board power in |
-| 3V3 | — | V3V3 | SK6812 Vdd |
+| 3V3 | — | V3V3 | SK6812 Vdd **(optional, see §2a)** |
 | GND | — | common / star ground | |
 | D2 | GPIO2 | SERVO_SIG | servo signal (existing — same pin the handbook's USB build uses) |
 | D1 / A1 | GPIO1 | VBAT_SENSE | divider tap, pack voltage sense |
 | D3 | GPIO21 | SERVO_EN | → 2N7002 gate (via 1k) |
-| D4 | GPIO22 | LED_DIN | → SK6812 data (via 470Ω) |
+| D4 | GPIO22 | LED_DIN **(optional)** | → SK6812 data (via 470Ω), unconnected/free if the LED is omitted |
 
 GPIO2 matches the existing firmware's servo pin
 (`firmware/vent-controller/src/main.rs`); GPIO1/21/22 are unused by the
 current build, so this slots in without conflicts.
 
 ## 4. Bill of materials
+
+Core (both variants):
 
 | Ref | Value / part | Footprint | Note |
 |---|---|---|---|
@@ -110,14 +162,20 @@ current build, so this slots in without conflicts.
 | R4 | 2 MΩ | R_0603 | divider top |
 | R5 | 1 MΩ | R_0603 | divider bottom (1:3 → A1) |
 | R6 | 330 Ω | R_0603 | servo signal series |
-| R7 | 470 Ω | R_0603 | LED data series |
-| C1, C3, C5 | 100 nF ×3, X7R | C_0603 | sense tap / servo decouple / LED decouple |
+| C1, C3 | 100 nF ×2, X7R | C_0603 | sense tap / servo decouple |
 | C2 | 470 µF, 10 V, electrolytic (polarized) | CP_Elec_6.3×5.4 | servo bulk cap — mount physically at J2, not at the XIAO |
 | C4 | 10 µF, X5R | C_0805 | VBAT bulk |
-| D1 | SK6812 RGB LED (5050), **not WS2812B** | SK6812 PLCC4 | locate + battery-state indicator; WS2812B's logic threshold is marginal at 3.3 V, SK6812 is reliable; **verify VDD/DOUT/GND/DIN = 1/2/3/4** |
 | — | 2× 1×7 female header, 2.54 mm | — | XIAO socket |
 | — | 2× M2.5 screws + standoffs | Ø2.7 mm cutouts | mounting |
 | ext | NiMH 4.8 V 1000 mAh pack (SM-2P) + SG90 | — | not on board |
+
+Add-on, only on the with-LED variant (see §2a for the tradeoff):
+
+| Ref | Value / part | Footprint | Note |
+|---|---|---|---|
+| R7 | 470 Ω | R_0603 | LED data series |
+| C5 | 100 nF, X7R | C_0603 | LED decouple |
+| D1 | SK6812 RGB LED (5050), **not WS2812B** | SK6812 PLCC4 | locate + battery-state indicator; WS2812B's logic threshold is marginal at 3.3 V, SK6812 is reliable; **verify VDD/DOUT/GND/DIN = 1/2/3/4** |
 
 The three "verify" callouts above are the only things that need eyes before
 routing — a wrong pin order on any of them silently miswires the board.
@@ -127,7 +185,9 @@ routing — a wrong pin order on any of them silently miswires the board.
 The board is 45×34 mm, 2-layer, 1.6 mm. Floorplan: analog/signal cluster on
 the left (near the XIAO's D1–D4 pins), high-current power cluster on the
 right (near 5V/GND), servo connector on the bottom edge, LED in the corner
-facing outward (so "find this vent" is visible through the enclosure). See
+facing outward (so "find this vent" is visible through the enclosure) — only
+on the with-LED variant; the no-LED variant simply leaves that corner empty
+(and has noticeably fewer placement conflicts there, see §9). See
 `hardware/pcb/carrier-board-v1/smart_vent_floorplan.svg` for the diagram.
 
 Five rules that matter more than exact placement:
@@ -171,10 +231,11 @@ SERVO_VCC, GND) at 0.9 mm track / 0.6-0.3 mm via; Default (signals) at
 
 ## 7. Assembly order and smoke test
 
-Assembly order: flattest SMD passives first (R1–R7, C1, C3, C4, C5) → SOT-23s
-(Q1, Q2 — double-check G/S/D) → D1 (watch corner orientation) → C2
-electrolytic (stripe = −) → through-hole parts (J1, J2, SW1) → solder the two
-female headers → socket the XIAO last (don't solder it down).
+Assembly order: flattest SMD passives first (R1–R6, C1, C3, C4, plus R7/C5
+if the LED is fitted) → SOT-23s (Q1, Q2 — double-check G/S/D) → D1 if fitted
+(watch corner orientation) → C2 electrolytic (stripe = −) → through-hole
+parts (J1, J2, SW1) → solder the two female headers → socket the XIAO last
+(don't solder it down).
 
 Before powering with the XIAO socketed, with just the bare board + battery:
 
@@ -224,6 +285,15 @@ firmware crate's current `0.45` pin in `Cargo.toml`):
   on-demand LED budget from §2. See the `Event`/`InstallState` enums in
   `indicator.rs` for the full state list.
 
+The whole `indicator` module — and everything that calls into it — only
+applies to the with-LED build. On the no-LED variant, skip pulling in
+`indicator.rs`, the `smart_leds`/`ws2812-esp32-rmt-driver` dependencies, and
+any call sites that would otherwise call `Indicator::show(...)`; `servo` and
+`battery` are unaffected either way. If/when this gets wired into the real
+crate (#47), gate it behind a Cargo feature (e.g. `led-indicator`) so a
+no-LED firmware build doesn't carry the dependency or try to drive a pin
+that isn't populated.
+
 Two spots are flagged `// VERSION:` in the file because the relevant crate
 APIs (the ADC oneshot config, and `Ws2812Esp32Rmt::new`'s signature) have
 churned across `esp-idf-hal`/`ws2812-esp32-rmt-driver` versions — confirm
@@ -239,8 +309,10 @@ built or flashed — treat it as a starting point, not drop-in code.
 What's done and machine-verified:
 
 - **Circuit topology** — captured as a SKiDL script
-  (`smart_vent_board.py`), 19 parts / 13 nets, re-running it regenerates a
-  byte-identical netlist (modulo random tags/timestamps), 0 errors.
+  (`smart_vent_board.py`), with the LED indicator as a toggle
+  (`SMART_VENT_LED=0`): 19 parts / 13 nets with LED, 16 parts / 10 nets
+  without. Re-running either variant regenerates a byte-identical netlist
+  (modulo random tags/timestamps), 0 errors.
 - **Connectivity** — manually audited net-by-net: GND collects all returns,
   VBAT correctly feeds the 5V pin / P-FET source / divider / pullup, the
   gate chain is right, the sense divider lands on GPIO1.
@@ -255,8 +327,9 @@ What's done and machine-verified:
   against a live board in this pass (no `pcbnew` outside the KiCad GUI).
 
 Since the first pass at this doc, a placement-verified (but unrouted)
-`.kicad_pcb` has been generated against KiCad 10.0.4 and machine-checked —
-see `hardware/pcb/carrier-board-v1/kicad-project/`. That run confirmed two
+`.kicad_pcb` has been generated against KiCad 10.0.4 and machine-checked,
+**for both the with-LED and no-LED variants** — see
+`hardware/pcb/carrier-board-v1/kicad-project/`. That run confirmed two
 of the three footprint pinouts flagged below against real stock-library
 parts (SOT-23 pad geometry and the SK6812 PLCC4 pad order both match what
 the netlist assumed), and surfaced findings the original sketch couldn't
@@ -266,15 +339,20 @@ catch:
   hobby-RC "SM-2P" battery connector, or the exact `CP_Elec_6.3x5.4` cap
   footprint.** All three need sourcing (or a substitute part) before
   routing — see the placeholder table in
-  `kicad-project/README.md`.
-- **The floorplan coordinates are too tight at real footprint sizes.**
-  DRC found 3 actual copper-to-copper shorts and 8 courtyard overlaps
-  around the LED/servo-cap cluster (D1/C2/C3/C5/R7) and a few other pairs
-  (R1/R2, SW1/J1, Q1/Q2) — the floorplan's left/right/bottom *zoning* is
-  still correct, the exact coordinates just need spreading apart. Full
-  details in `kicad-project/drc_report.json`.
-- **The Gerber/drill export pipeline is confirmed working** against this
-  unrouted board — the JLCPCB-compatible layer set in §6 plots correctly.
+  `kicad-project/README.md`. (Applies to both variants.)
+- **The floorplan coordinates are too tight at real footprint sizes** —
+  more so on the with-LED variant. DRC against `smart_vent_v1.kicad_pcb`
+  (with LED) found 3 actual copper-to-copper shorts and 8 courtyard
+  overlaps, most of them in the D1/C2/C3/C5/R7 cluster; DRC against
+  `smart_vent_v1_no_led.kicad_pcb` (no LED) found only 1 short and 5
+  overlaps — confirming that dropping the LED removes most of the worst
+  cluster. The floorplan's left/right/bottom *zoning* is still correct in
+  both cases, the exact coordinates just need spreading apart. Full
+  details in `kicad-project/drc_report.json` (with LED) and
+  `kicad-project/drc_report_no_led.json` (without).
+- **The Gerber/drill export pipeline is confirmed working** against the
+  unrouted with-LED board — the JLCPCB-compatible layer set in §6 plots
+  correctly.
 
 What's still **not** done — this is placement-verified, not fab-ready:
 
@@ -289,8 +367,8 @@ What's still **not** done — this is placement-verified, not fab-ready:
 Follow-up work is tracked as GitHub issues (footprint sourcing, placement
 re-spacing + routing, firmware integration of `power_indicator.rs`).
 
-Next concrete step: open
-`hardware/pcb/carrier-board-v1/kicad-project/smart_vent_v1.kicad_pcb` in
-KiCad, source/swap in the three missing footprints, spread out the
-overlapping parts per the DRC report, route to the rules in §5, run DRC
-again, then plot Gerbers per §6.
+Next concrete step: pick a variant (§2a), open the matching
+`.kicad_pcb` in `hardware/pcb/carrier-board-v1/kicad-project/` in KiCad,
+source/swap in the three missing footprints, spread out the overlapping
+parts per the matching DRC report, route to the rules in §5, run DRC again,
+then plot Gerbers per §6.
