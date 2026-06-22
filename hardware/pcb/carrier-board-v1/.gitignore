@@ -2,3 +2,7 @@
 *.erc
 *.log
 *_sklib.py
+
+# KiCad per-user local project state (layer visibility, selection filters) —
+# not shared config, regenerated automatically on open.
+*.kicad_prl
