@@ -12,6 +12,7 @@
 #include <app/clusters/window-covering-server/window-covering-server.h>
 #include <app/clusters/window-covering-server/window-covering-delegate.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
+#include <app-common/zap-generated/cluster-enums.h>
 
 static const char *TAG = "matter_bridge";
 
@@ -168,6 +169,24 @@ int matter_bridge_init(matter_position_cb_t position_cb,
         }
     }
 
+    // Add a Power Source cluster (Battery feature) to the same endpoint, so
+    // battery-powered builds can report charge level/percentage and HA's
+    // Matter integration surfaces a battery sensor entity (issue #50). Safe
+    // to add on USB-powered builds too -- matter_bridge_update_battery()
+    // just won't be called for those, so it stays at its default (Ok, 0%).
+    {
+        cluster::power_source::config_t ps_config;
+        ps_config.battery.bat_charge_level = static_cast<uint8_t>(PowerSource::BatChargeLevelEnum::kOk);
+        cluster_t *ps_cluster = cluster::power_source::create(
+            ep, &ps_config, CLUSTER_FLAG_SERVER,
+            static_cast<uint32_t>(PowerSource::Feature::kBattery));
+        if (ps_cluster) {
+            ESP_LOGI(TAG, "PowerSource cluster added (Battery feature)");
+        } else {
+            ESP_LOGE(TAG, "Could not add PowerSource cluster");
+        }
+    }
+
     // Set Basic Information cluster attributes
     endpoint_t *root_ep = endpoint::get_first(s_node);
     if (root_ep) {
@@ -242,6 +261,21 @@ void matter_bridge_update_operational_status(uint8_t status)
     esp_matter_attr_val_t val = esp_matter_uint8(status);
     attribute::update(s_endpoint_id, WindowCovering::Id,
                      WindowCovering::Attributes::OperationalStatus::Id, &val);
+}
+
+void matter_bridge_update_battery(uint8_t bat_charge_level, uint8_t bat_percent)
+{
+    ESP_LOGI(TAG, "Reporting battery: level=%u percent=%u", bat_charge_level, bat_percent);
+
+    esp_matter_attr_val_t level_val = esp_matter_uint8(bat_charge_level);
+    attribute::update(s_endpoint_id, PowerSource::Id,
+                     PowerSource::Attributes::BatChargeLevel::Id, &level_val);
+
+    // BatPercentRemaining is nullable, in half-percent units (0-200 = 0-100%).
+    uint8_t half_percent = (bat_percent > 100 ? 100 : bat_percent) * 2;
+    esp_matter_attr_val_t pct_val = esp_matter_nullable_uint8(nullable<uint8_t>(half_percent));
+    attribute::update(s_endpoint_id, PowerSource::Id,
+                     PowerSource::Attributes::BatPercentRemaining::Id, &pct_val);
 }
 
 bool matter_bridge_is_commissioned(void)
