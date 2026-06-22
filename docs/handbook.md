@@ -255,6 +255,11 @@ The XIAO's onboard USB Serial/JTAG enumerates as `/dev/ttyACM0` (vendor:product
 `303a:1001`, "Espressif USB JTAG/serial debug unit"). espflash uses the same
 port — no separate UART adapter needed.
 
+This is the USB-powered wiring. For a battery-powered build (4-cell NiMH pack,
+no USB tether), see [battery-carrier-board.md](battery-carrier-board.md) for
+the carrier PCB design, BOM, and firmware integration notes — it's a separate
+power path, not a replacement for the wiring above.
+
 The USB-hub gotcha is one of the more annoying ones in this project: the chain
 provides power but not data. Always plug the XIAO directly into a Pi USB port.
 `lsusb -d 303a:` will return blank if it's going through the hub.

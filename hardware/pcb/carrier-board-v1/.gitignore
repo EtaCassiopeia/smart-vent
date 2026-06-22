@@ -1,0 +1,13 @@
+# SKiDL build artifacts from running smart_vent_board.py — regenerate, don't commit.
+*.erc
+*.log
+*_sklib.py
+
+# KiCad per-user local project state (layer visibility, selection filters) —
+# not shared config, regenerated automatically on open.
+*.kicad_prl
+
+# KiCad's built-in file-history feature (its own nested git repo) and lock
+# files — local-machine artifacts, never shared config.
+.history/
+~*.lck
