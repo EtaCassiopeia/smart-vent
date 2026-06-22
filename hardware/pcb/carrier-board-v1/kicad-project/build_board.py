@@ -47,7 +47,7 @@ PARTS = {
     "R5":  ("Resistor_SMD", "R_0603_1608Metric", False),
     "R6":  ("Resistor_SMD", "R_0603_1608Metric", False),
     "C1":  ("Capacitor_SMD", "C_0603_1608Metric", False),
-    "C2":  ("Capacitor_THT", "CP_Radial_D8.0mm_P3.50mm", True),  # placeholder: exact CP_Elec_6.3x5.4 SMD not present, using closest stock part
+    "C2":  ("Capacitor_SMD", "CP_Elec_6.3x5.4", False),  # exact match -- it IS in stock libs, just under Capacitor_SMD.pretty (earlier search missed it)
     "C3":  ("Capacitor_SMD", "C_0603_1608Metric", False),
     "C4":  ("Capacitor_SMD", "C_0805_2012Metric", False),
 }
@@ -71,9 +71,9 @@ if INCLUDE_LED:
         "Q1":  (37.82, 16.32,  0),
         "Q2":  (42.02, 18.0,   0),
         "R1":  (34.82, 15.27, 90),
-        "R2":  (33.01, 16.78, 90),
+        "R2":  (33.01, 16.38, 90),
         "R3":  (42.12, 21.74,  0),
-        "C2":  (32.82, 22.86,  0),
+        "C2":  (32.82, 21.7,   0),
         "C3":  (43.23, 24.33, 90),
         "R6":  ( 6.0,  9.0,  90),
         "R4":  ( 4.0, 18.0,  90),

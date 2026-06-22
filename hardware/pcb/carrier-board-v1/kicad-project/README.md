@@ -71,11 +71,18 @@ electrical concern.
 
 ## Footprints with no exact stock match (placeholders, need sourcing — issue #45)
 
+**C2 is resolved** — `Capacitor_SMD:CP_Elec_6.3x5.4` exists after all; the
+first pass's library search missed it (it's filed under
+`Capacitor_SMD.pretty`, not a separate electrolytic library). It's now the
+real footprint on both boards (courtyard 9.69×7.19mm — similar area to the
+THT stand-in it replaced, not smaller as originally assumed; needed one
+follow-up nudge to R2 to clear a new, smaller overlap once the real shape
+went in). Two placeholders remain:
+
 | Ref | Part | Stand-in used | What's actually needed |
 |---|---|---|---|
 | U1 | Seeed XIAO ESP32-C6 | generic 1×7 pin header | The official Seeed XIAO footprint (KiCad's stock libraries only ship `MCU_Seeed_ESP32C3`, not the XIAO carrier module). Source from Seeed's own KiCad library or via `easyeda2kicad` against the LCSC part. Its odd placeholder shape is also why J2 needed the manual nudge above — expect to revisit J2's exact position once the real footprint lands. |
-| J1 | "SM-2P" battery connector | generic 1×2 pin header | The hobby-RC "JST-SM" 2-pin plug is not a real JST series (despite the name) and isn't in KiCad's `Connector_JST.pretty`. Needs a footprint sourced from the connector's actual datasheet/LCSC listing, or substitute a connector that *is* in-library (e.g. a real `JST_PH` 2-pin) and adjust the BOM. |
-| C2 | 470 µF / 10 V electrolytic | `CP_Radial_D8.0mm_P3.50mm` (THT) | The SMD `CP_Elec_6.3x5.4` footprint the original netlist specified isn't in this KiCad install's stock library — confirm it exists in a newer/different library (it's much smaller than the THT stand-in, which would free up real estate in the power cluster), or commit to the THT radial substitute. |
+| J1 | "SM-2P" battery connector | generic 1×2 pin header | The hobby-RC "JST-SM" 2-pin plug is not a real JST series (despite the name) and isn't in KiCad's `Connector_JST.pretty` (checked `JST_PH`/`JST_VH`/`JST_GH` series specifically — none match). Needs a footprint sourced from the connector's actual datasheet/LCSC listing (e.g. via `easyeda2kicad` against a specific part number once you've picked the exact connector to buy), or substitute a connector that *is* in-library and adjust the BOM. |
 
 ## What's left (tracked in #46)
 

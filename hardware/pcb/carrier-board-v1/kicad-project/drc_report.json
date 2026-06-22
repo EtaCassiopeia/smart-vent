@@ -1,7 +1,7 @@
 {
     "$schema": "https://schemas.kicad.org/drc.v1.json",
     "coordinate_units": "mm",
-    "date": "2026-06-22T12:48:56",
+    "date": "2026-06-22T13:13:52",
     "ignored_checks": [
         {
             "description": "Footprint has no courtyard defined",
@@ -36,357 +36,12 @@
             "description": "Missing connection between items",
             "items": [
                 {
-                    "description": "Pad 2 [SERVO_SIG] of R6 on F.Cu",
-                    "pos": {
-                        "x": 36.0,
-                        "y": 38.175
-                    },
-                    "uuid": "b71af742-4157-44cf-ab9f-54019a9d002e"
-                },
-                {
-                    "description": "PTH pad 1 [SERVO_SIG] of J2",
-                    "pos": {
-                        "x": 58.0,
-                        "y": 57.5
-                    },
-                    "uuid": "85dc95d6-16a8-4824-b609-0654b38fd066"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "PTH pad 1 [SERVO_VCC] of C2",
-                    "pos": {
-                        "x": 62.82,
-                        "y": 52.86
-                    },
-                    "uuid": "e5fa7c49-2f6b-44a9-9f0e-910bc7d2130f"
-                },
-                {
-                    "description": "PTH pad 2 [SERVO_VCC] of J2",
-                    "pos": {
-                        "x": 58.0,
-                        "y": 60.04
-                    },
-                    "uuid": "3f8defc0-a435-4ac3-a8ba-feedc1a8541a"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 3 [SERVO_VCC] of Q1 on F.Cu",
-                    "pos": {
-                        "x": 68.7575,
-                        "y": 46.32
-                    },
-                    "uuid": "85b83f56-8634-4be1-af19-4fdb44902448"
-                },
-                {
-                    "description": "PTH pad 1 [SERVO_VCC] of C2",
-                    "pos": {
-                        "x": 62.82,
-                        "y": 52.86
-                    },
-                    "uuid": "e5fa7c49-2f6b-44a9-9f0e-910bc7d2130f"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 1 [SERVO_VCC] of C3 on F.Cu",
-                    "pos": {
-                        "x": 73.229999,
-                        "y": 55.105
-                    },
-                    "uuid": "3d289e54-9b6d-40bd-ab81-090f22026d17"
-                },
-                {
-                    "description": "Pad 3 [SERVO_VCC] of Q1 on F.Cu",
-                    "pos": {
-                        "x": 68.7575,
-                        "y": 46.32
-                    },
-                    "uuid": "85b83f56-8634-4be1-af19-4fdb44902448"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 2 [GND] of C1 on F.Cu",
-                    "pos": {
-                        "x": 37.5,
-                        "y": 48.725
-                    },
-                    "uuid": "236a6a5d-db24-4d1e-a714-c11429d35414"
-                },
-                {
-                    "description": "Pad 2 [GND] of R5 on F.Cu",
-                    "pos": {
-                        "x": 34.0,
-                        "y": 50.175
-                    },
-                    "uuid": "cadf3485-be6e-4b8c-8c55-e9988a55c004"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "PTH pad 3 [GND] of J2",
-                    "pos": {
-                        "x": 58.0,
-                        "y": 62.58
-                    },
-                    "uuid": "343aceff-fde9-4491-9c3c-8aa43a8f8cb6"
-                },
-                {
-                    "description": "Pad 3 [GND] of D1 on F.Cu",
-                    "pos": {
-                        "x": 67.72,
-                        "y": 61.8
-                    },
-                    "uuid": "7e55e170-785c-4529-af61-944f2986fcd6"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "PTH pad 3 [GND] of J2",
-                    "pos": {
-                        "x": 58.0,
-                        "y": 62.58
-                    },
-                    "uuid": "343aceff-fde9-4491-9c3c-8aa43a8f8cb6"
-                },
-                {
-                    "description": "Pad 2 [GND] of C1 on F.Cu",
-                    "pos": {
-                        "x": 37.5,
-                        "y": 48.725
-                    },
-                    "uuid": "236a6a5d-db24-4d1e-a714-c11429d35414"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "PTH pad 2 [GND] of C2",
-                    "pos": {
-                        "x": 66.32,
-                        "y": 52.86
-                    },
-                    "uuid": "d9acf142-4be3-4ba2-b7db-9df631b4f3fd"
-                },
-                {
-                    "description": "Pad 2 [GND] of C5 on F.Cu",
-                    "pos": {
-                        "x": 69.93,
-                        "y": 55.955
-                    },
-                    "uuid": "963dd233-2fb8-429c-8341-0c25e7bdba96"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "PTH pad 2 [GND] of J1",
-                    "pos": {
-                        "x": 66.49,
-                        "y": 37.54
-                    },
-                    "uuid": "13b7ac6e-cea0-4f88-a1eb-f42cf4fd6edb"
-                },
-                {
-                    "description": "Pad 2 [GND] of C4 on F.Cu",
-                    "pos": {
-                        "x": 63.62,
-                        "y": 36.0
-                    },
-                    "uuid": "185b11f0-aa9b-4289-aa4c-4955f7ca528c"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "PTH pad 2 [GND] of J1",
-                    "pos": {
-                        "x": 66.49,
-                        "y": 37.54
-                    },
-                    "uuid": "13b7ac6e-cea0-4f88-a1eb-f42cf4fd6edb"
-                },
-                {
-                    "description": "Pad 2 [GND] of Q2 on F.Cu",
-                    "pos": {
-                        "x": 71.0825,
-                        "y": 48.95
-                    },
-                    "uuid": "dafef67e-21b3-4114-b831-b1e316c8f6f9"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 2 [GND] of C5 on F.Cu",
-                    "pos": {
-                        "x": 69.93,
-                        "y": 55.955
-                    },
-                    "uuid": "963dd233-2fb8-429c-8341-0c25e7bdba96"
-                },
-                {
-                    "description": "Pad 3 [GND] of D1 on F.Cu",
-                    "pos": {
-                        "x": 67.72,
-                        "y": 61.8
-                    },
-                    "uuid": "7e55e170-785c-4529-af61-944f2986fcd6"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 2 [GND] of C3 on F.Cu",
-                    "pos": {
-                        "x": 73.229999,
-                        "y": 53.555
-                    },
-                    "uuid": "610884f6-d845-4918-bb6c-baf940b802a4"
-                },
-                {
-                    "description": "Pad 2 [GND] of C5 on F.Cu",
-                    "pos": {
-                        "x": 69.93,
-                        "y": 55.955
-                    },
-                    "uuid": "963dd233-2fb8-429c-8341-0c25e7bdba96"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 2 [GND] of C3 on F.Cu",
-                    "pos": {
-                        "x": 73.229999,
-                        "y": 53.555
-                    },
-                    "uuid": "610884f6-d845-4918-bb6c-baf940b802a4"
-                },
-                {
-                    "description": "Pad 2 [GND] of Q2 on F.Cu",
-                    "pos": {
-                        "x": 71.0825,
-                        "y": 48.95
-                    },
-                    "uuid": "dafef67e-21b3-4114-b831-b1e316c8f6f9"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 2 [PFET_GATE] of R1 on F.Cu",
-                    "pos": {
-                        "x": 64.819999,
-                        "y": 44.444999
-                    },
-                    "uuid": "3c09835e-4d24-4d60-93de-2cbd5a4f5dd6"
-                },
-                {
-                    "description": "Pad 1 [PFET_GATE] of Q1 on F.Cu",
-                    "pos": {
-                        "x": 66.8825,
-                        "y": 45.37
-                    },
-                    "uuid": "79b18536-4a21-484b-b3be-a42f360af61c"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 1 [PFET_GATE] of Q1 on F.Cu",
-                    "pos": {
-                        "x": 66.8825,
-                        "y": 45.37
-                    },
-                    "uuid": "79b18536-4a21-484b-b3be-a42f360af61c"
-                },
-                {
-                    "description": "Pad 3 [PFET_GATE] of Q2 on F.Cu",
-                    "pos": {
-                        "x": 72.9575,
-                        "y": 48.0
-                    },
-                    "uuid": "f46edf3b-4689-4f4b-9edd-d931ff0b224a"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
                     "description": "Pad 1 [VBAT] of C4 on F.Cu",
                     "pos": {
                         "x": 61.72,
                         "y": 36.0
                     },
-                    "uuid": "691019c6-5ae5-4dc0-ac9d-a88139a7facc"
+                    "uuid": "d844b11c-b610-4ba4-a686-4bd0e1218156"
                 },
                 {
                     "description": "Pad 1 [VBAT] of R1 on F.Cu",
@@ -394,7 +49,7 @@
                         "x": 64.819999,
                         "y": 46.094999
                     },
-                    "uuid": "aa78c6d5-c6ac-4db2-bb04-710108e3e5c2"
+                    "uuid": "8bf9db53-d996-4867-a741-190d2912d189"
                 }
             ],
             "severity": "error",
@@ -409,7 +64,7 @@
                         "x": 61.72,
                         "y": 36.0
                     },
-                    "uuid": "691019c6-5ae5-4dc0-ac9d-a88139a7facc"
+                    "uuid": "d844b11c-b610-4ba4-a686-4bd0e1218156"
                 },
                 {
                     "description": "Pad 1 [VBAT] of R4 on F.Cu",
@@ -417,7 +72,7 @@
                         "x": 34.0,
                         "y": 48.825
                     },
-                    "uuid": "e4d92ff1-98cf-4fcf-a0fd-ae11d9db387d"
+                    "uuid": "8bfbb132-5a96-4eee-aeab-92a8c5ff198b"
                 }
             ],
             "severity": "error",
@@ -432,7 +87,7 @@
                         "x": 64.819999,
                         "y": 46.094999
                     },
-                    "uuid": "aa78c6d5-c6ac-4db2-bb04-710108e3e5c2"
+                    "uuid": "8bf9db53-d996-4867-a741-190d2912d189"
                 },
                 {
                     "description": "Pad 2 [VBAT] of Q1 on F.Cu",
@@ -440,7 +95,7 @@
                         "x": 66.8825,
                         "y": 47.27
                     },
-                    "uuid": "6f4eaae8-2cbd-40c1-9997-8f088f85f2ae"
+                    "uuid": "b98574e7-999a-4a63-aa2e-359c98de245b"
                 }
             ],
             "severity": "error",
@@ -455,7 +110,7 @@
                         "x": 71.28,
                         "y": 35.29
                     },
-                    "uuid": "e7092042-2a71-4d17-8135-b1297156a297"
+                    "uuid": "8d0cd7ed-8c20-459c-930b-c7ad054f235d"
                 },
                 {
                     "description": "Pad 1 [VBAT] of C4 on F.Cu",
@@ -463,7 +118,7 @@
                         "x": 61.72,
                         "y": 36.0
                     },
-                    "uuid": "691019c6-5ae5-4dc0-ac9d-a88139a7facc"
+                    "uuid": "d844b11c-b610-4ba4-a686-4bd0e1218156"
                 }
             ],
             "severity": "error",
@@ -473,112 +128,204 @@
             "description": "Missing connection between items",
             "items": [
                 {
-                    "description": "Pad 1 [V3V3] of D1 on F.Cu",
-                    "pos": {
-                        "x": 62.82,
-                        "y": 58.6
-                    },
-                    "uuid": "24283000-6893-4b63-b273-be1771cb75e9"
-                },
-                {
-                    "description": "Pad 1 [V3V3] of C5 on F.Cu",
-                    "pos": {
-                        "x": 69.93,
-                        "y": 57.505
-                    },
-                    "uuid": "8eb6aa5b-0de0-4b04-ac70-495b0be56123"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 1 [NFET_GATE] of Q2 on F.Cu",
-                    "pos": {
-                        "x": 71.0825,
-                        "y": 47.05
-                    },
-                    "uuid": "f206b1db-8ed8-4ff3-847e-59529877c33f"
-                },
-                {
-                    "description": "Pad 2 [NFET_GATE] of R2 on F.Cu",
-                    "pos": {
-                        "x": 63.01,
-                        "y": 45.955
-                    },
-                    "uuid": "21617f8c-5f58-4491-abb3-e118823445e7"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 1 [NFET_GATE] of R3 on F.Cu",
-                    "pos": {
-                        "x": 71.295,
-                        "y": 51.739999
-                    },
-                    "uuid": "0fff6b79-a064-436c-8af1-c434e2bc6034"
-                },
-                {
-                    "description": "Pad 1 [NFET_GATE] of Q2 on F.Cu",
-                    "pos": {
-                        "x": 71.0825,
-                        "y": 47.05
-                    },
-                    "uuid": "f206b1db-8ed8-4ff3-847e-59529877c33f"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 2 [VBAT_SENSE] of R4 on F.Cu",
-                    "pos": {
-                        "x": 34.0,
-                        "y": 47.175
-                    },
-                    "uuid": "e0428a0c-5672-4ffd-9be6-48f2ab97e872"
-                },
-                {
-                    "description": "Pad 1 [VBAT_SENSE] of R5 on F.Cu",
-                    "pos": {
-                        "x": 34.0,
-                        "y": 51.825
-                    },
-                    "uuid": "62a78691-278a-47ad-b78b-801be9d9f198"
-                }
-            ],
-            "severity": "error",
-            "type": "unconnected_items"
-        },
-        {
-            "description": "Missing connection between items",
-            "items": [
-                {
-                    "description": "Pad 1 [VBAT_SENSE] of R5 on F.Cu",
-                    "pos": {
-                        "x": 34.0,
-                        "y": 51.825
-                    },
-                    "uuid": "62a78691-278a-47ad-b78b-801be9d9f198"
-                },
-                {
-                    "description": "Pad 1 [VBAT_SENSE] of C1 on F.Cu",
+                    "description": "Pad 2 [GND] of C1 on F.Cu",
                     "pos": {
                         "x": 37.5,
-                        "y": 50.275
+                        "y": 48.725
                     },
-                    "uuid": "b1f49f0c-158f-4621-bcda-a84116c6ee38"
+                    "uuid": "2bec892e-6f92-4df7-80b0-333c9bf2ead5"
+                },
+                {
+                    "description": "Pad 2 [GND] of R5 on F.Cu",
+                    "pos": {
+                        "x": 34.0,
+                        "y": 50.175
+                    },
+                    "uuid": "5af0fc7f-1c4e-4de9-ad6e-6833d1e1e842"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of C1 on F.Cu",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 48.725
+                    },
+                    "uuid": "2bec892e-6f92-4df7-80b0-333c9bf2ead5"
+                },
+                {
+                    "description": "PTH pad 3 [GND] of J2",
+                    "pos": {
+                        "x": 58.0,
+                        "y": 62.58
+                    },
+                    "uuid": "d0105782-7b0f-42f0-b520-99cb6093ef29"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 3 [GND] of J2",
+                    "pos": {
+                        "x": 58.0,
+                        "y": 62.58
+                    },
+                    "uuid": "d0105782-7b0f-42f0-b520-99cb6093ef29"
+                },
+                {
+                    "description": "Pad 3 [GND] of D1 on F.Cu",
+                    "pos": {
+                        "x": 67.72,
+                        "y": 61.8
+                    },
+                    "uuid": "eacb051b-1f1b-4dd4-8973-3f843ba706ec"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of C2 on F.Cu",
+                    "pos": {
+                        "x": 65.62,
+                        "y": 51.7
+                    },
+                    "uuid": "adf8d232-35e7-4865-a427-c799c7f732ec"
+                },
+                {
+                    "description": "Pad 2 [GND] of C5 on F.Cu",
+                    "pos": {
+                        "x": 69.93,
+                        "y": 55.955
+                    },
+                    "uuid": "9780ebdc-2c92-484b-bfec-db7ff952f3e1"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 2 [GND] of J1",
+                    "pos": {
+                        "x": 66.49,
+                        "y": 37.54
+                    },
+                    "uuid": "695ccaa1-f278-4352-a699-0fa991fd5e85"
+                },
+                {
+                    "description": "Pad 2 [GND] of C4 on F.Cu",
+                    "pos": {
+                        "x": 63.62,
+                        "y": 36.0
+                    },
+                    "uuid": "b2ec444a-cbe7-466b-94f9-5122a8045a94"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 3 [GND] of D1 on F.Cu",
+                    "pos": {
+                        "x": 67.72,
+                        "y": 61.8
+                    },
+                    "uuid": "eacb051b-1f1b-4dd4-8973-3f843ba706ec"
+                },
+                {
+                    "description": "Pad 2 [GND] of C5 on F.Cu",
+                    "pos": {
+                        "x": 69.93,
+                        "y": 55.955
+                    },
+                    "uuid": "9780ebdc-2c92-484b-bfec-db7ff952f3e1"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of C5 on F.Cu",
+                    "pos": {
+                        "x": 69.93,
+                        "y": 55.955
+                    },
+                    "uuid": "9780ebdc-2c92-484b-bfec-db7ff952f3e1"
+                },
+                {
+                    "description": "Pad 2 [GND] of C3 on F.Cu",
+                    "pos": {
+                        "x": 73.229999,
+                        "y": 53.555
+                    },
+                    "uuid": "80a7a8e0-08c5-4a8c-95f6-b6639897fe47"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of Q2 on F.Cu",
+                    "pos": {
+                        "x": 71.0825,
+                        "y": 48.95
+                    },
+                    "uuid": "6f44f401-abeb-44e3-b477-c10d83176e7a"
+                },
+                {
+                    "description": "Pad 2 [GND] of C3 on F.Cu",
+                    "pos": {
+                        "x": 73.229999,
+                        "y": 53.555
+                    },
+                    "uuid": "80a7a8e0-08c5-4a8c-95f6-b6639897fe47"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of Q2 on F.Cu",
+                    "pos": {
+                        "x": 71.0825,
+                        "y": 48.95
+                    },
+                    "uuid": "6f44f401-abeb-44e3-b477-c10d83176e7a"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of J1",
+                    "pos": {
+                        "x": 66.49,
+                        "y": 37.54
+                    },
+                    "uuid": "695ccaa1-f278-4352-a699-0fa991fd5e85"
                 }
             ],
             "severity": "error",
@@ -593,7 +340,7 @@
                         "x": 66.49,
                         "y": 35.0
                     },
-                    "uuid": "c7511a49-7282-4c79-9e2b-f97a297770ff"
+                    "uuid": "1f7c8c7e-44e1-4203-a33a-3643fa27629a"
                 },
                 {
                     "description": "PTH pad 1 [VBAT_RAW] of SW1",
@@ -601,7 +348,237 @@
                         "x": 71.28,
                         "y": 42.91
                     },
-                    "uuid": "93ea012a-53e2-4460-a1a6-65cfc15b53b6"
+                    "uuid": "ffa8f567-5b6f-44fe-aeb5-92bf8afc5efd"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [VBAT_SENSE] of R4 on F.Cu",
+                    "pos": {
+                        "x": 34.0,
+                        "y": 47.175
+                    },
+                    "uuid": "95e4b9fb-4d89-4af3-928c-168138213000"
+                },
+                {
+                    "description": "Pad 1 [VBAT_SENSE] of R5 on F.Cu",
+                    "pos": {
+                        "x": 34.0,
+                        "y": 51.825
+                    },
+                    "uuid": "2dfeea03-59da-435f-a131-234413656336"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [VBAT_SENSE] of R5 on F.Cu",
+                    "pos": {
+                        "x": 34.0,
+                        "y": 51.825
+                    },
+                    "uuid": "2dfeea03-59da-435f-a131-234413656336"
+                },
+                {
+                    "description": "Pad 1 [VBAT_SENSE] of C1 on F.Cu",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 50.275
+                    },
+                    "uuid": "9ad659d7-676c-4998-b2a1-bf7a1bf6174e"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [NFET_GATE] of Q2 on F.Cu",
+                    "pos": {
+                        "x": 71.0825,
+                        "y": 47.05
+                    },
+                    "uuid": "a289e81a-3755-4d2e-97df-e25221a75798"
+                },
+                {
+                    "description": "Pad 2 [NFET_GATE] of R2 on F.Cu",
+                    "pos": {
+                        "x": 63.01,
+                        "y": 45.554999
+                    },
+                    "uuid": "bf2a9d59-ed1e-4386-905f-e9c6cc8df56d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [NFET_GATE] of R3 on F.Cu",
+                    "pos": {
+                        "x": 71.295,
+                        "y": 51.739999
+                    },
+                    "uuid": "22d7df3a-ba00-445c-8f2e-c9a58b6a7d62"
+                },
+                {
+                    "description": "Pad 1 [NFET_GATE] of Q2 on F.Cu",
+                    "pos": {
+                        "x": 71.0825,
+                        "y": 47.05
+                    },
+                    "uuid": "a289e81a-3755-4d2e-97df-e25221a75798"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [PFET_GATE] of R1 on F.Cu",
+                    "pos": {
+                        "x": 64.819999,
+                        "y": 44.444999
+                    },
+                    "uuid": "7c7e28ca-3300-4f82-8e9e-d6a1d45b99b8"
+                },
+                {
+                    "description": "Pad 1 [PFET_GATE] of Q1 on F.Cu",
+                    "pos": {
+                        "x": 66.8825,
+                        "y": 45.37
+                    },
+                    "uuid": "412506dd-f16e-47c6-bc10-41e85bce642a"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [PFET_GATE] of Q1 on F.Cu",
+                    "pos": {
+                        "x": 66.8825,
+                        "y": 45.37
+                    },
+                    "uuid": "412506dd-f16e-47c6-bc10-41e85bce642a"
+                },
+                {
+                    "description": "Pad 3 [PFET_GATE] of Q2 on F.Cu",
+                    "pos": {
+                        "x": 72.9575,
+                        "y": 48.0
+                    },
+                    "uuid": "d260b5b1-c1a3-4961-b5a3-de95f705dbf6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [SERVO_VCC] of C2 on F.Cu",
+                    "pos": {
+                        "x": 60.02,
+                        "y": 51.7
+                    },
+                    "uuid": "af2d7c85-942f-44df-90e1-7d5e357444ca"
+                },
+                {
+                    "description": "PTH pad 2 [SERVO_VCC] of J2",
+                    "pos": {
+                        "x": 58.0,
+                        "y": 60.04
+                    },
+                    "uuid": "59ce25d7-f06c-474b-ae02-1621683a90fd"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 3 [SERVO_VCC] of Q1 on F.Cu",
+                    "pos": {
+                        "x": 68.7575,
+                        "y": 46.32
+                    },
+                    "uuid": "dff7cf63-011d-4c3d-96e0-e100523bb48b"
+                },
+                {
+                    "description": "Pad 1 [SERVO_VCC] of C2 on F.Cu",
+                    "pos": {
+                        "x": 60.02,
+                        "y": 51.7
+                    },
+                    "uuid": "af2d7c85-942f-44df-90e1-7d5e357444ca"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [SERVO_VCC] of C3 on F.Cu",
+                    "pos": {
+                        "x": 73.229999,
+                        "y": 55.105
+                    },
+                    "uuid": "18c49dcf-58e6-46d2-b9ac-d7501bb66582"
+                },
+                {
+                    "description": "Pad 3 [SERVO_VCC] of Q1 on F.Cu",
+                    "pos": {
+                        "x": 68.7575,
+                        "y": 46.32
+                    },
+                    "uuid": "dff7cf63-011d-4c3d-96e0-e100523bb48b"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [SERVO_SIG] of R6 on F.Cu",
+                    "pos": {
+                        "x": 36.0,
+                        "y": 38.175
+                    },
+                    "uuid": "9004fed8-bc15-44ec-8963-acdcb9d03767"
+                },
+                {
+                    "description": "PTH pad 1 [SERVO_SIG] of J2",
+                    "pos": {
+                        "x": 58.0,
+                        "y": 57.5
+                    },
+                    "uuid": "307b7bd6-2dd8-405f-9861-985fc15d98e3"
                 }
             ],
             "severity": "error",
@@ -616,7 +593,7 @@
                         "x": 60.71,
                         "y": 58.855
                     },
-                    "uuid": "2248046f-4668-4585-8f27-88b69d1c233c"
+                    "uuid": "a86e8ed0-f19e-46a9-9121-6b4d96784ef9"
                 },
                 {
                     "description": "Pad 4 [LED_DIN] of D1 on F.Cu",
@@ -624,7 +601,30 @@
                         "x": 67.72,
                         "y": 58.6
                     },
-                    "uuid": "2936b63a-7b82-487a-8346-80d98ed0397e"
+                    "uuid": "a7dc97d3-8e69-49c2-b23d-9588962534e3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [V3V3] of D1 on F.Cu",
+                    "pos": {
+                        "x": 62.82,
+                        "y": 58.6
+                    },
+                    "uuid": "690316cc-947a-488a-83c1-e89a16162b06"
+                },
+                {
+                    "description": "Pad 1 [V3V3] of C5 on F.Cu",
+                    "pos": {
+                        "x": 69.93,
+                        "y": 57.505
+                    },
+                    "uuid": "b9a6b084-0e1f-41a4-a730-0edd221b1774"
                 }
             ],
             "severity": "error",
@@ -641,7 +641,7 @@
                         "x": 75.0,
                         "y": 64.0
                     },
-                    "uuid": "4c0497f9-2ac7-4a74-86bd-902ae2792c40"
+                    "uuid": "dd3c95b5-07ff-4f9e-bdbe-704bc816faed"
                 },
                 {
                     "description": "Segment of J2 on F.Silkscreen",
@@ -649,7 +649,7 @@
                         "x": 56.62,
                         "y": 58.77
                     },
-                    "uuid": "4e470714-0d7c-4dc3-941a-26cfec7ace6a"
+                    "uuid": "875d8e2a-6f6c-4e21-a6e9-3fa3810f7a2e"
                 }
             ],
             "severity": "warning",
@@ -664,7 +664,7 @@
                         "x": 75.0,
                         "y": 64.0
                     },
-                    "uuid": "4c0497f9-2ac7-4a74-86bd-902ae2792c40"
+                    "uuid": "dd3c95b5-07ff-4f9e-bdbe-704bc816faed"
                 },
                 {
                     "description": "Segment of J2 on F.Silkscreen",
@@ -672,7 +672,7 @@
                         "x": 56.62,
                         "y": 63.96
                     },
-                    "uuid": "acb63cbb-6358-4a9f-9c76-f4f797365066"
+                    "uuid": "a83ed748-717b-465d-89d5-cd5dd8776078"
                 }
             ],
             "severity": "warning",
@@ -687,7 +687,7 @@
                         "x": 75.0,
                         "y": 64.0
                     },
-                    "uuid": "4c0497f9-2ac7-4a74-86bd-902ae2792c40"
+                    "uuid": "dd3c95b5-07ff-4f9e-bdbe-704bc816faed"
                 },
                 {
                     "description": "Segment of J2 on F.Silkscreen",
@@ -695,7 +695,7 @@
                         "x": 59.38,
                         "y": 58.77
                     },
-                    "uuid": "537c3b2a-c98a-45f7-bc54-6e943df4532f"
+                    "uuid": "b95a1ea4-4443-4ca4-8719-f7d77e7a6b92"
                 }
             ],
             "severity": "warning",
@@ -705,848 +705,20 @@
             "description": "Silkscreen clearance",
             "items": [
                 {
-                    "description": "Segment of D1 on F.Silkscreen",
+                    "description": "Segment of J1 on F.Silkscreen",
                     "pos": {
-                        "x": 68.77,
-                        "y": 62.95
+                        "x": 65.11,
+                        "y": 38.92
                     },
-                    "uuid": "1cef3853-5543-4eca-9b26-31938ca7acb5"
+                    "uuid": "07385dc3-e05f-4a58-97b4-29ae6bcb1a65"
                 },
-                {
-                    "description": "Reference field of C5",
-                    "pos": {
-                        "x": 68.5,
-                        "y": 56.73
-                    },
-                    "uuid": "3bcbec52-e0e7-4459-bf56-d72295c128cb"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of C5",
-                    "pos": {
-                        "x": 68.5,
-                        "y": 56.73
-                    },
-                    "uuid": "3bcbec52-e0e7-4459-bf56-d72295c128cb"
-                },
-                {
-                    "description": "Segment of D1 on F.Silkscreen",
-                    "pos": {
-                        "x": 68.77,
-                        "y": 57.45
-                    },
-                    "uuid": "76b0fb03-3715-4e58-9fae-d8c511da4ec5"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.57,
-                        "y": 48.78
-                    },
-                    "uuid": "08e65375-1973-4d27-ba0e-24d43dbb3e6f"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.61,
-                        "y": 48.78
-                    },
-                    "uuid": "10809bff-ac34-4c75-b18e-6bef17490cf5"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.65,
-                        "y": 48.781
-                    },
-                    "uuid": "fb66c604-a522-40fd-84c3-75a390ad518d"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.69,
-                        "y": 48.782
-                    },
-                    "uuid": "81c6a480-1e49-4201-90a5-13d8f51a7068"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.73,
-                        "y": 48.783
-                    },
-                    "uuid": "fcdcbf15-243e-4984-b5fb-79e6eb40849a"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.77,
-                        "y": 48.785
-                    },
-                    "uuid": "bda9cde4-7217-4391-a8e8-13dd8607954b"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.81,
-                        "y": 48.787
-                    },
-                    "uuid": "20f923ee-30a6-48cd-9efb-47d17679b9b3"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.85,
-                        "y": 48.79
-                    },
-                    "uuid": "2f40b88f-d6df-4c08-bef5-dd3e0c0e308e"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.89,
-                        "y": 48.792
-                    },
-                    "uuid": "58e01e45-77f6-47a7-afd2-7efc8d87eb60"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.93,
-                        "y": 48.796
-                    },
-                    "uuid": "4d480400-d54d-4144-b894-bfa0c0551f59"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.01,
-                        "y": 48.804
-                    },
-                    "uuid": "d5094db4-adc5-47f7-8b9a-6e498f95aa5f"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.05,
-                        "y": 48.808
-                    },
-                    "uuid": "1afc0ce1-41ae-426b-9be2-69085fdd2772"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.09,
-                        "y": 48.813
-                    },
-                    "uuid": "84171ce5-49e6-4f8d-8838-7c4880e67912"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.13,
-                        "y": 48.818
-                    },
-                    "uuid": "3692752b-9221-4ecc-b5de-56fc6cc71e8c"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.73,
-                        "y": 53.9
-                    },
-                    "uuid": "0141687d-d54b-4c35-99af-b36f97214cd7"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.97,
-                        "y": 48.799
-                    },
-                    "uuid": "efc31fdd-8607-439d-a14a-860a8e1b5b0c"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.17,
-                        "y": 48.824
-                    },
-                    "uuid": "f112438a-e457-40b8-8092-e7a5f5c7b1b1"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.21,
-                        "y": 48.83
-                    },
-                    "uuid": "0f3c3b40-e375-46f2-ac3d-a737a9246d0b"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Circle of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 64.57,
-                        "y": 52.86
-                    },
-                    "uuid": "06a86eb8-5522-4452-a1e4-f576d27761a1"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.65,
-                        "y": 53.9
-                    },
-                    "uuid": "8efdd044-79e9-42eb-b563-c86b7899dfd1"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.85,
-                        "y": 53.9
-                    },
-                    "uuid": "870301d3-d42b-4cf7-8bf4-8c3979f184c8"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.89,
-                        "y": 53.9
-                    },
-                    "uuid": "7aafef32-933b-4db9-959b-06f107c4b4e3"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.69,
-                        "y": 53.9
-                    },
-                    "uuid": "f6a36933-a3ea-401d-9d7f-ea105c9ffd90"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.77,
-                        "y": 53.9
-                    },
-                    "uuid": "1f98c80e-62e5-49a6-866e-8fa71197fd97"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.81,
-                        "y": 53.9
-                    },
-                    "uuid": "1b07f17d-cc53-4f89-b474-42b2e0d22fad"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.37,
-                        "y": 53.9
-                    },
-                    "uuid": "99ca8dce-9244-40cd-beec-458a9e823c46"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.41,
-                        "y": 53.9
-                    },
-                    "uuid": "479aa574-04c5-4193-a14a-1e9cd6821d0f"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.45,
-                        "y": 53.9
-                    },
-                    "uuid": "c2d93c23-ecc5-4578-995e-07e0a0b18271"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.49,
-                        "y": 53.9
-                    },
-                    "uuid": "4696a4ed-50eb-4c86-995e-4e91e3c5c8d6"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.53,
-                        "y": 53.9
-                    },
-                    "uuid": "edda421a-b451-4be9-8a74-2e457f743f61"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.57,
-                        "y": 53.9
-                    },
-                    "uuid": "1ec36221-c0c1-4dd6-a63f-dfb107465497"
-                },
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Reference field of D1",
-                    "pos": {
-                        "x": 65.27,
-                        "y": 56.7
-                    },
-                    "uuid": "25df5bfb-3d5d-4881-b866-cc614f9f7f51"
-                },
-                {
-                    "description": "Segment of C2 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.61,
-                        "y": 53.9
-                    },
-                    "uuid": "4e3ec922-a1e5-467c-bb47-fdc3ffd89d2a"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of SW1 on F.Silkscreen",
-                    "pos": {
-                        "x": 68.62,
-                        "y": 44.29
-                    },
-                    "uuid": "249e273d-b019-47a8-bbdf-a920f409e1f7"
-                },
-                {
-                    "description": "Reference field of Q1",
-                    "pos": {
-                        "x": 67.82,
-                        "y": 43.92
-                    },
-                    "uuid": "e23358ed-4e97-4c85-ac4c-7ca79779d661"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
-                {
-                    "description": "Segment of SW1 on F.Silkscreen",
-                    "pos": {
-                        "x": 68.62,
-                        "y": 44.29
-                    },
-                    "uuid": "d454b2cd-7387-41c8-b06d-ec1f6b2d0277"
-                },
-                {
-                    "description": "Reference field of Q1",
-                    "pos": {
-                        "x": 67.82,
-                        "y": 43.92
-                    },
-                    "uuid": "e23358ed-4e97-4c85-ac4c-7ca79779d661"
-                }
-            ],
-            "severity": "warning",
-            "type": "silk_overlap"
-        },
-        {
-            "description": "Silkscreen clearance",
-            "items": [
                 {
                     "description": "Reference field of SW1",
                     "pos": {
                         "x": 67.86,
                         "y": 39.1
                     },
-                    "uuid": "4bd713d6-f51c-434f-9169-8164749a156c"
-                },
-                {
-                    "description": "Segment of J1 on F.Silkscreen",
-                    "pos": {
-                        "x": 65.11,
-                        "y": 38.92
-                    },
-                    "uuid": "895c26b1-05c9-4645-8c02-0af0aa1efdac"
+                    "uuid": "fde069b3-9197-42ee-8b1a-d815931817c2"
                 }
             ],
             "severity": "warning",
@@ -1561,7 +733,7 @@
                         "x": 67.87,
                         "y": 36.27
                     },
-                    "uuid": "0c8c0b4d-1f3f-4aac-8b70-44eb9cd2d9a3"
+                    "uuid": "92d49824-24a4-4551-a4b2-d678940bda93"
                 },
                 {
                     "description": "Reference field of SW1",
@@ -1569,7 +741,99 @@
                         "x": 67.86,
                         "y": 39.1
                     },
-                    "uuid": "4bd713d6-f51c-434f-9169-8164749a156c"
+                    "uuid": "fde069b3-9197-42ee-8b1a-d815931817c2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of SW1 on F.Silkscreen",
+                    "pos": {
+                        "x": 68.62,
+                        "y": 44.29
+                    },
+                    "uuid": "5af62ef3-0302-4f2d-8d53-cbf787231eec"
+                },
+                {
+                    "description": "Reference field of Q1",
+                    "pos": {
+                        "x": 67.82,
+                        "y": 43.92
+                    },
+                    "uuid": "a1b2d373-3a2e-44c8-a516-0dcce09f3afe"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of SW1 on F.Silkscreen",
+                    "pos": {
+                        "x": 68.62,
+                        "y": 44.29
+                    },
+                    "uuid": "62dc72a8-6cf4-4e92-beb7-59ed17bef07c"
+                },
+                {
+                    "description": "Reference field of Q1",
+                    "pos": {
+                        "x": 67.82,
+                        "y": 43.92
+                    },
+                    "uuid": "a1b2d373-3a2e-44c8-a516-0dcce09f3afe"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.Silkscreen",
+                    "pos": {
+                        "x": 63.5325,
+                        "y": 46.617257
+                    },
+                    "uuid": "444d1293-96fb-418e-822b-8133086e4399"
+                },
+                {
+                    "description": "Reference field of R1",
+                    "pos": {
+                        "x": 63.389999,
+                        "y": 45.269999
+                    },
+                    "uuid": "44f87a31-ce0e-4355-bf39-8771a916831e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of C2",
+                    "pos": {
+                        "x": 62.82,
+                        "y": 47.35
+                    },
+                    "uuid": "8f2b5e22-9f15-4f4c-8092-3de519069200"
+                },
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 61.58,
+                        "y": 46.379999
+                    },
+                    "uuid": "a990c147-3de4-4ec7-958a-8f2cb48342c0"
                 }
             ],
             "severity": "warning",
@@ -1584,7 +848,7 @@
                         "x": 59.28,
                         "y": 59.68
                     },
-                    "uuid": "8c5173a8-939b-4110-8c75-f867af55c342"
+                    "uuid": "a4220258-a64b-4557-8993-2adfb991c07f"
                 },
                 {
                     "description": "Segment of J2 on F.Silkscreen",
@@ -1592,7 +856,7 @@
                         "x": 56.62,
                         "y": 58.77
                     },
-                    "uuid": "cd60da76-e223-4210-ba43-47f659e7c7b6"
+                    "uuid": "d9abf947-608a-4f8e-9019-542b636c11b6"
                 }
             ],
             "severity": "warning",
@@ -1602,20 +866,66 @@
             "description": "Silkscreen clearance",
             "items": [
                 {
-                    "description": "Segment of J2 on F.Silkscreen",
-                    "pos": {
-                        "x": 59.38,
-                        "y": 58.77
-                    },
-                    "uuid": "537c3b2a-c98a-45f7-bc54-6e943df4532f"
-                },
-                {
                     "description": "Reference field of R7",
                     "pos": {
                         "x": 59.28,
                         "y": 59.68
                     },
-                    "uuid": "8c5173a8-939b-4110-8c75-f867af55c342"
+                    "uuid": "a4220258-a64b-4557-8993-2adfb991c07f"
+                },
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 59.38,
+                        "y": 58.77
+                    },
+                    "uuid": "b95a1ea4-4443-4ca4-8719-f7d77e7a6b92"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of C5",
+                    "pos": {
+                        "x": 68.5,
+                        "y": 56.73
+                    },
+                    "uuid": "09a1dbe6-d8ff-4d86-9ac6-44be202babfd"
+                },
+                {
+                    "description": "Segment of D1 on F.Silkscreen",
+                    "pos": {
+                        "x": 68.77,
+                        "y": 57.45
+                    },
+                    "uuid": "a51482af-5b27-4f7e-b99a-96f1bced5b95"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of C5",
+                    "pos": {
+                        "x": 68.5,
+                        "y": 56.73
+                    },
+                    "uuid": "09a1dbe6-d8ff-4d86-9ac6-44be202babfd"
+                },
+                {
+                    "description": "Segment of D1 on F.Silkscreen",
+                    "pos": {
+                        "x": 68.77,
+                        "y": 62.95
+                    },
+                    "uuid": "6ebad07b-4091-471c-a55d-d7567b1e772f"
                 }
             ],
             "severity": "warning",
@@ -1630,15 +940,38 @@
                         "x": 63.389999,
                         "y": 45.269999
                     },
-                    "uuid": "76a9e2f2-3fed-4978-a422-124ed1a70e55"
+                    "uuid": "44f87a31-ce0e-4355-bf39-8771a916831e"
                 },
                 {
                     "description": "Pad 2 [NFET_GATE] of R2 on F.Cu",
                     "pos": {
                         "x": 63.01,
-                        "y": 45.955
+                        "y": 45.554999
                     },
-                    "uuid": "21617f8c-5f58-4491-abb3-e118823445e7"
+                    "uuid": "bf2a9d59-ed1e-4386-905f-e9c6cc8df56d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of C2",
+                    "pos": {
+                        "x": 62.82,
+                        "y": 47.35
+                    },
+                    "uuid": "8f2b5e22-9f15-4f4c-8092-3de519069200"
+                },
+                {
+                    "description": "Pad 1 [SERVO_EN] of R2 on F.Cu",
+                    "pos": {
+                        "x": 63.01,
+                        "y": 47.204999
+                    },
+                    "uuid": "06fe12ca-8435-4167-88b3-74593b7c4529"
                 }
             ],
             "severity": "warning",
@@ -1653,7 +986,7 @@
                         "x": 59.28,
                         "y": 59.68
                     },
-                    "uuid": "8c5173a8-939b-4110-8c75-f867af55c342"
+                    "uuid": "a4220258-a64b-4557-8993-2adfb991c07f"
                 },
                 {
                     "description": "PTH pad 2 [SERVO_VCC] of J2",
@@ -1661,7 +994,7 @@
                         "x": 58.0,
                         "y": 60.04
                     },
-                    "uuid": "3f8defc0-a435-4ac3-a8ba-feedc1a8541a"
+                    "uuid": "59ce25d7-f06c-474b-ae02-1621683a90fd"
                 }
             ],
             "severity": "warning",

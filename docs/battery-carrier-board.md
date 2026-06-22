@@ -359,11 +359,14 @@ cosmetic silkscreen-text overlap, not a routing or electrical concern.
 Full before/after numbers and the placement rationale are in
 `kicad-project/README.md`.
 
-- **No KiCad stock footprint exists for the Seeed XIAO module, the
-  hobby-RC "SM-2P" battery connector, or the exact `CP_Elec_6.3x5.4` cap
-  footprint.** All three still need sourcing (or a confirmed substitute)
-  before routing — see the placeholder table in `kicad-project/README.md`.
-  (Applies to both variants; tracked in #45.)
+- **C2's exact footprint, `CP_Elec_6.3x5.4`, turned out to already be in
+  KiCad's stock libraries** (under `Capacitor_SMD.pretty` — the first pass's
+  search missed it). It's now the real footprint on both boards. Two
+  placeholders remain: **no stock footprint exists for the Seeed XIAO
+  module or the hobby-RC "SM-2P" battery connector**; both still need
+  sourcing (or a confirmed substitute) before routing — see the placeholder
+  table in `kicad-project/README.md`. (Applies to both variants; tracked in
+  #45.)
 - **The Gerber/drill export pipeline is confirmed working** against the
   unrouted boards — the JLCPCB-compatible layer set in §6 plots correctly.
 
