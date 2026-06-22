@@ -259,10 +259,38 @@ bench.
 
 ## 8. Firmware integration
 
-`hardware/pcb/carrier-board-v1/firmware-reference/power_indicator.rs` is a
-**reference implementation**, not yet wired into `vent-controller`. It adds
-three pieces, written against `esp-idf-hal` ~0.44/0.45 (matching the
-firmware crate's current `0.45` pin in `Cargo.toml`):
+**Status: lands in the crate, compiles, behind a feature flag — not yet
+called from `main()`, not flashed to real hardware.**
+`firmware/vent-controller/src/carrier_board.rs` (mirrored at
+`hardware/pcb/carrier-board-v1/firmware-reference/power_indicator.rs` for
+reference) is now a real module in the `vent-controller` crate, gated
+behind two Cargo features so it has zero effect on the default
+always-on-USB build:
+
+- `battery-carrier-board` — the `servo` and `battery` modules below
+- `led-indicator` — the `indicator` module, requires `battery-carrier-board`
+
+```bash
+cargo build --release --features led-indicator   # with-LED variant
+cargo build --release --features battery-carrier-board  # no-LED variant
+cargo build --release                             # default, unaffected
+```
+
+All three combinations were verified building against the crate's actual
+pinned versions (`esp-idf-hal 0.45.2`, `esp-idf-sys 0.36.1`, ESP-IDF
+`v5.2.3`) on the `riscv32imac-esp-espidf` target. Compiling against the
+real toolchain caught two real bugs the original hand-written reference
+had wrong:
+
+- `AdcChannelConfig::calibration` is an enum (`Calibration::Curve` /
+  `Line` / `None`) in this `esp-idf-hal` version, not the `bool` the
+  reference assumed.
+- `Ws2812Esp32Rmt` is feature-gated behind `ws2812-esp32-rmt-driver`'s own
+  `smart-leds-trait` Cargo feature, which isn't on by default.
+
+(The other previously-flagged uncertain spot — `Ws2812Esp32Rmt::new`'s
+constructor signature — turned out to already match what the reference
+assumed; only the feature flag was missing.) It adds three pieces:
 
 - `servo` — replaces a bare PWM write with power-gated moves: energize VCC,
   settle 50 ms, command position, wait out travel, cut VCC. Drop the final
@@ -292,24 +320,22 @@ firmware crate's current `0.45` pin in `Cargo.toml`):
   on-demand LED budget from §2. See the `Event`/`InstallState` enums in
   `indicator.rs` for the full state list.
 
-The whole `indicator` module — and everything that calls into it — only
-applies to the with-LED build. On the no-LED variant, skip pulling in
-`indicator.rs`, the `smart_leds`/`ws2812-esp32-rmt-driver` dependencies, and
-any call sites that would otherwise call `Indicator::show(...)`; `servo` and
-`battery` are unaffected either way. If/when this gets wired into the real
-crate (#47), gate it behind a Cargo feature (e.g. `led-indicator`) so a
-no-LED firmware build doesn't carry the dependency or try to drive a pin
-that isn't populated.
+The whole `indicator` module — and everything that calls into it — is
+compiled in only when `led-indicator` is enabled, which is the no-LED
+variant's actual situation, not just a suggestion: the feature flag
+enforces it at the Cargo level rather than relying on someone remembering
+to skip a file. `servo` and `battery` compile under just
+`battery-carrier-board`, on either PCB variant.
 
-Two spots are flagged `// VERSION:` in the file because the relevant crate
-APIs (the ADC oneshot config, and `Ws2812Esp32Rmt::new`'s signature) have
-churned across `esp-idf-hal`/`ws2812-esp32-rmt-driver` versions — confirm
-against whatever version is pinned in `Cargo.lock` before integrating. It
-also requires adding `smart_leds` and `ws2812-esp32-rmt-driver` as
-dependencies, which are not currently in `firmware/vent-controller/Cargo.toml`.
-
-The module compiles against the logic described above but has not been
-built or flashed — treat it as a starting point, not drop-in code.
+What's still not done: nothing in `main.rs` calls into `carrier_board` yet
+— no `Servo`/`PackSense`/`Indicator` is instantiated, no GPIO1/21/22 is
+claimed from `Peripherals`. That's the remaining wiring work in #47:
+replace the existing bare PWM write in the relevant call sites with
+`carrier_board::servo::Servo::move_to()`, instantiate `PackSense` on
+`adc1`/GPIO1, and hook `Indicator::show(Event::Identify)` into the
+`/device/identity` handler and `Event::Install(...)` into the commissioning
+flow. None of this has been flashed to real hardware — compiling is
+verified, behavior on an actual XIAO is not.
 
 ## 9. Current state
 

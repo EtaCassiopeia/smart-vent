@@ -1,3 +1,5 @@
+#[cfg(feature = "battery-carrier-board")]
+mod carrier_board;
 #[allow(dead_code)]
 mod identity;
 #[allow(dead_code)]

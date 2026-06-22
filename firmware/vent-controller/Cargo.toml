@@ -10,6 +10,9 @@ esp-idf-sys = { version = "0.36", features = ["binstart"] }
 log = "0.4"
 esp_idf_logger = "0.1"
 vent-protocol = { path = "../shared-protocol", default-features = false }
+smart-leds = { version = "0.4.0", optional = true }
+anyhow = "1"
+ws2812-esp32-rmt-driver = { version = "0.13.1", default-features = false, features = ["smart-leds-trait", "std", "alloc"], optional = true }
 
 [build-dependencies]
 embuild = { version = "0.32", features = ["espidf"] }
@@ -20,6 +23,15 @@ harness = false
 
 [profile.release]
 opt-level = "s"
+
+[features]
+# Battery carrier board (docs/battery-carrier-board.md): power-gated servo
+# + NiMH pack voltage sense via GPIO1/21. No effect on the default
+# always-on-USB build.
+battery-carrier-board = []
+# Status LED on the carrier board (GPIO22). Requires battery-carrier-board;
+# only meaningful on the with-LED PCB variant, see the doc's section 2a.
+led-indicator = ["battery-carrier-board", "dep:smart-leds", "dep:ws2812-esp32-rmt-driver"]
 
 [package.metadata.esp-idf-sys]
 extra_components = [{ component_dirs = ["components"] }]
