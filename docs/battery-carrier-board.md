@@ -1,15 +1,18 @@
 # Battery carrier board (NiMH) — design notes
 
-> **Status: schematic/netlist validated, board not yet routed.** This document
-> covers an alternative power path for a vent: running off a 4-cell NiMH pack
-> instead of USB, via a small carrier PCB. The circuit (parts, values, nets) is
-> done and machine-verified; physical layout/routing/Gerbers are not. See
-> [Current state](#current-state) for exactly what exists and what's left.
+> **Status: schematic/netlist validated, placement clean, board not yet
+> routed.** This document covers an alternative power path for a vent:
+> running off a 4-cell NiMH pack instead of USB, via a small carrier PCB.
+> The circuit (parts, values, nets) is done and machine-verified;
+> footprint placement has been collision-checked and fixed (zero shorts/
+> overlaps/clearance violations on both variants); routing/Gerbers are
+> not done. See [Current state](#current-state) for exactly what exists
+> and what's left.
 >
 > **Two variants, pick one**: the status LED (§2a) is optional. Both a
 > with-LED and a no-LED build are generated from the same source and
 > tracked side by side — the no-LED variant trades away locate/status
-> feedback for a lower idle power draw and fewer placement conflicts.
+> feedback for a lower idle power draw.
 
 This is a variant of the wiring in [handbook.md §3](handbook.md) (XIAO +
 SG90 over USB power). Use this doc instead of the handbook's wiring table when
@@ -116,12 +119,14 @@ Both variants are generated from the same source and tracked side by side:
 | Placement-checked board | `kicad-project/smart_vent_v1.kicad_pcb` | `kicad-project/smart_vent_v1_no_led.kicad_pcb` |
 | Parts omitted | — | D1 (SK6812), R7 (470Ω data series), C5 (100nF decouple) |
 | GPIO22 | wired to LED_DIN | unconnected, free for future use |
-| DRC findings (placement-only, unrouted) | 3 shorts, 8 courtyard overlaps | 1 short, 5 courtyard overlaps |
+| DRC findings (placement, unrouted) | clean — 0 shorts/overlaps/clearance | clean — 0 shorts/overlaps/clearance |
 
-Dropping the LED also happens to resolve most of the worst placement
+Dropping the LED originally also resolved most of the worst placement
 cluster DRC found in issue #46 (D1/C2/C3/C5/R7 were the tightest corner of
-the floorplan) — one less reason to fit it if you don't need it, on top of
-the battery argument.
+the floorplan) — that issue's full set of findings (on both variants) has
+since been resolved by re-spacing the placement; see §9 and
+`kicad-project/README.md` for how. The LED-vs-battery-life tradeoff above
+stands regardless of the placement fix.
 
 A future middle ground — power-gating the LED's `VDD` through its own
 small load switch, the same way the servo is gated — would close the
@@ -186,9 +191,11 @@ The board is 45×34 mm, 2-layer, 1.6 mm. Floorplan: analog/signal cluster on
 the left (near the XIAO's D1–D4 pins), high-current power cluster on the
 right (near 5V/GND), servo connector on the bottom edge, LED in the corner
 facing outward (so "find this vent" is visible through the enclosure) — only
-on the with-LED variant; the no-LED variant simply leaves that corner empty
-(and has noticeably fewer placement conflicts there, see §9). See
-`hardware/pcb/carrier-board-v1/smart_vent_floorplan.svg` for the diagram.
+on the with-LED variant; the no-LED variant simply leaves that corner empty.
+`hardware/pcb/carrier-board-v1/smart_vent_floorplan.svg` illustrates this
+zoning concept, but its exact part positions are superseded — see §9 and
+`kicad-project/README.md` for the actual collision-free coordinates now
+in `kicad-project/*.kicad_pcb` and `place_smart_vent.py`.
 
 Five rules that matter more than exact placement:
 
@@ -326,49 +333,57 @@ What's done and machine-verified:
   outline + mounting holes. Written against the KiCad 7/8/9 API; not run
   against a live board in this pass (no `pcbnew` outside the KiCad GUI).
 
-Since the first pass at this doc, a placement-verified (but unrouted)
-`.kicad_pcb` has been generated against KiCad 10.0.4 and machine-checked,
-**for both the with-LED and no-LED variants** — see
-`hardware/pcb/carrier-board-v1/kicad-project/`. That run confirmed two
-of the three footprint pinouts flagged below against real stock-library
-parts (SOT-23 pad geometry and the SK6812 PLCC4 pad order both match what
-the netlist assumed), and surfaced findings the original sketch couldn't
-catch:
+A placement-checked (but still unrouted) `.kicad_pcb` exists for both
+variants, generated against KiCad 10.0.4 and machine-checked — see
+`hardware/pcb/carrier-board-v1/kicad-project/`. That run confirmed two of
+the three footprint pinouts flagged below against real stock-library parts
+(SOT-23 pad geometry and the SK6812 PLCC4 pad order both match what the
+netlist assumed).
+
+**Placement is now clean on both variants** — this took two passes. The
+floorplan's left/right/bottom *zoning* was always correct, but the exact
+coordinates were sized around small SMD placeholders; once real stock
+footprints went in (notably a THT slide switch for SW1 and a THT radial
+cap for C2 — both substituted because no SMD match exists in KiCad's
+stock libraries, see below — and both much bigger than what the floorplan
+assumed), DRC found 3 shorts + 8 courtyard overlaps on the with-LED board
+and 1 short + 5 overlaps on the no-LED board. An iterative solver
+(`kicad-project/nudge_apart.py`) plus one manual follow-up — the servo
+header J2 needed shifting both to clear the board's bottom edge (its last
+pad, at the original anchor, landed entirely past the board outline) and
+sideways to clear U1's placeholder footprint (a tall single-column header
+shape that doesn't represent the real XIAO module at all) — resolved
+every short, clearance violation, and courtyard overlap on both variants
+down to zero. What's left in `kicad-project/drc_report*.json` is purely
+cosmetic silkscreen-text overlap, not a routing or electrical concern.
+Full before/after numbers and the placement rationale are in
+`kicad-project/README.md`.
 
 - **No KiCad stock footprint exists for the Seeed XIAO module, the
   hobby-RC "SM-2P" battery connector, or the exact `CP_Elec_6.3x5.4` cap
-  footprint.** All three need sourcing (or a substitute part) before
-  routing — see the placeholder table in
-  `kicad-project/README.md`. (Applies to both variants.)
-- **The floorplan coordinates are too tight at real footprint sizes** —
-  more so on the with-LED variant. DRC against `smart_vent_v1.kicad_pcb`
-  (with LED) found 3 actual copper-to-copper shorts and 8 courtyard
-  overlaps, most of them in the D1/C2/C3/C5/R7 cluster; DRC against
-  `smart_vent_v1_no_led.kicad_pcb` (no LED) found only 1 short and 5
-  overlaps — confirming that dropping the LED removes most of the worst
-  cluster. The floorplan's left/right/bottom *zoning* is still correct in
-  both cases, the exact coordinates just need spreading apart. Full
-  details in `kicad-project/drc_report.json` (with LED) and
-  `kicad-project/drc_report_no_led.json` (without).
+  footprint.** All three still need sourcing (or a confirmed substitute)
+  before routing — see the placeholder table in `kicad-project/README.md`.
+  (Applies to both variants; tracked in #45.)
 - **The Gerber/drill export pipeline is confirmed working** against the
-  unrouted with-LED board — the JLCPCB-compatible layer set in §6 plots
-  correctly.
+  unrouted boards — the JLCPCB-compatible layer set in §6 plots correctly.
 
-What's still **not** done — this is placement-verified, not fab-ready:
+What's still **not** done — placement is clean, but this is not fab-ready:
 
 - No routing. Trace widths and the five layout rules (§5) are specified
   but not laid out on copper.
-- No final DRC pass (the one in `kicad-project/drc_report.json` is against
-  the unrouted placeholder placement, not a routed board).
+- No DRC pass against routed copper (the clean DRC reports are against
+  unrouted placement only).
 - The XIAO pad-order pinout still needs confirming once a real footprint is
   sourced (it's the one of the three "verify" callouts in §4 that couldn't
-  be checked against a stock part).
+  be checked against a stock part) — and J2's exact position should be
+  revisited once that footprint replaces U1's placeholder shape.
 
-Follow-up work is tracked as GitHub issues (footprint sourcing, placement
-re-spacing + routing, firmware integration of `power_indicator.rs`).
+Follow-up work is tracked as GitHub issues (footprint sourcing in #45,
+routing in #46, firmware integration of `power_indicator.rs` in #47).
 
 Next concrete step: pick a variant (§2a), open the matching
 `.kicad_pcb` in `hardware/pcb/carrier-board-v1/kicad-project/` in KiCad,
-source/swap in the three missing footprints, spread out the overlapping
-parts per the matching DRC report, route to the rules in §5, run DRC again,
-then plot Gerbers per §6.
+source/swap in the three missing footprints, clean up the cosmetic
+silkscreen overlaps while you're in there, then route per the rules in §5
+and DRC again before plotting Gerbers. The placement (left/right/bottom
+zoning, no collisions) is ready to route against as-is.

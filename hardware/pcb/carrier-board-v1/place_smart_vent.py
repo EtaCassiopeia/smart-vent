@@ -11,12 +11,23 @@ HOW TO RUN (KiCad 7 / 8 / 9):
      Or set BOARD_PATH below and run it standalone with kicad-cli's python.
 
 It positions parts by reference, draws a 45 x 34 mm Edge.Cuts outline, and adds
-two M2.5 mounting holes as board cutouts. Nudge overlaps, then route to the plan.
+two M2.5 mounting holes as board cutouts.
+
+These coordinates are the resolved, collision-free placement (see
+kicad-project/nudge_apart.py and kicad-project/README.md for how they were
+derived -- DRC against the original floorplan sketch found real shorts and
+courtyard overlaps once real footprint sizes were dropped in; this is the
+fix, not the original sketch). Re-running DRC after this script should come
+back clean except for cosmetic silkscreen-text overlap.
 
 The status LED (D1/R7/C5) is optional (see smart_vent_board.py /
 docs/battery-carrier-board.md). If you imported smart_vent_no_led.net, those
 three refs won't exist on the board — this script warns and skips them, which
-is expected, not an error.
+is expected, not an error. (If you're on the no-LED netlist, the no-LED
+variant's coordinates for SW1/Q1/Q2/R1/R2/R3/C2/C3 differ slightly from
+this script's -- it uses the with-LED solve throughout; see
+kicad-project/build_board.py's PLACE dicts if you want the exact per-variant
+numbers instead.)
 
 Coordinates are board-relative mm (origin = top-left of the outline), offset onto
 the page by (ORIGIN_X, ORIGIN_Y). Y increases downward, matching the floorplan.
@@ -33,16 +44,17 @@ PLACE = {
     "U1":  (22.5, 11.5,   0),   # XIAO ESP32-C6, USB toward top edge
 
     # --- power cluster (right) ---
-    "J1":  (41.0,  6.0,   0),   # SM-2P battery  (rotate so opening faces the edge)
-    "SW1": (41.0, 11.0,   0),   # master slide switch
-    "C4":  (37.0,  8.0,   0),   # 10uF VBAT bulk
-    "Q1":  (40.0, 16.5,   0),   # P-FET servo high-side
-    "Q2":  (43.5, 16.5,   0),   # 2N7002 gate level-shift
-    "R1":  (37.0, 15.0,  90),   # 100k P-FET gate pullup
-    "R2":  (37.0, 17.5,  90),   # 1k gate series
-    "R3":  (43.5, 20.0,   0),   # 100k gate pulldown
-    "C2":  (40.0, 24.0,   0),   # 470uF servo bulk  (keep hard against J2)
-    "C3":  (43.5, 23.5,  90),   # 100n servo decouple
+    "J1":  (36.49, 5.0,    0),   # SM-2P battery  (rotate so opening faces the edge)
+    "SW1": (41.28, 12.91, 90),   # master slide switch -- rotated: unrotated it's
+                                  # 10.37mm wide and sticks off the board's right edge
+    "C4":  (32.67, 6.0,    0),   # 10uF VBAT bulk
+    "Q1":  (37.82, 16.32,  0),   # P-FET servo high-side
+    "Q2":  (42.02, 18.0,   0),   # 2N7002 gate level-shift
+    "R1":  (34.82, 15.27, 90),   # 100k P-FET gate pullup
+    "R2":  (33.01, 16.78, 90),   # 1k gate series
+    "R3":  (42.12, 21.74,  0),   # 100k gate pulldown
+    "C2":  (32.82, 22.86,  0),   # 470uF servo bulk  (keep hard against J2)
+    "C3":  (43.23, 24.33, 90),   # 100n servo decouple
 
     # --- signal / analog cluster (left) ---
     "R6":  ( 6.0,  9.0,  90),   # 330R servo signal series
@@ -51,10 +63,14 @@ PLACE = {
     "C1":  ( 7.5, 19.5,  90),   # 100n sense tap
 
     # --- connectors / LED (bottom) ---
-    "J2":  (22.5, 31.5,   0),   # SG90 servo header (pins toward bottom edge)
-    "D1":  (40.5, 30.5,   0),   # SK6812 — face OUT of the enclosure
-    "R7":  (36.5, 29.5,  90),   # 470R LED data series
-    "C5":  (44.0, 30.5,  90),   # 100n LED decouple
+    "J2":  (28.0, 27.5,   0),   # SG90 servo header -- shifted from directly under
+                                 # U1 (whose placeholder footprint is an oddly tall,
+                                 # unrepresentative shape, see kicad-project/README.md)
+                                 # and up from the original anchor, whose last pad
+                                 # otherwise landed past the board's bottom edge
+    "D1":  (35.27, 30.2,   0),  # SK6812 — face OUT of the enclosure
+    "R7":  (30.71, 29.68, 90),  # 470R LED data series
+    "C5":  (39.93, 26.73, 90),  # 100n LED decouple
 }
 
 # M2.5 mounting holes (board-relative center mm), unplated cutouts
