@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="560" viewBox="0 0 680 560" font-family="Helvetica, Arial, sans-serif">
+  <rect width="680" height="560" fill="#fbfbfa"/>
+  <text x="340" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2937">smart-vent carrier — PCB floorplan (top view, ~45 × 34 mm, 2-layer)</text>
+  <text x="340" y="48" text-anchor="middle" font-size="12" fill="#6b7280">Top copper = parts + signal · Bottom copper = solid GND pour · resize outline to your vent enclosure</text>
+
+  <!-- board outline -->
+  <rect x="60" y="70" width="500" height="370" rx="10" fill="#ffffff" stroke="#9ca3af" stroke-width="2"/>
+
+  <!-- mounting holes -->
+  <circle cx="84" cy="94" r="8" fill="#ffffff" stroke="#9ca3af" stroke-width="2"/>
+  <circle cx="536" cy="416" r="8" fill="#ffffff" stroke="#9ca3af" stroke-width="2"/>
+  <text x="84" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">M2.5</text>
+  <text x="536" y="438" text-anchor="middle" font-size="9" fill="#9ca3af">M2.5</text>
+
+  <!-- power loop highlight (drawn first, under the blocks) -->
+  <path d="M 505 120 L 505 200 L 505 270 L 470 330 L 410 400" fill="none" stroke="#f59e0b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+  <text x="560" y="250" font-size="10" fill="#b45309" transform="rotate(90 560 250)">fat power loop: batt → SW → P-FET → C2 → servo</text>
+
+  <!-- SIGNAL / ANALOG zone (left) -->
+  <rect x="74" y="130" width="138" height="290" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="143" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">SIGNAL / ANALOG</text>
+  <text x="143" y="167" text-anchor="middle" font-size="10" fill="#3b82f6">(keep clear of power loop)</text>
+
+  <rect x="90" y="180" width="106" height="34" rx="4" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="143" y="201" text-anchor="middle" font-size="11" fill="#1e3a8a">R6  servo-sig 330R</text>
+
+  <rect x="90" y="226" width="106" height="62" rx="4" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="143" y="246" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">SENSE divider</text>
+  <text x="143" y="262" text-anchor="middle" font-size="10" fill="#1e3a8a">R4 2M · R5 1M</text>
+  <text x="143" y="277" text-anchor="middle" font-size="10" fill="#1e3a8a">C1 100n → D1/GPIO1</text>
+
+  <rect x="90" y="300" width="106" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="143" y="320" text-anchor="middle" font-size="11" fill="#1e3a8a">tap node: compact!</text>
+
+  <!-- XIAO (center) -->
+  <rect x="230" y="120" width="200" height="250" rx="8" fill="#111827"/>
+  <rect x="300" y="104" width="60" height="20" rx="3" fill="#374151" stroke="#6b7280"/>
+  <text x="330" y="118" text-anchor="middle" font-size="10" fill="#e5e7eb">USB-C ↑ edge</text>
+  <text x="330" y="180" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">U1</text>
+  <text x="330" y="200" text-anchor="middle" font-size="12" fill="#e5e7eb">XIAO ESP32-C6</text>
+  <text x="330" y="220" text-anchor="middle" font-size="10" fill="#9ca3af">on female headers</text>
+  <!-- left pin labels -->
+  <text x="238" y="255" font-size="10" fill="#93c5fd">◧ D1 sense</text>
+  <text x="238" y="272" font-size="10" fill="#93c5fd">◧ D2 servo sig</text>
+  <text x="238" y="289" font-size="10" fill="#93c5fd">◧ D3 servo-en</text>
+  <text x="238" y="306" font-size="10" fill="#93c5fd">◧ D4 LED data</text>
+  <!-- right pin labels -->
+  <text x="422" y="290" text-anchor="end" font-size="10" fill="#fcd34d">5V ▷</text>
+  <text x="422" y="307" text-anchor="end" font-size="10" fill="#fcd34d">GND ▷</text>
+  <text x="422" y="324" text-anchor="end" font-size="10" fill="#fcd34d">3V3 ▷</text>
+
+  <!-- POWER zone (right) -->
+  <rect x="448" y="130" width="100" height="220" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="498" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#b45309">POWER</text>
+  <text x="498" y="165" text-anchor="middle" font-size="10" fill="#d97706">high-current</text>
+
+  <rect x="458" y="176" width="80" height="40" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="498" y="193" text-anchor="middle" font-size="10" fill="#92400e">J1 batt (SM-2P)</text>
+  <text x="498" y="208" text-anchor="middle" font-size="10" fill="#92400e">SW1 master · C4</text>
+
+  <rect x="458" y="224" width="80" height="42" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="498" y="241" text-anchor="middle" font-size="10" fill="#92400e">Q1 P-FET · Q2</text>
+  <text x="498" y="256" text-anchor="middle" font-size="10" fill="#92400e">R1·R2·R3 gate</text>
+
+  <rect x="458" y="274" width="80" height="40" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="498" y="291" text-anchor="middle" font-size="10" fill="#92400e">C2 470µF</text>
+  <text x="498" y="306" text-anchor="middle" font-size="10" fill="#92400e">C3 100n</text>
+
+  <!-- star ground -->
+  <g transform="translate(498,332)">
+    <path d="M0,-11 L3,-3 L11,-3 L4,2 L7,10 L0,5 L-7,10 L-4,2 L-11,-3 L-3,-3 Z" fill="#dc2626"/>
+  </g>
+  <text x="498" y="350" text-anchor="middle" font-size="9" fill="#991b1b">★ star GND</text>
+
+  <!-- servo connector -->
+  <rect x="250" y="392" width="150" height="38" rx="4" fill="#e5e7eb" stroke="#6b7280"/>
+  <text x="325" y="409" text-anchor="middle" font-size="11" font-weight="700" fill="#374151">J2 — SG90</text>
+  <text x="325" y="423" text-anchor="middle" font-size="10" fill="#374151">SIG · VCC · GND</text>
+
+  <!-- LED -->
+  <rect x="452" y="378" width="96" height="44" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="470" cy="400" r="7" fill="#34d399"/>
+  <text x="506" y="396" text-anchor="middle" font-size="10" font-weight="700" fill="#065f46">D1 SK6812</text>
+  <text x="506" y="410" text-anchor="middle" font-size="9" fill="#047857">R7 470R · C5</text>
+  <text x="506" y="421" text-anchor="middle" font-size="9" fill="#047857">faces OUT →</text>
+  <path d="M548 400 L575 400" stroke="#10b981" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- legend -->
+  <text x="60" y="480" font-size="12" font-weight="700" fill="#374151">Routing</text>
+  <line x1="60" y1="492" x2="92" y2="492" stroke="#dc2626" stroke-width="4"/>
+  <text x="98" y="496" font-size="11" fill="#374151">VBAT / SERVO_VCC / main GND — 0.8–1.0 mm (≈40 mil)</text>
+  <line x1="60" y1="512" x2="92" y2="512" stroke="#2563eb" stroke-width="2"/>
+  <text x="98" y="516" font-size="11" fill="#374151">signals (sig, en, LED, sense, gates) — 0.25 mm (≈10 mil)</text>
+  <line x1="60" y1="532" x2="92" y2="532" stroke="#9ca3af" stroke-width="1.5"/>
+  <text x="98" y="536" font-size="11" fill="#374151">everything else — 0.3 mm default · vias 0.3/0.6 mm, stitch the pours</text>
+</svg>
